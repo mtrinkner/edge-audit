@@ -68,3 +68,45 @@ market. Rules tuned on it are tuned on that history.
 - That daily-bar results transfer to intraday trading.
 - That statistical significance on 2014-2025 data implies significance going
   forward.
+
+## The result is chaotically sensitive to its inputs (measured)
+
+This was discovered by accident and is the most important caveat in the project.
+
+The pipeline was rebuilt from scratch, re-downloading the same symbols over the
+same date range. Net P/L changed from $1,596 to $3,191, roughly double, with no
+code change.
+
+The inputs had barely moved. Comparing the two downloads row by row across all
+200,571 bars:
+
+| Column | Rows differing | Max relative difference |
+|---|---|---|
+| `close` | 0 | 2.2e-16 (floating point only) |
+| `volume` | 0 | 0 |
+| `adj_close` | 140,745 (70%) | **1.06e-6** |
+
+Raw prices and volumes were bit-identical. Only adjusted closes moved, by at most
+one part in a million, which is vendor rounding from a recomputed adjustment
+factor. Three rows changed by more than 1e-6.
+
+A one-part-in-a-million input perturbation doubling the outcome is not a bug in
+the pipeline. The model and the backtest were both verified deterministic:
+re-running either on an unchanged database reproduces identical predictions and
+identical P/L. The sensitivity is a property of the strategy.
+
+The mechanism is threshold crossing. The backtest holds at most three concurrent
+positions and enters when predicted probability clears a cutoff. A microscopic
+shift in probability reorders which symbols clear it on a given day, a different
+trade is taken, capital is committed differently, and the paths diverge and never
+reconverge.
+
+**What this means for interpretation.** Any single headline number from this
+backtest is one draw from a wide distribution, not a measurement. That is why
+`python/sensitivity.py` reports the spread across parameter variants rather than a
+point estimate, and why the conclusion rests on the statistical tests in
+`R/validate.R` rather than on the equity curve.
+
+It is also independent evidence for the main finding. A strategy with a real,
+robust edge does not reverse its outcome when the sixth decimal place of its
+inputs changes.

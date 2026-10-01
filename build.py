@@ -82,14 +82,21 @@ def main() -> int:
         timings["test"] = run("STAGE 4  lookahead audit",
                               [PY, "tests/test_no_lookahead.py"])
 
-    for optional, label, script in (
-        ("model", "STAGE 5  walk-forward modeling", "python/model.py"),
-        ("report", "STAGE 6  figures and Excel dashboard", "python/export_excel.py"),
-    ):
-        if optional in order and (ROOT / script).exists():
-            timings[optional] = run(label, [PY, script])
-        elif optional in order:
-            print(f"\n(skipping {label}: {script} not built yet)")
+    if "model" in order:
+        timings["model"] = run("STAGE 5  walk-forward modeling",
+                               [PY, "python/model.py"])
+        timings["backtest"] = run("STAGE 6  cost-aware portfolio backtest",
+                                  [PY, "python/backtest.py", "--model", "gbm"])
+        run_sql("STAGE 7  analysis views", ["05_metrics.sql"])
+        timings["sensitivity"] = run("STAGE 8  parameter robustness sweep",
+                                     [PY, "python/sensitivity.py"])
+        timings["validate"] = run("STAGE 9  statistical validation (R)",
+                                  ["Rscript", "R/validate.R"])
+
+    if "report" in order:
+        timings["figures"] = run("STAGE 10  figures (R)", ["Rscript", "R/figures.R"])
+        timings["dashboard"] = run("STAGE 11  Excel dashboard",
+                                   [PY, "python/export_excel.py"])
 
     print(f"\n{'=' * 70}\nBUILD COMPLETE\n{'=' * 70}")
     for k, v in timings.items():

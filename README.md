@@ -29,9 +29,9 @@ Excel dashboard       results written back for a non-technical reader
 | 1. Excel data contract | **done** | `python/make_workbook.py`, `python/validate_excel.py` |
 | 2. Warehouse and ETL | **done** | `sql/01_schema.sql`, `python/ingest_bars.py` |
 | 3. SQL feature layer | **done** | `sql/02_features.sql`, `sql/03_materialize.sql`, `sql/04_labels.sql` |
-| 4. Modeling and backtest | in progress | `python/model.py`, `python/backtest.py` |
-| 5. R validation | in progress | `R/validate.R` |
-| 6. Reporting | in progress | `R/figures.R`, `python/export_excel.py` |
+| 4. Modeling and backtest | **done** | `python/model.py`, `python/folds.py`, `python/backtest.py` |
+| 5. R validation | **done** | `R/validate.R`, `python/sensitivity.py` |
+| 6. Reporting | **done** | `R/figures.R`, `python/export_excel.py` |
 
 Rebuild everything from source:
 
@@ -39,8 +39,8 @@ Rebuild everything from source:
 python3 build.py --ingest
 ```
 
-Sixteen seconds without the download. Every number in the project traces back to
-that one command.
+About two minutes end to end without the download, including the statistical
+validation. Every number in this README traces back to that one command.
 
 ## What the data looks like
 
@@ -57,6 +57,54 @@ That 53.6% is the number any model has to beat. US equities drifted upward over
 this sample, so a coin that always says "up" is already right most of the time.
 Reporting 55% accuracy without that baseline next to it would be meaningless.
 
+
+## The finding
+
+**No strategy beat a passive benchmark, and the apparent edge does not survive
+statistical scrutiny.** Stated up front because that is the result, not a
+disappointment to bury below a chart.
+
+| | Strategy (GBM) | SPY buy and hold |
+|---|---|---|
+| Total return, 7 years out of sample | **+30.8%** | **+204.4%** |
+| Annualized | 3.9% | 17.3% |
+| Sharpe | 0.35 | 0.91 |
+| Max drawdown | 17.1% | 33.7% |
+
+Four things had to be true at once for this to be a real edge. None of them were.
+
+**1. Costs ate most of the gross edge.** The model found something: $6,078 of
+gross P/L on a $10,000 account. Slippage, spread and commission took $4,482 of it,
+**73.7%**, leaving $1,596. Across all 45 parameter variants the median was 54% of
+gross lost to costs. An edge that exists only before execution is not an edge.
+
+**2. The sample is far smaller than the row count suggests.** The model's
+strongest features are market-wide, so its high-confidence picks arrive in bursts:
+in the worst fold, 1,342 selected rows fell on 52 distinct dates, 41% of them on
+just ten. With 5-day overlapping labels, 1,740 trading dates are roughly **348
+independent observations**. Scoring each row as an independent trade inflated the
+logistic model's Sharpe from **0.36 to 1.59**. The honest number is the first one.
+
+**3. It fails the data-snooping test.** Against a zero null, the GBM's mean return
+is significant at p = 0.009. But equities drifted upward over the sample, so zero
+is the wrong null. Against an always-long baseline the excess is +0.112% per
+5-day period at p = 0.128, and White's Reality Check across all strategies tested
+gives **p = 0.092**. Nothing survives Benjamini-Hochberg.
+
+**4. The result is chaotically sensitive to its inputs.** Rebuilding after
+re-downloading the same data changed net P/L from $1,596 to $3,191. The inputs had
+moved by at most **1.06e-6** in relative terms (vendor rounding on adjusted
+closes; raw prices and volumes were bit-identical), and both the model and the
+backtest were verified deterministic. With at most three concurrent positions
+chosen by a probability cutoff, a microscopic shift reorders which names clear the
+threshold and the paths diverge. Across 45 parameter variants, returns ranged from
+**11.9% to 88.6%**, and **0 of 45 beat SPY**.
+
+The best variant returned 88.6%. That number is the maximum of 45 tries and is
+what a less careful write-up would report as "the result".
+
+![Reality check](reports/figures/02_reality_check.png)
+
 ## Three decisions that define the project
 
 ### 1. The conclusion is allowed to be negative
@@ -67,6 +115,9 @@ and publishing the one that survived. This project treats that selection effect
 as the thing to measure rather than the thing to hide: the R layer corrects for
 how many variants were tested, and a finding of "no edge after costs" is a valid
 and reportable result.
+
+It would have been easy to report the 88.6% variant and stop. Every mechanism in
+this repository exists to prevent that.
 
 ### 2. Lookahead bias is tested, not asserted
 
@@ -118,14 +169,22 @@ python/
   make_workbook.py       generates the Excel workbook from the schema
   validate_excel.py      the data contract; nothing loads until it passes
   load_journal.py        Excel to warehouse
+  folds.py               walk-forward splits with purge and embargo
+  model.py               baselines and models, clustering-aware evaluation
+  backtest.py            cost-aware portfolio backtest, next-open fills
+  sensitivity.py         45-variant robustness sweep
+  export_excel.py        results back into Excel
 sql/
   01_schema.sql          DDL with CHECK constraints and provenance tables
   02_features.sql        backward-looking features (views define the logic)
   03_materialize.sql     views to indexed tables (60s query to 15ms)
   04_labels.sql          forward-looking targets, kept deliberately separate
+  05_metrics.sql         one return per date per strategy, the analysis surface
+R/
+  validate.R             stationary bootstrap, BH, White's Reality Check
+  figures.R              the five charts that carry the argument
 tests/
   test_no_lookahead.py   the audit the whole project rests on
-R/                       statistical validation and figures
 journal/                 the paper-trading assistant that seeded this project
 docs/                    methodology and limitations
 ```
@@ -168,3 +227,33 @@ not a fill log.
 out of. It is the forward-testing arm: trades logged there enter the same
 warehouse through the Excel contract, so live decisions and historical research
 are measured with identical code.
+
+## Résumé summary
+
+> **Equity Signal Research Pipeline** — Excel, Python, SQL, R
+> Built an end-to-end research pipeline testing whether a short-horizon equity
+> signal has a tradeable edge. Ingested and validated 200K daily bars across 67
+> symbols into a SQLite warehouse with provenance tracking and queryable data
+> quality checks; engineered 41 point-in-time features using SQL window functions,
+> verified leak-free by a truncation-rebuild audit; trained walk-forward models
+> with purge and embargo; and validated results in R using a stationary bootstrap
+> and White's Reality Check. **Found the apparent 1.59 Sharpe fell to 0.36 once
+> clustered, overlapping trades were counted correctly, that transaction costs
+> consumed 74% of the gross edge, and that 0 of 45 parameter variants beat a
+> passive benchmark. Reported the negative result.**
+
+## Reproducing
+
+```bash
+python3 build.py --ingest     # full rebuild including the data download
+Rscript R/validate.R          # just the statistical tests
+open reports/dashboard.xlsx   # the results, for a non-technical reader
+```
+
+Requires Python 3 with pandas, scikit-learn, xlsxwriter and yfinance, plus R with
+tidyverse, DBI and RSQLite. On macOS, install the R packages with Anaconda off the
+PATH or Anaconda's `libcurl` breaks the RSQLite build:
+
+```bash
+env PATH="/opt/homebrew/bin:/usr/bin:/bin" Rscript -e 'install.packages(c("RSQLite","writexl"))'
+```
