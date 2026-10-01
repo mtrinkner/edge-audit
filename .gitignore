@@ -1,0 +1,16 @@
+# Derived artifacts. Everything here is rebuilt by `python3 build.py --ingest`.
+data/warehouse.db
+data/warehouse.db-wal
+data/warehouse.db-shm
+data/raw/*.csv
+reports/figures/*.png
+reports/dashboard.xlsx
+__pycache__/
+*.pyc
+.Rhistory
+.DS_Store
+
+# The journal workbook holds real personal trade history. The generator
+# (python/make_workbook.py) is versioned instead, so anyone can recreate the
+# empty workbook without inheriting someone else's trades.
+data/journal.xlsx

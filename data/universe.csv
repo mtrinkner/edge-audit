@@ -1,0 +1,68 @@
+symbol,name,sector,kind,inclusion_reason
+SPY,SPDR S&P 500 ETF Trust,Broad Market,etf,benchmark
+XLK,Technology Select Sector SPDR,Information Technology,etf,sector sleeve
+XLF,Financial Select Sector SPDR,Financials,etf,sector sleeve
+XLV,Health Care Select Sector SPDR,Health Care,etf,sector sleeve
+XLE,Energy Select Sector SPDR,Energy,etf,sector sleeve
+XLY,Consumer Discretionary Select Sector SPDR,Consumer Discretionary,etf,sector sleeve
+XLP,Consumer Staples Select Sector SPDR,Consumer Staples,etf,sector sleeve
+XLI,Industrial Select Sector SPDR,Industrials,etf,sector sleeve
+XLU,Utilities Select Sector SPDR,Utilities,etf,sector sleeve
+XLB,Materials Select Sector SPDR,Materials,etf,sector sleeve
+XLRE,Real Estate Select Sector SPDR,Real Estate,etf,sector sleeve
+XLC,Communication Services Select Sector SPDR,Communication Services,etf,sector sleeve
+AAPL,Apple Inc,Information Technology,stock,large cap liquid
+MSFT,Microsoft Corp,Information Technology,stock,large cap liquid
+NVDA,NVIDIA Corp,Information Technology,stock,large cap liquid
+AMZN,Amazon.com Inc,Consumer Discretionary,stock,large cap liquid
+GOOGL,Alphabet Inc Class A,Communication Services,stock,large cap liquid
+META,Meta Platforms Inc,Communication Services,stock,large cap liquid
+TSLA,Tesla Inc,Consumer Discretionary,stock,large cap liquid
+AVGO,Broadcom Inc,Information Technology,stock,large cap liquid
+JPM,JPMorgan Chase & Co,Financials,stock,large cap liquid
+V,Visa Inc,Financials,stock,large cap liquid
+MA,Mastercard Inc,Financials,stock,large cap liquid
+BAC,Bank of America Corp,Financials,stock,large cap liquid
+WFC,Wells Fargo & Co,Financials,stock,large cap liquid
+GS,Goldman Sachs Group Inc,Financials,stock,large cap liquid
+UNH,UnitedHealth Group Inc,Health Care,stock,large cap liquid
+JNJ,Johnson & Johnson,Health Care,stock,large cap liquid
+LLY,Eli Lilly & Co,Health Care,stock,large cap liquid
+PFE,Pfizer Inc,Health Care,stock,large cap liquid
+ABBV,AbbVie Inc,Health Care,stock,large cap liquid
+MRK,Merck & Co Inc,Health Care,stock,large cap liquid
+XOM,Exxon Mobil Corp,Energy,stock,large cap liquid
+CVX,Chevron Corp,Energy,stock,large cap liquid
+COP,ConocoPhillips,Energy,stock,large cap liquid
+WMT,Walmart Inc,Consumer Staples,stock,large cap liquid
+COST,Costco Wholesale Corp,Consumer Staples,stock,large cap liquid
+PG,Procter & Gamble Co,Consumer Staples,stock,large cap liquid
+KO,Coca-Cola Co,Consumer Staples,stock,large cap liquid
+PEP,PepsiCo Inc,Consumer Staples,stock,large cap liquid
+HD,Home Depot Inc,Consumer Discretionary,stock,large cap liquid
+MCD,McDonald's Corp,Consumer Discretionary,stock,large cap liquid
+NKE,NIKE Inc,Consumer Discretionary,stock,large cap liquid
+SBUX,Starbucks Corp,Consumer Discretionary,stock,large cap liquid
+CAT,Caterpillar Inc,Industrials,stock,large cap liquid
+BA,Boeing Co,Industrials,stock,large cap liquid
+HON,Honeywell International Inc,Industrials,stock,large cap liquid
+UPS,United Parcel Service Inc,Industrials,stock,large cap liquid
+GE,GE Aerospace,Industrials,stock,large cap liquid
+LMT,Lockheed Martin Corp,Industrials,stock,large cap liquid
+CRM,Salesforce Inc,Information Technology,stock,large cap liquid
+ADBE,Adobe Inc,Information Technology,stock,large cap liquid
+AMD,Advanced Micro Devices Inc,Information Technology,stock,large cap liquid
+INTC,Intel Corp,Information Technology,stock,large cap liquid
+CSCO,Cisco Systems Inc,Information Technology,stock,large cap liquid
+ORCL,Oracle Corp,Information Technology,stock,large cap liquid
+QCOM,QUALCOMM Inc,Information Technology,stock,large cap liquid
+TXN,Texas Instruments Inc,Information Technology,stock,large cap liquid
+IBM,International Business Machines Corp,Information Technology,stock,large cap liquid
+T,AT&T Inc,Communication Services,stock,large cap liquid
+VZ,Verizon Communications Inc,Communication Services,stock,large cap liquid
+DIS,Walt Disney Co,Communication Services,stock,large cap liquid
+NFLX,Netflix Inc,Communication Services,stock,large cap liquid
+NEE,NextEra Energy Inc,Utilities,stock,large cap liquid
+DUK,Duke Energy Corp,Utilities,stock,large cap liquid
+LIN,Linde plc,Materials,stock,large cap liquid
+AMT,American Tower Corp,Real Estate,stock,large cap liquid
