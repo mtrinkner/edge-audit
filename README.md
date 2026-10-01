@@ -68,15 +68,16 @@ disappointment to bury below a chart.
 |---|---|---|
 | Total return, 7 years out of sample | **+30.8%** | **+204.4%** |
 | Annualized | 3.9% | 17.3% |
-| Sharpe | 0.35 | 0.91 |
-| Max drawdown | 17.1% | 33.7% |
+| Sharpe | 0.38 | 0.91 |
+| Max drawdown | 12.4% | 33.7% |
 
 Four things had to be true at once for this to be a real edge. None of them were.
 
-**1. Costs ate most of the gross edge.** The model found something: $6,078 of
-gross P/L on a $10,000 account. Slippage, spread and commission took $4,482 of it,
-**73.7%**, leaving $1,596. Across all 45 parameter variants the median was 54% of
-gross lost to costs. An edge that exists only before execution is not an edge.
+**1. Costs ate most of the gross edge.** The model found something: $7,696 of
+gross P/L on a $10,000 account over seven years. Slippage, spread and commission
+took $4,504 of it, **58.5%**, leaving $3,191. Across all 45 parameter variants the
+median was **54%** of gross lost to costs. An edge that exists only before
+execution is not an edge.
 
 **2. The sample is far smaller than the row count suggests.** The model's
 strongest features are market-wide, so its high-confidence picks arrive in bursts:
