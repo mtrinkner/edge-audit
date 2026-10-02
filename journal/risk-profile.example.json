@@ -1,0 +1,10 @@
+{
+  "_comment": "Copy to risk-profile.json and set your own numbers. The real file is gitignored.",
+  "account_size": 25000,
+  "max_risk_pct_per_trade": 1.0,
+  "daily_loss_limit": 500,
+  "max_open_positions": 3,
+  "max_exposure_pct": 50,
+  "min_risk_reward": 2.0,
+  "mode": "paper"
+}

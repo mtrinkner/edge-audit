@@ -14,3 +14,10 @@ __pycache__/
 # (python/make_workbook.py) is versioned instead, so anyone can recreate the
 # empty workbook without inheriting someone else's trades.
 data/journal.xlsx
+
+# Personal trading configuration and history. The example file is versioned
+# instead, so the repo shows the shape without publishing anyone's numbers.
+journal/risk-profile.json
+journal/trades.jsonl
+journal/memos/*.md
+journal/logs/*.md
