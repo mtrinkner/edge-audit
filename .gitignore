@@ -1,10 +1,11 @@
 # Derived artifacts. Everything here is rebuilt by `python3 build.py --ingest`.
+# The figures and the dashboard are the exception: they are the deliverable, the
+# README embeds one of them, and a reader should not have to run the pipeline to
+# see the result.
 data/warehouse.db
 data/warehouse.db-wal
 data/warehouse.db-shm
 data/raw/*.csv
-reports/figures/*.png
-reports/dashboard.xlsx
 __pycache__/
 *.pyc
 .Rhistory
