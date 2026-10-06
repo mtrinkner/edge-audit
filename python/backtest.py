@@ -230,9 +230,17 @@ def main() -> int:
     ap.add_argument("--top-n", type=int, default=config.MAX_OPEN_POSITIONS)
     ap.add_argument("--horizon", type=int, default=config.LABEL_HORIZON_DAYS)
     ap.add_argument("--stop-atr", type=float, default=1.5)
+    ap.add_argument("--account", type=float,
+                    help="override the account size, to test how cost drag scales")
     ap.add_argument("--no-write", action="store_true")
     args = ap.parse_args()
 
+    if args.account:
+        # Position sizing and the exposure cap both scale with account size, but
+        # the commission minimum does not. Overriding here is how we measure
+        # whether the cost drag that sank the $10k result is a property of the
+        # signal or just a property of trading small.
+        config.ACCOUNT_SIZE = args.account
     out = run(args.model, args.prob_threshold, args.top_n, args.horizon, args.stop_atr)
     tdf, cdf = out["trades"], out["curve"]
     m = metrics(tdf, cdf)
