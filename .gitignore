@@ -6,6 +6,7 @@ data/warehouse.db
 data/warehouse.db-wal
 data/warehouse.db-shm
 data/raw/*.csv
+!data/raw/bars_snapshot.csv.gz
 __pycache__/
 *.pyc
 .Rhistory
@@ -22,3 +23,7 @@ journal/risk-profile.json
 journal/trades.jsonl
 journal/memos/*.md
 journal/logs/*.md
+
+# The forward ledger is the evidence, not scratch output. It is versioned so
+# the record can be audited by anyone who clones this.
+!data/forward_ledger.jsonl

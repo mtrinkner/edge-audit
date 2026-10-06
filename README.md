@@ -36,11 +36,14 @@ Excel dashboard       results written back for a non-technical reader
 Rebuild everything from source:
 
 ```bash
-python3 build.py --ingest
+python3 build.py --from ingest     # uses the pinned data snapshot, no network
 ```
 
-About two minutes end to end without the download, including the statistical
-validation. Every number in this README traces back to that one command.
+Every number in this README comes from that command. The bars behind the
+published results are committed in `data/raw/bars_snapshot.csv.gz`, because the
+data vendor silently revises adjusted closes and a fresh download does not
+reproduce them. `python3 build.py --ingest` re-downloads instead, which is how
+you check whether the finding survives new data rather than just re-reading it.
 
 ## What the data looks like
 
@@ -66,17 +69,17 @@ disappointment to bury below a chart.
 
 | | Strategy (GBM) | SPY buy and hold |
 |---|---|---|
-| Total return, 7 years out of sample | **+30.8%** | **+204.4%** |
-| Annualized | 3.9% | 17.3% |
-| Sharpe | 0.38 | 0.91 |
-| Max drawdown | 12.4% | 33.7% |
+| Total return, 7 years out of sample | **+15.3%** | **+204.4%** |
+| Annualized | 2.1% | 17.3% |
+| Sharpe | 0.23 | 0.91 |
+| Max drawdown | 17.1% | 33.7% |
 
 Four things had to be true at once for this to be a real edge. None of them were.
 
-**1. Costs ate most of the gross edge.** The model found something: $7,696 of
+**1. Costs ate most of the gross edge.** The model found something: $6,078 of
 gross P/L on a $10,000 account over seven years. Slippage, spread and commission
-took $4,504 of it, **58.5%**, leaving $3,191. Across all 45 parameter variants the
-median was **54%** of gross lost to costs. An edge that exists only before
+took $4,482 of it, **73.7%**, leaving $1,596. Across all 45 parameter variants the
+median was **69%** of gross lost to costs. An edge that exists only before
 execution is not an edge.
 
 **2. The sample is far smaller than the row count suggests.** The model's
@@ -90,7 +93,7 @@ logistic model's Sharpe from **0.36 to 1.59**. The honest number is the first on
 is significant at p = 0.009. But equities drifted upward over the sample, so zero
 is the wrong null. Against an always-long baseline the excess is +0.112% per
 5-day period at p = 0.128, and White's Reality Check across all strategies tested
-gives **p = 0.092**. Nothing survives Benjamini-Hochberg.
+gives **p = 0.149**. Nothing survives Benjamini-Hochberg.
 
 **4. The result is chaotically sensitive to its inputs.** Rebuilding after
 re-downloading the same data changed net P/L from $1,596 to $3,191. The inputs had
@@ -99,9 +102,9 @@ closes; raw prices and volumes were bit-identical), and both the model and the
 backtest were verified deterministic. With at most three concurrent positions
 chosen by a probability cutoff, a microscopic shift reorders which names clear the
 threshold and the paths diverge. Across 45 parameter variants, returns ranged from
-**11.9% to 88.6%**, and **0 of 45 beat SPY**.
+**-5.2% to 56.6%**, and **0 of 45 beat SPY**.
 
-The best variant returned 88.6%. That number is the maximum of 45 tries and is
+The best variant returned 56.6%. That number is the maximum of 45 tries and is
 what a less careful write-up would report as "the result".
 
 ![Reality check](reports/figures/02_reality_check.png)
@@ -117,7 +120,7 @@ as the thing to measure rather than the thing to hide: the R layer corrects for
 how many variants were tested, and a finding of "no edge after costs" is a valid
 and reportable result.
 
-It would have been easy to report the 88.6% variant and stop. Every mechanism in
+It would have been easy to report the 56.6% variant and stop. Every mechanism in
 this repository exists to prevent that.
 
 ### 2. Lookahead bias is tested, not asserted
@@ -228,6 +231,38 @@ not a fill log.
 out of. It is the forward-testing arm: trades logged there enter the same
 warehouse through the Excel contract, so live decisions and historical research
 are measured with identical code.
+
+## Forward test
+
+The backtest is finished and its answer is negative. Re-running it monthly would
+be the same question asked twelve times a year against the same history, which is
+how false findings get published. So the live arm is a **pre-registered forward
+test** instead:
+
+```bash
+python3 python/freeze_model.py      # once: train, serialize, register a SHA-256
+python3 python/forward_run.py       # monthly: score data the model has not seen
+```
+
+The model and every decision rule are frozen in `models/gbm_v1.json`. Each run
+writes predictions to an append-only, hash-chained ledger **before** outcomes
+exist, then scores whatever has matured. `tests/test_ledger_integrity.py` proves
+that edits, deletions and reorderings are detectable, because an append-only
+claim nobody tested is just a claim.
+
+Evidence is reported in two buckets that never merge. Dates between the training
+cutoff and the first run are `holdout`: out-of-sample, but the data already
+existed, so not pre-registered. Everything after is `live`.
+
+| Stage | Trades | Dates | Effective obs | Excess vs SPY | p |
+|---|---|---|---|---|---|
+| holdout (2026 YTD) | 496 | 169 | 33.8 | +0.329% per 5 days | **0.452** |
+| live | 0 | — | — | — | — |
+
+The holdout mean looks healthy and means nothing: its 95% interval runs from
+-0.53% to +1.18%. At roughly 4 independent observations a month, the live arm
+needs about 8 months to reach even 30. The report prints the p-value next to the
+mean every time, so the number is never read alone.
 
 ## Résumé summary
 

@@ -65,9 +65,15 @@ def main() -> int:
     order = STAGES[STAGES.index(args.start):]
     timings: dict[str, float] = {}
 
-    if args.ingest and "ingest" in order:
-        timings["ingest"] = run("STAGE 1  ingest daily bars",
-                                [PY, "python/ingest_bars.py", "--all"])
+    if "ingest" in order:
+        # Default to the pinned snapshot so a clone reproduces the published
+        # numbers exactly. --ingest re-downloads, which tests whether the finding
+        # survives revised data; it will not match the README, and that is the
+        # point of keeping both paths.
+        flag = "--all" if args.ingest else "--snapshot"
+        timings["ingest"] = run(
+            f"STAGE 1  load bars ({'fresh download' if args.ingest else 'pinned snapshot'})",
+            [PY, "python/ingest_bars.py", flag])
 
     if "sql" in order:
         timings["sql"] = run_sql(
@@ -88,6 +94,8 @@ def main() -> int:
         timings["backtest"] = run("STAGE 6  cost-aware portfolio backtest",
                                   [PY, "python/backtest.py", "--model", "gbm"])
         run_sql("STAGE 7  analysis views", ["05_metrics.sql"])
+        timings["ledger"] = run("STAGE 7b  ledger integrity",
+                                [PY, "tests/test_ledger_integrity.py"])
         timings["sensitivity"] = run("STAGE 8  parameter robustness sweep",
                                      [PY, "python/sensitivity.py"])
         timings["validate"] = run("STAGE 9  statistical validation (R)",

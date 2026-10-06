@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Phase 2 — download daily bars and load them into the warehouse idempotently.
 
-    python3 python/ingest_bars.py --all
+    python3 python/ingest_bars.py --snapshot      # the pinned bars, no network
+    python3 python/ingest_bars.py --all           # fresh download
     python3 python/ingest_bars.py --symbols AAPL MSFT --start 2020-01-01
 
 Design points worth defending in an interview:
@@ -14,6 +15,10 @@ Design points worth defending in an interview:
     data_quality_issues. The checks look for the failures that actually corrupt
     a backtest: zero volume days, impossible OHLC ordering, extreme one-day
     moves that usually mean an unadjusted split, and calendar gaps.
+  * A pinned SNAPSHOT of the exact bars behind the published results ships in
+    data/raw/. yfinance revises adjusted closes over time, so a fresh download
+    does not reproduce the README numbers. Anyone can check the published result
+    with --snapshot, and test whether it survives new data with --all.
   * Raw and adjusted closes are both stored. Returns must be computed from
     adjusted prices or every dividend looks like a loss; position sizing must
     use raw prices or share counts are fictional. Keeping one of the two is a
@@ -200,10 +205,12 @@ def main() -> int:
     ap.add_argument("--start", default=config.START_DATE.isoformat())
     ap.add_argument("--end", default=config.END_DATE.isoformat())
     ap.add_argument("--save-raw", action="store_true", help="also write a CSV snapshot")
+    ap.add_argument("--snapshot", action="store_true",
+                    help="load the pinned snapshot instead of downloading")
     args = ap.parse_args()
 
-    if not args.symbols and not args.all:
-        ap.error("pass --all or --symbols")
+    if not args.symbols and not args.all and not args.snapshot:
+        ap.error("pass --snapshot, --all, or --symbols")
 
     config.ensure_dirs()
     db.init_schema()
@@ -232,8 +239,17 @@ def main() -> int:
     print(f"ingest run {run_id}: {len(symbols)} symbols, {start} to {end}")
 
     try:
-        raw = download(symbols, start, end)
-        df = normalize(raw)
+        if args.snapshot:
+            snap = config.RAW / "bars_snapshot.csv.gz"
+            if not snap.exists():
+                raise RuntimeError(f"{snap} not found")
+            print(f"  loading pinned snapshot {snap.name} (no network)")
+            df = pd.read_csv(snap, compression="gzip")
+            df = df[["symbol", "dt", "open", "high", "low", "close",
+                     "adj_close", "volume"]]
+        else:
+            raw = download(symbols, start, end)
+            df = normalize(raw)
         if df.empty:
             raise RuntimeError("no rows returned from the data source")
 
