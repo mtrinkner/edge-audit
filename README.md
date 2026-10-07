@@ -1,10 +1,9 @@
-# Lockbox
+# Edge Audit
 
-A quant research setup built to catch its own false discoveries.
+Backtests trading strategies, then audits whether the edge it found is real.
 
-Most backtesting projects are built to find an edge. This one is built to figure
-out whether the edge you found is real, and it is willing to tell you no. It did
-tell me no.
+Most backtesting projects are built to find an edge. This one is built to check
+the one you found, and it is willing to tell you no. It did tell me no.
 
 **Python · SQL · R · Excel**
 
