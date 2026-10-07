@@ -108,6 +108,31 @@ That holdout number looks healthy and means nothing. Its 95% interval runs from
 -0.53% to +1.18%. The report prints the p-value next to the mean every time so
 the number can never be read on its own.
 
+## The signal zoo
+
+Then I tested the classics. Forty-one published technical signals — golden cross,
+RSI, MACD, Bollinger bands, Donchian breakouts, support and resistance,
+candlestick patterns, gaps, volume spikes — at three holding periods each. 123
+trials.
+
+**Zero of 122 cleared their bar. Zero survived multiple-comparison correction.**
+
+| signal | hold | indep. obs | Sharpe | its bar | verdict |
+|---|---|---|---|---|---|
+| rsi_oversold_20 | 21d | **6** | 1.98 | 7.89 | fails |
+| rsi_oversold_30 | 21d | 41 | 1.66 | 3.02 | fails |
+| above_sma_200 | 63d | 47 | 1.46 | 2.82 | fails |
+| cross_above_sma_50 | 63d | 35 | 1.25 | 3.27 | fails |
+
+15 of 122 looked significant at p < 0.05. Pure noise predicts 6. After
+Benjamini-Hochberg, none survive.
+
+Look at the top row, because it is the best argument for building any of this.
+A 1.98 Sharpe computed from **six** independent observations. My first version of
+this report fed the project's sample size into the correction instead of each
+signal's own, and announced that result was 99.2% likely to be real. It is 3.4%.
+The tool built to catch false discoveries caught mine.
+
 ## Running it
 
 ```bash

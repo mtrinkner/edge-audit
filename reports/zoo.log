@@ -1,0 +1,38 @@
+reading data through 2026-10-06 (lockbox sealed from 2026-10-07)
+  176,495 bars, 55 symbols
+  computing 41 signals at horizons [5, 21, 63]
+  evaluated 3/123  evaluated 6/123  evaluated 9/123  evaluated 12/123  evaluated 15/123  evaluated 18/123  evaluated 21/123  evaluated 24/123  evaluated 27/123  evaluated 30/123  evaluated 33/123  evaluated 36/123  evaluated 39/123  evaluated 42/123  evaluated 45/123  evaluated 48/123  evaluated 51/123  evaluated 54/123  evaluated 57/123  evaluated 60/123  evaluated 63/123  evaluated 66/123  evaluated 69/123  evaluated 72/123  evaluated 75/123  evaluated 78/123  evaluated 81/123  evaluated 84/123  evaluated 87/123  evaluated 90/123  evaluated 93/123  evaluated 96/123  evaluated 99/123  evaluated 102/123  evaluated 105/123  evaluated 108/123  evaluated 111/123  evaluated 114/123  evaluated 117/123  evaluated 120/123  evaluated 123/123
+
+==============================================================================
+SIGNAL ZOO — 123 trials (41 signals x 3 horizons), 122 evaluable
+==============================================================================
+signal                       h  trades  dates  sharpe   excess      p
+rsi_oversold_20             21     154    112    1.98  -0.623%  0.475
+rsi_oversold_30             21    1764    848    1.66  +0.317%  0.201
+above_sma_200               63  110891   2947    1.46  +0.137%  0.546
+ma_ribbon_aligned           63   74663   2933    1.46  +0.043%  0.908
+rsi_oversold_30              5    1783    856    1.34  +0.172%  0.204
+inside_bar                  21   20804   3035    1.28  +0.013%  0.841
+cross_above_sma_50          63    6034   2177    1.25  -0.459%  0.109
+oversold_in_uptrend         63    2419   1111    1.22  -0.331%  0.595
+big_down_day                21    6902   1750    1.20  +0.595%  0.045
+oversold_in_uptrend         21    2429   1120    1.17  +0.090%  0.816
+outside_bar_up              63    7068   2222    1.08  +0.200%  0.391
+pullback_to_sma50           21    2745   1460    1.05  +0.534%  0.251
+doji                        63   18247   3094    1.05  -0.001%  0.991
+above_sma_200               21  112437   2989    1.05  -0.001%  0.987
+inside_bar                  63   20567   2993    1.04  -0.024%  0.846
+
+------------------------------------------------------------------------------
+trials before this run        175
+trials added by the zoo       123
+total trials                  298
+bar the best must clear       1.101  (median best from pure noise)
+best observed                 1.980  (rsi_oversold_20, 21d)
+deflated p(real)              0.024  (want > 0.95)
+
+signals clearing the bar      1 of 122
+significant before correction 15 of 122
+expected false positives at p<0.05 from noise alone: 6.1
+
+wrote reports/signal_zoo.csv

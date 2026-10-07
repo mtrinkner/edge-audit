@@ -30,3 +30,6 @@ journal/logs/*.md
 
 # The strategy registry is the trial count every correction depends on.
 !data/strategy_registry.jsonl
+
+# Signal zoo results are findings, not scratch output.
+!reports/signal_zoo.csv
