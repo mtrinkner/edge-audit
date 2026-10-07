@@ -96,6 +96,8 @@ def main() -> int:
         run_sql("STAGE 7  analysis views", ["05_metrics.sql"])
         timings["ledger"] = run("STAGE 7b  ledger integrity",
                                 [PY, "tests/test_ledger_integrity.py"])
+        timings["controls"] = run("STAGE 7c  search controls",
+                                  [PY, "tests/test_search_controls.py"])
         timings["sensitivity"] = run("STAGE 8  parameter robustness sweep",
                                      [PY, "python/sensitivity.py"])
         timings["validate"] = run("STAGE 9  statistical validation (R)",

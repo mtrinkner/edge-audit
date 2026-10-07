@@ -27,3 +27,6 @@ journal/logs/*.md
 # The forward ledger is the evidence, not scratch output. It is versioned so
 # the record can be audited by anyone who clones this.
 !data/forward_ledger.jsonl
+
+# The strategy registry is the trial count every correction depends on.
+!data/strategy_registry.jsonl
