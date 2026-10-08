@@ -45,3 +45,6 @@ data/xs_panel.parquet
 !reports/multi_source.csv
 !reports/earnings_v2.csv
 !reports/regime_test.csv
+
+!reports/cap_spectrum.csv
+data/spreads.parquet

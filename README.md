@@ -207,6 +207,44 @@ being real, against a benchmark of 0.91 and a target of 1.5.
 Reaching 1.5 by combining sleeves of that quality needs 8.3 uncorrelated ones. I
 have 7.0, and the two added were negative. That is the ceiling this data implies.
 
+## Going down the cap spectrum
+
+The literature says anomalies concentrate where arbitrage is costly. The cleanest
+causal evidence is the SEC's Reg SHO pilot: lifting short-sale constraints cut
+long-short anomaly returns by 94bp for small stocks against 48bp for large. So I
+expanded the universe from 515 names to 1,515 (S&P 500 + 400 + 600), 4.4M bars,
+112,850 earnings events.
+
+**First I had to fix the cost model**, because testing small caps on a large-cap
+cost assumption manufactures an edge out of an accounting choice. Corwin-Schultz
+estimated from daily OHLC turned out unusable as a level: it gives AAPL 23bp
+against a real quoted spread near 1bp, because it conflates volatility with
+spread. Replaced with a model built on quantities our data measures precisely, a
+tick-size floor and an inverse-square-root-of-volume term, anchored so large caps
+keep the 2bp assumption used everywhere else:
+
+| Bucket | Median price | Median $vol/day | Half-spread |
+|---|---|---|---|
+| S&P 500 | $98 | $212M | 2.1 bp |
+| S&P 400 | $59 | $44M | 4.4 bp |
+| S&P 600 | $35 | $15M | 7.6 bp |
+
+**The hypothesis was refuted. PEAD gets weaker down-cap, not stronger:**
+
+| Bucket | Names | Gross Sharpe | Net Sharpe | t | Cost drag |
+|---|---|---|---|---|---|
+| **Large** | 500 | **0.71** | **0.65** | 2.29 | 0.41%/yr |
+| Mid | 399 | 0.41 | 0.28 | 1.00 | 0.90%/yr |
+| Small | 593 | 0.31 | 0.08 | 0.28 | 1.48%/yr |
+
+Gross drift declines monotonically with size, and costs then roughly triple going
+down, so net collapses from 0.65 to 0.08. Small caps lose on both terms at once.
+
+A cost bug of mine nearly hid this. The first version subtracted each leg's cost
+and then differenced the legs, which cancelled the costs and reported a drag of
+0.00% on a book trading small caps at 7.7bp. A long/short book pays on both legs,
+so the two terms add.
+
 ## Running it
 
 ```bash
