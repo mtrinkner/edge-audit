@@ -38,3 +38,6 @@ journal/logs/*.md
 
 data/xs_panel.parquet
 !reports/neutral_book.csv
+
+!reports/earnings_book.csv
+!reports/combined_book.csv

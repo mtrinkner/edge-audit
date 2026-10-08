@@ -1,0 +1,4 @@
+fetching earnings for 503 symbols (3,209 sessions in the calendar)
+  25/503  rows=2,284  failed=0  50/503  rows=4,301  failed=0  75/503  rows=6,418  failed=0  100/503  rows=8,592  failed=0  125/503  rows=10,721  failed=0  150/503  rows=12,809  failed=0  175/503  rows=15,154  failed=0  200/503  rows=17,088  failed=0  225/503  rows=19,152  failed=0  250/503  rows=21,124  failed=0  275/503  rows=23,253  failed=0  300/503  rows=25,526  failed=0  325/503  rows=27,715  failed=0  350/503  rows=29,936  failed=0  375/503  rows=32,076  failed=0  400/503  rows=34,252  failed=0  425/503  rows=36,367  failed=0  450/503  rows=38,455  failed=0  475/503  rows=40,330  failed=0  500/503  rows=42,537  failed=0  503/503  rows=42,790  failed=0
+
+earnings table: 42,687 events, 2014-01-02 to 2026-10-02

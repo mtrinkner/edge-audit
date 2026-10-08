@@ -180,3 +180,29 @@ CREATE TABLE IF NOT EXISTS backtest_equity (
     exposure REAL NOT NULL,
     PRIMARY KEY (bt_id, dt)
 );
+
+-- ---------------------------------------------------- earnings events
+-- A second, genuinely independent data source. Price-derived signals are all
+-- transforms of one series, which is why 13 of them collapsed to 2.9 effective
+-- independent strategies. Earnings surprise is measured by a different process
+-- entirely (analyst forecasts versus reported results), so it has a real chance
+-- of being uncorrelated with momentum.
+--
+-- POINT-IN-TIME DISCIPLINE. announced_at is a timestamp, not a date, because
+-- whether a release landed before or after the close decides the first session
+-- it could have been traded on. tradeable_from stores that resolved date, so no
+-- downstream query has to re-derive it and get it wrong.
+CREATE TABLE IF NOT EXISTS earnings (
+    symbol          TEXT NOT NULL REFERENCES symbols(symbol),
+    announced_at    TEXT NOT NULL,          -- full timestamp with offset
+    period_end      TEXT,
+    eps_estimate    REAL,
+    eps_actual      REAL,
+    surprise_pct    REAL,
+    tradeable_from  TEXT NOT NULL,          -- first session this could be acted on
+    run_id          INTEGER REFERENCES ingest_runs(run_id),
+    PRIMARY KEY (symbol, announced_at)
+);
+
+CREATE INDEX IF NOT EXISTS idx_earnings_tradeable ON earnings(tradeable_from);
+CREATE INDEX IF NOT EXISTS idx_earnings_symbol ON earnings(symbol, tradeable_from);
