@@ -57,6 +57,49 @@ which was the good stretch. A robustness check performed inside a truncated
 sample cannot detect that the truncation is the problem. No amount of further
 checking would have found this. Only more data did.
 
+## Where the money actually is
+
+"Quant firms exist, so something must beat the index." True, and the public
+record says the dominant business is not forecasting.
+
+Virtu's filings state that 95% of revenue is trading income and describe the
+operation as *"making small amounts—as in $10—millions of times a day."* One
+losing day in 1,238. That is spread capture for providing liquidity, not
+prediction, and it needs exchange membership, colocation and rebates. Industry
+market-making revenue was $30.2bn in 2025.
+
+So I tested the one documented effect that daily bars can actually reach: US
+equity returns accrue disproportionately **overnight** (Lachance 2023,
+Bogousslavsky JFE 2021). The mechanism is mechanical — margin is higher overnight
+and lending fees are charged on overnight positions, so arbitrageurs flatten
+before the close.
+
+It is clearly there, across 4.4M stock-days:
+
+| | Annualized | Daily vol | Sharpe |
+|---|---|---|---|
+| **Overnight** | **9.86%** | 0.78% | **0.83** |
+| Intraday | 3.56% | 0.95% | 0.31 |
+| Total | 15.60% | 1.26% | 0.83 |
+
+62% of the return and 38% of the variance arrive overnight. And it is not
+capturable:
+
+| Capturing it | Gross | Cost of 252 round trips | Net |
+|---|---|---|---|
+| All 1,499 names | 9.82% | -32.43% | **-20.61%** |
+| Large caps only | 9.82% | -10.58% | **-1.21%** |
+| SPY at 1bp | 7.39% | -5.27% | **+2.12%** |
+
+**The breakeven half-spread is 2.01 basis points.** Large caps cost 2.1. The
+premium and the cost of harvesting it are the same size to within a tenth of a
+basis point, which is what an efficiently priced risk premium looks like: it is
+the compensation for holding overnight risk, and it is paid to whoever holds it,
+not to whoever trades it.
+
+Even the best case, SPY at sub-penny spreads, nets 2-6% against 12% for simply
+holding the thing.
+
 ## What it runs on
 
 | Source | What it is | Size |
