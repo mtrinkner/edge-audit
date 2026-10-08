@@ -47,7 +47,8 @@ from earnings_signals import as_of_panel, build_event_features
 from spread_estimator import liquidity_half_spread_bps
 
 
-def build_panel(max_date: str, h: int, min_adv: float) -> pd.DataFrame:
+def build_panel(max_date: str, h: int, min_adv: float,
+                require_fwd: bool = True) -> pd.DataFrame:
     with db.connect() as con:
         bars = pd.read_sql(
             "SELECT b.symbol, b.dt, b.close, b.adj_close, b.volume, s.sector "
@@ -87,7 +88,12 @@ def build_panel(max_date: str, h: int, min_adv: float) -> pd.DataFrame:
     panel = panel.merge(merged[["symbol", "dt", "sue", "surprise_pct"]],
                         on=["symbol", "dt"], how="left")
     panel = panel[panel["adv"] >= min_adv]
-    return panel.dropna(subset=["fwd", "vol63", "adv"])
+    # `require_fwd` is False when generating a LIVE book. A backtest needs the
+    # forward return to score against; today's positions do not have one yet, and
+    # requiring it silently rewinds the book to the last date whose outcome is
+    # already known, which was a year stale.
+    cols = ["vol63", "adv"] + (["fwd"] if require_fwd else [])
+    return panel.dropna(subset=cols)
 
 
 def zs(s: pd.Series, keys) -> pd.Series:

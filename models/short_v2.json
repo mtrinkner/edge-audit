@@ -1,0 +1,59 @@
+{
+  "version": "short_v2",
+  "kind": "rule-based",
+  "frozen_at": "2026-10-08T13:18:19-05:00",
+  "description": "Short interest / ADV, sector-ranked, factor-residualised, quintile long-short",
+  "signal": {
+    "source": "FINRA consolidated short interest",
+    "field": "short_shares / (avg_daily_vol * 21)",
+    "orientation": -1,
+    "comment": "heavily shorted names underperform (Boehmer, Jones & Zhang). orientation fixed from the literature, not from the sample.",
+    "publication_lag_sessions": 10
+  },
+  "universe": {
+    "members": "S&P 500 + 400 + 600 as of 2026-10",
+    "min_adv_usd": 5000000,
+    "survivorship_bias": true
+  },
+  "construction": {
+    "rank_within": [
+      "date",
+      "sector"
+    ],
+    "residualise_against": [
+      "beta",
+      "size",
+      "mom126"
+    ],
+    "buckets": 5,
+    "legs": "long top quintile, short bottom quintile",
+    "weighting": "equal within bucket, sectors equally weighted",
+    "holding_days": 63
+  },
+  "costs": {
+    "model": "tick floor + inverse-sqrt-volume, anchored to 2bp for large caps",
+    "charged": "both sides, both legs, at each stock's own half-spread"
+  },
+  "backtest": {
+    "window": "2021-03-29 to 2026-07-08",
+    "sharpe": 1.66,
+    "t_stat": 3.9,
+    "ret_ann": 0.0298,
+    "vol_ann": 0.0204,
+    "max_dd": 0.0153,
+    "independent_observations": 22,
+    "trials_registered_at_freeze": 212,
+    "deflated_probability": 0.052,
+    "verdict": "fails the luck bar on sample size; frozen to find out if that changes with data that did not exist at freeze time"
+  },
+  "live_sizing": {
+    "gross_exposure_usd": 5000,
+    "comment": "deliberately small. this is a measurement, not a position. sizing is a parameter of the record, so changing it later requires a new version."
+  },
+  "implemented_by": [
+    "python/alt_signals.py",
+    "python/portfolio.py",
+    "python/spread_estimator.py"
+  ],
+  "code_sha256": "3dc29de6230d91d873beb89733517abd0d5913cc1150103b5c071961caeee7a9"
+}

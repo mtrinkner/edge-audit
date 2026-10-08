@@ -251,6 +251,41 @@ built to do.
 It is, however, the first result worth putting in the lockbox and forward-testing
 rather than abandoning.
 
+## Frozen and running forward
+
+Short interest is the first result worth locking rather than abandoning, so it is
+frozen as `short_v2` and its book is recorded monthly before outcomes exist.
+
+Freezing a rule-based strategy is different from freezing a fitted model. There
+is no pickled object, only a set of decisions — universe, neutralization,
+bucketing, horizon — each of which is a dial that could be turned after a bad
+quarter. So the hash covers the parameter spec **and** the source of the three
+modules that implement it. Change a threshold and the hash moves, which voids
+that version's record rather than quietly extending it.
+
+That fired almost immediately. I edited an unrelated plumbing flag in
+`portfolio.py` and the next position run refused to start with a HASH MISMATCH.
+Re-freezing was legitimate only because no forward record existed yet; once one
+does, the same situation requires a new version.
+
+### It is not tradeable at small size
+
+```
+  the frozen book holds 603 names; at $5,000 gross that is $8.29 each
+  535 of 603 positions (89%) round to zero shares
+  a tradeable version of THIS strategy needs roughly $352,574 gross
+```
+
+A full sector-wise quintile sort over 1,500 names is unremarkable in a backtest
+and impossible at retail size. Concentrating into the strongest names would make
+it tradeable and would also make it a different strategy, needing its own freeze,
+its own backtest and its own entry in the trial count. The book is recorded on
+paper instead, which keeps the experiment intact.
+
+`python/v2_positions.py` produces a position list and nothing else. It places no
+orders, connects to no broker and holds no credentials. Execution stays a human
+decision.
+
 ## Running it
 
 ```bash
