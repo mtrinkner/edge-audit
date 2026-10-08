@@ -48,3 +48,5 @@ data/xs_panel.parquet
 
 !reports/cap_spectrum.csv
 data/spreads.parquet
+
+!reports/portfolio.csv

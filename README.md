@@ -12,17 +12,31 @@ the one you found, and it is willing to tell you no. It has told me no 202 times
 ## The finding
 
 I tested whether any of a long list of signals could beat the index after costs.
-None of them could.
+None of them could. The best-looking one turned out not to be a signal at all.
 
 | | Best strategy found | Just buying SPY |
 |---|---|---|
 | Sharpe ratio | **0.65** | **0.91** |
 | t-statistic | 2.29 | — |
-| Probability it is real, after 202 trials | **0.018** | — |
+| Probability it is real, after 206 trials | **0.018** | — |
+| **Sharpe after removing beta, size and momentum** | **-0.17** | — |
 
-The best thing in the project is post-earnings drift in large caps. It is the
-only result that ever cleared a t-statistic of 2, and it still loses to buying
-the index and still fails its own trial-count correction.
+That last row is the real result. The best thing in this project was
+post-earnings drift in large caps, the only book that ever cleared a
+t-statistic of 2. Then I regressed the signal against factor exposures and the
+return went to zero and through it:
+
+| Large-cap book | Sharpe | t |
+|---|---|---|
+| As measured | 0.34 | 1.21 |
+| Minus market beta | **-0.05** | -0.19 |
+| Minus momentum | 0.08 | 0.28 |
+| Minus beta, size, momentum | **-0.17** | -0.60 |
+
+The earnings score correlates +0.104 with 126-day momentum. Companies that beat
+expectations have usually already gone up, so "surprise" is partly measuring
+price momentum wearing a different name. Strip the factor tilts and there is no
+independent alpha underneath.
 
 That is the whole answer. Everything below is how I know it is not a bug, bad
 luck, or me fooling myself.
@@ -93,6 +107,8 @@ Every one of these was declared with a written hypothesis before it ran.
 | 12 | Four quality fixes to the earnings sleeve | All four made it worse |
 | 13 | Regime-conditioning the fundamentals | Negative in all four regimes |
 | 14 | Down the cap spectrum, per-stock costs | Drift gets *weaker* down-cap |
+| 15 | Four portfolio constructions, signal held fixed | None beat the plain quintile sort |
+| 15 | Factor attribution of the best book | **The edge was beta and momentum. Residual is negative.** |
 
 ### Why breadth was the wrong lever
 
@@ -127,6 +143,24 @@ answer.
 Drift declines monotonically with size, and costs triple going down. Small caps
 lose on both terms at once. My guess at why: PEAD needs the consensus estimate to
 mean something, and small-cap consensus is three analysts rather than thirty.
+
+### Why better portfolio construction did not help
+
+The signal was held fixed and only the map from signal to positions changed:
+quintile sort, signal weighting, risk-adjusted weighting, and factor-neutral
+weighting. All three alternatives lost to the plain quintile sort.
+
+| Construction | Names held | Gross Sharpe | Net Sharpe | Cost drag |
+|---|---|---|---|---|
+| **Quintile, equal weight** | 546 | **0.56** | **0.39** | 0.48%/yr |
+| Signal weighted | 1,346 | 0.20 | 0.09 | 0.50%/yr |
+| Risk adjusted | 1,346 | 0.16 | 0.02 | 0.46%/yr |
+| Factor neutral + risk | 1,340 | -0.00 | -0.16 | 0.47%/yr |
+
+Cost drag is flat across all four, so trading more was not the explanation. The
+gross column is: spreading weight across the whole cross-section dilutes the
+signal, because only the extremes carry information. And the factor-neutral book
+goes to exactly zero gross, which is what sent me looking at attribution.
 
 ### Verifying the earnings data was point-in-time
 
