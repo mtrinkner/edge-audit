@@ -33,3 +33,5 @@ journal/logs/*.md
 
 # Signal zoo results are findings, not scratch output.
 !reports/signal_zoo.csv
+
+!reports/cross_sectional.csv

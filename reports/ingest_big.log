@@ -1,0 +1,33 @@
+ingest run 3: 515 symbols, 2014-01-01 to 2026-10-07
+  downloading 25 symbols: SPY..AKAM
+  downloading 25 symbols: ALB..APO
+  downloading 25 symbols: AAPL..TECH
+  downloading 25 symbols: BIIB..CASY
+  downloading 25 symbols: CAT..CMS
+  downloading 25 symbols: KO..DRI
+  downloading 25 symbols: DDOG..ECL
+  downloading 25 symbols: EIX..FDS
+  downloading 25 symbols: FICO..GEN
+  downloading 25 symbols: GNRC..HWM
+  downloading 25 symbols: HPQ..JBHT
+  downloading 25 symbols: JBL..LLY
+  downloading 25 symbols: LIN..MGM
+  downloading 25 symbols: MCHP..NTRS
+  downloading 25 symbols: NOC..PEP
+  downloading 25 symbols: PFE..RTX
+  downloading 25 symbols: O..SJM
+  downloading 25 symbols: SW..TSLA
+  downloading 25 symbols: TXN..UHS
+  downloading 25 symbols: VLO..WFC
+  downloading 15 symbols: WELL..ZTS
+  quarantined 1 rows failing OHLC checks
+
+loaded 1,578,202 rows for 515 symbols
+calendar: 3,209 trading days
+
+quality issues by type:
+severity  issue        
+error     ohlc_ordering       1
+warn      calendar_gap        2
+          extreme_move       57
+          zero_volume      3960
