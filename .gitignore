@@ -35,3 +35,6 @@ journal/logs/*.md
 !reports/signal_zoo.csv
 
 !reports/cross_sectional.csv
+
+data/xs_panel.parquet
+!reports/neutral_book.csv
