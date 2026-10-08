@@ -11,35 +11,41 @@ the one you found, and it is willing to tell you no. It has told me no 202 times
 
 ## The finding
 
-I tested whether any of a long list of signals could beat the index after costs.
-None of them could. The best-looking one turned out not to be a signal at all.
+I tested 212 strategies for an edge that beats the index after costs. Nothing
+cleared the bar. Two results are worth stating precisely, because they fail in
+different ways.
 
-| | Best strategy found | Just buying SPY |
-|---|---|---|
-| Sharpe ratio | **0.65** | **0.91** |
-| t-statistic | 2.29 | — |
-| Probability it is real, after 206 trials | **0.018** | — |
-| **Sharpe after removing beta, size and momentum** | **-0.17** | — |
+| | Short interest | Earnings drift | Just buying SPY |
+|---|---|---|---|
+| Sharpe, as measured | 0.51 | 0.34 | **0.91** |
+| **Sharpe, after removing beta, size, momentum** | **1.66** | **-0.17** | — |
+| t-statistic | 3.90 | -0.60 | — |
+| Independent observations | **22** | 50 | — |
+| Luck bar at 212 trials | 4.21 | 2.78 | — |
+| Deflated probability it is real | **0.052** | 0.009 | — |
 
-That last row is the real result. The best thing in this project was
-post-earnings drift in large caps, the only book that ever cleared a
-t-statistic of 2. Then I regressed the signal against factor exposures and the
-return went to zero and through it:
+**Earnings drift failed because it was never a signal.** It looked like the best
+thing here, the only book to clear a t-statistic of 2. Then I regressed it
+against factor exposures and the return went through zero: the earnings score
+correlates +0.104 with 126-day momentum, because companies that beat
+expectations have usually already gone up. Strip the tilts and nothing is
+underneath.
 
-| Large-cap book | Sharpe | t |
-|---|---|---|
-| As measured | 0.34 | 1.21 |
-| Minus market beta | **-0.05** | -0.19 |
-| Minus momentum | 0.08 | 0.28 |
-| Minus beta, size, momentum | **-0.17** | -0.60 |
+**Short interest failed on sample size, which is a different problem.** It is the
+only signal here whose return *grows* under factor neutralization, from 0.51 to
+1.66. It survived every attempt I made to break it: dropping the 2021 meme-squeeze
+era raised it to 1.69, starting from mid-2022 raised it to 2.03, the best five
+dates account for 2% of the return, and every one of six years is positive. But
+FINRA only retains short interest back to 2021, so there are 22 independent
+observations, and the luck threshold after 212 trials is 4.21.
 
-The earnings score correlates +0.104 with 126-day momentum. Companies that beat
-expectations have usually already gone up, so "surprise" is partly measuring
-price momentum wearing a different name. Strip the factor tilts and there is no
-independent alpha underneath.
+So it is not a finding. It is the one unfitted, literature-oriented rule that
+fails only on a problem time can solve, which is why it is frozen as `short_v2`
+and recording a forward book rather than being written up as a result.
 
-That is the whole answer. Everything below is how I know it is not a bug, bad
-luck, or me fooling myself.
+And note what the 1.66 is in dollars: **2.98% a year at 2.04% volatility.** High
+ratio, small return. Earning the index's 17.3% from it would need roughly 5.8x
+leverage, which is not modeled anywhere here.
 
 ## What it runs on
 
