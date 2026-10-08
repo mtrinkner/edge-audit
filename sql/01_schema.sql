@@ -206,3 +206,30 @@ CREATE TABLE IF NOT EXISTS earnings (
 
 CREATE INDEX IF NOT EXISTS idx_earnings_tradeable ON earnings(tradeable_from);
 CREATE INDEX IF NOT EXISTS idx_earnings_symbol ON earnings(symbol, tradeable_from);
+
+-- -------------------------------------------- SEC XBRL fundamentals
+-- Third data source, and the only one here with genuine as-filed history.
+--
+-- WHY THE PRIMARY KEY INCLUDES `filed`. Companies restate. The same fiscal
+-- quarter can be reported once in the original 10-Q and again, differently, in a
+-- later amendment. A backtest at date t must see the number that was public at
+-- t, not the corrected one published two years later. Keeping every (period,
+-- filing) pair makes that possible; collapsing to one row per period would
+-- silently substitute hindsight for history on exactly the companies where it
+-- matters most.
+CREATE TABLE IF NOT EXISTS fundamentals (
+    symbol        TEXT NOT NULL REFERENCES symbols(symbol),
+    concept       TEXT NOT NULL,
+    period_start  TEXT,
+    period_end    TEXT NOT NULL,
+    filed         TEXT NOT NULL,      -- the date this became public
+    val           REAL NOT NULL,
+    form          TEXT,
+    fy            INTEGER,
+    fp            TEXT,
+    run_id        INTEGER REFERENCES ingest_runs(run_id),
+    PRIMARY KEY (symbol, concept, period_end, filed)
+);
+
+CREATE INDEX IF NOT EXISTS idx_fund_lookup ON fundamentals(symbol, concept, filed);
+CREATE INDEX IF NOT EXISTS idx_fund_filed  ON fundamentals(filed);
