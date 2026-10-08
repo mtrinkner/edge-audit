@@ -1,5 +1,0 @@
-fetching the SEC ticker to CIK map
-  503/503 symbols matched to a CIK
-  25/503  rows=29,511  failed=0  50/503  rows=55,804  failed=0  75/503  rows=79,868  failed=0  100/503  rows=106,356  failed=0  125/503  rows=133,357  failed=0  150/503  rows=159,770  failed=0  175/503  rows=185,239  failed=0  200/503  rows=209,773  failed=0  225/503  rows=236,284  failed=0  250/503  rows=261,317  failed=0  275/503  rows=287,958  failed=0  300/503  rows=316,784  failed=0  325/503  rows=345,137  failed=0  350/503  rows=373,715  failed=0  375/503  rows=399,320  failed=0  400/503  rows=424,131  failed=0  425/503  rows=449,953  failed=0  450/503  rows=478,414  failed=0  475/503  rows=504,001  failed=0  500/503  rows=528,272  failed=0  503/503  rows=531,801  failed=0
-
-fundamentals: 453,279 facts, filed 2009-04-15 to 2026-10-08
