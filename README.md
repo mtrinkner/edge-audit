@@ -134,47 +134,26 @@ mirror leg does not is weak evidence, not a finding.
 ## The closest thing to an edge, and why it still is not one
 
 Having exhausted daily US equities, I went to a market with an explicit
-mechanism: perpetual swap funding. A perp never expires, so an hourly payment
-tethers it to spot. When the perp trades above spot, longs pay shorts. Holding a
-short perp against long spot is delta-neutral and collects that payment as a
-contractual cash flow, not a forecast.
-
-Hyperliquid serves hourly funding back to May 2023 (Binance and Bybit return 451
-and 403 from here; OKX retains only 100 days). 233,170 hourly prints, 16 liquid
-coins, 3.4 years.
-
-The gross carry is substantial and persistent:
+mechanism: perpetual swap funding. Short perp against long spot is
+delta-neutral and collects the funding payment as a contractual cash flow. Full
+write-up, code and data in [`crypto/`](crypto/).
 
 | | |
 |---|---|
-| Median annualized funding | **10.5%** |
-| Coins with positive mean | 81% |
-| Months positive | 71% |
-| Daily Sharpe | **7.11** |
+| Median coin, annualized funding | 10.0% |
+| ...of which the exchange's fixed interest constant | **11.0%** |
+| ...of which the market premium | **-0.9%** |
+| Per dollar of capital, in excess of T-bills | **4.0%** |
+| Monthly Sharpe of that excess | 0.87 vs a luck bar of 3.07 |
 
-**And a Sharpe of 7 is the clearest warning sign in this entire document.**
+The median coin's carry is a parameter Hyperliquid sets, not a price the market
+pays for leverage. All of the excess over T-bills arrived in 2024 (+12.3%). In
+2023, 2025 and 2026 it was -1.0%, +1.4% and +0.5%, with venue risk that no
+series prices.
 
-It is high because the measured variance is the wobble in a *cash flow*, not the
-risk of the trade. The actual risks are basis blowout between perp and spot,
-liquidation of the short leg in a squeeze, and the venue failing while holding
-your collateral. None of those appear in a funding series. A strategy whose risk
-is a rare total loss shows a magnificent Sharpe right up until it does not.
-
-On monthly observations the Sharpe is 1.56 against a luck bar of 3.07, deflated
-probability 0.089.
-
-**And it is decaying fast:**
-
-| Year | Annualized carry |
-|---|---|
-| 2023 | 7.1% |
-| 2024 | **23.5%** |
-| 2025 | 6.3% |
-| 2026 | **1.7%** |
-
-This is what a real risk premium looks like while it is being competed away. It
-was never a mispricing; it is the price of supplying leverage to levered longs,
-and more people are now willing to supply it.
+The first version of this section reported a daily Sharpe of 7.11 and 1.7% in
+2026. Both came from an ingest that silently truncated 9 of 16 coins when it was
+rate-limited, the same failure that killed short_v2.
 
 ## Where the money actually is
 
@@ -494,6 +473,7 @@ python/
   deflated_sharpe.py      what a candidate must beat, given how many you tried
   lockbox.py              data the search is not allowed to read
   freeze_model.py         pin a model with a hash; forward_run.py scores it monthly
+crypto/                   perpetual funding carry: ingest, data, analysis, own README
 sql/                      schema, features, labels, analysis views
 R/                        stationary bootstrap, Reality Check, figures
 tests/                    lookahead audit, ledger integrity, search controls
