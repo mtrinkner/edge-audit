@@ -57,6 +57,51 @@ which was the good stretch. A robustness check performed inside a truncated
 sample cannot detect that the truncation is the problem. No amount of further
 checking would have found this. Only more data did.
 
+## Testing a mechanism instead of a pattern
+
+Every signal above was a *pattern*: momentum, earnings surprise, short interest.
+The r/algotrading framing that reads best is that an edge should be *"a reason
+someone pays you"* — a participant who is structurally forced to transact at a
+bad price. So I tested one: when a stock joins the S&P 500, index funds must buy
+it on the effective date regardless of price.
+
+The headline result looked excellent and was almost entirely an artifact:
+
+| Window around the effective date | Abnormal return | t |
+|---|---|---|
+| -250 to -126 sessions | **+17.53%** | 7.14 |
+| -125 to -61 | +11.37% | 6.42 |
+| -60 to -21 | +10.61% | 5.19 |
+| -20 to -6 | +3.02% | 4.21 |
+| -5 to -1 | +1.36% | 3.25 |
+| **0 to +5** | **-0.79%** | **-2.09** |
+
+A forced buyer would move the price in the days around the event. This run-up
+stretches back a full year, which is not index funds — it is the selection rule.
+S&P adds companies *because* they already grew 17% over the prior year.
+
+The last row is the part a forced buyer could actually explain: a reversal once
+the buying stops. Shorting each addition for ten days after the effective date,
+market-adjusted and net of costs:
+
+| | |
+|---|---|
+| Mean per event | **+1.20%** |
+| t-statistic | **2.18** |
+| Event dates | 148 over 12.7 years |
+| Share positive | 55% |
+| Sharpe | 0.61 |
+| Luck bar at 218 trials | 1.63 |
+| Deflated probability | **0.041** |
+
+It does not decay across the sample — 2014-2017 +0.44%, 2018-2021 +1.47%,
+2022-2026 +1.80% — which is unusual for a published effect and the opposite of
+what the literature predicts. It still fails the bar.
+
+Two caveats that matter more than the t-statistic. The sample is only additions
+*still in the index today*, so it is survivorship-biased, though plausibly against
+the short rather than for it. And 12 events a year is not a business.
+
 ## Where the money actually is
 
 "Quant firms exist, so something must beat the index." True, and the public
