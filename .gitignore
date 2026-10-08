@@ -41,3 +41,7 @@ data/xs_panel.parquet
 
 !reports/earnings_book.csv
 !reports/combined_book.csv
+
+!reports/multi_source.csv
+!reports/earnings_v2.csv
+!reports/regime_test.csv

@@ -1,0 +1,20 @@
+  using cached panel (1,541,262 rows)
+
+  rows inside the 60-day drift window: 92.8%
+
+  v2a: sue + surprise, windowed: 2 signals ['sue', 'surprise_pct']
+  v2b: + event reaction: 3 signals ['sue', 'surprise_pct', 'event_reaction']
+  v2c: reaction only: 1 signals ['event_reaction']
+  v2d: sue x reaction sign: 3 signals ['sue', 'surprise_pct', 'sue_x_reaction']
+
+==============================================================================
+EARNINGS SLEEVE — v1 baseline vs v2 variants
+==============================================================================
+variant                             ret/yr     vol   Sharpe      t    maxDD
+v1 (previous best)                  +2.21%    7.3%     0.52   1.84     9.9%
+v2a: sue + surprise, windowed       +1.94%    6.4%     0.28   0.99    14.9%
+v2b: + event reaction               +1.47%    6.1%     0.16   0.55    17.5%
+v2c: reaction only                  +0.16%    4.8%    -0.21  -0.75    16.8%
+v2d: sue x reaction sign            +2.04%    6.6%     0.20   0.72    18.1%
+
+best v2: v2a: sue + surprise, windowed  Sharpe +0.280 (v1 was +0.52)
