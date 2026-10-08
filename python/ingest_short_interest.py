@@ -73,30 +73,40 @@ def main() -> int:
             (config.END_DATE.isoformat(), len(symbols)))
         run_id = cur.lastrowid
 
+    # PAGINATE BY MONTH, NOT BY OFFSET.
+    #
+    # The first version walked `offset` forward until the API returned nothing.
+    # The API caps how far an offset can reach, so it stopped early and silently,
+    # and the result looked like "FINRA only retains data back to 2021". It does
+    # not: the archive goes back to 2017-12-29. A silent truncation that looks
+    # like a data limitation is worse than an error, because it gets written into
+    # the README as a fact about the world.
+    #
+    # Querying one month at a time bounds every request to roughly two settlement
+    # dates times the symbol chunk, which always fits in a single page and never
+    # touches the offset cap.
     rows = []
     chunks = [symbols[i:i + args.chunk] for i in range(0, len(symbols), args.chunk)]
+    months = pd.date_range("2017-12-01", "2026-10-01", freq="MS")
     for ci, chunk in enumerate(chunks, 1):
-        offset = 0
-        while True:
-            payload = {
-                "limit": PAGE, "offset": offset,
+        for mi, m0 in enumerate(months):
+            m1 = m0 + pd.offsets.MonthEnd(1) + pd.Timedelta(days=1)
+            batch = post({
+                "limit": PAGE,
                 "domainFilters": [{"fieldName": "symbolCode", "values": chunk}],
                 "compareFilters": [
-                    {"fieldName": "settlementDate", "fieldValue": "2014-01-01",
+                    {"fieldName": "settlementDate",
+                     "fieldValue": (m0 - pd.Timedelta(days=1)).date().isoformat(),
                      "compareType": "GREATER"},
-                    {"fieldName": "settlementDate", "fieldValue": "2026-10-08",
-                     "compareType": "LESSER"}],
-            }
-            batch = post(payload)
-            if not batch:
-                break
-            rows.extend(batch)
-            print(f"\r  chunk {ci}/{len(chunks)}  offset {offset:>7}  "
-                  f"total {len(rows):,}", end="", flush=True)
-            if len(batch) < PAGE:
-                break
-            offset += PAGE
-            time.sleep(0.15)
+                    {"fieldName": "settlementDate",
+                     "fieldValue": m1.date().isoformat(), "compareType": "LESSER"}],
+            })
+            if batch:
+                rows.extend(batch)
+            if mi % 12 == 0:
+                print(f"\r  chunk {ci}/{len(chunks)}  {m0.date()}  total {len(rows):,}",
+                      end="", flush=True)
+            time.sleep(0.1)
     print()
 
     if not rows:

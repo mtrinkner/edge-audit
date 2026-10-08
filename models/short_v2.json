@@ -55,5 +55,17 @@
     "python/portfolio.py",
     "python/spread_estimator.py"
   ],
-  "code_sha256": "3dc29de6230d91d873beb89733517abd0d5913cc1150103b5c071961caeee7a9"
+  "code_sha256": "3dc29de6230d91d873beb89733517abd0d5913cc1150103b5c071961caeee7a9",
+  "REFUTED": {
+    "date": "2026-10-08",
+    "reason": "backtest sample was truncated by a pagination bug in the ingest. the API returns data to 2017-12-29; the first pull stopped at 2021-03 and that truncation was mistaken for a FINRA retention limit.",
+    "full_sample": {
+      "window": "2018-01 to 2026-07",
+      "sharpe": 0.24,
+      "t": 0.69,
+      "independent_observations": 34,
+      "max_dd": 0.0871
+    },
+    "status": "abandoned. the manifest is kept so the record shows what was frozen, what it claimed, and how it was refuted."
+  }
 }
