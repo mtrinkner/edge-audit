@@ -102,6 +102,35 @@ Two caveats that matter more than the t-statistic. The sample is only additions
 *still in the index today*, so it is survivorship-biased, though plausibly against
 the short rather than for it. And 12 events a year is not a business.
 
+### The symmetric test does not confirm it
+
+Deletions are the mirror experiment: index funds are forced to *sell*. Using
+historical constituent data (fja05680/sp500) there are 291 deletions in the
+window, but only 101 have usable bars, because the rest were acquired and the
+data vendor keeps nothing for delisted tickers. That exclusion is less damaging
+than it sounds — an acquired company's price is pinned to the deal terms, so
+there is no pressure reversal to measure either way.
+
+The pre-event side mirrors additions exactly, which confirms the selection story
+from the other direction:
+
+| Window | Additions | Deletions |
+|---|---|---|
+| -250 to -126 | +17.53% | **-15.93%** |
+| -125 to -61 | +11.37% | -13.04% |
+| -60 to -21 | +10.61% | -9.43% |
+| **0 to +5** | **-0.79% (t = -2.09)** | **+0.59% (t = 0.67)** |
+
+Same sign as predicted, half the significance. Combining both into one
+market-neutral event book — short additions, long deletions, 10-day hold — gives
+0.82% per event, t = 1.65, Sharpe 0.46 against a luck bar of 1.55 and a deflated
+probability of 0.025.
+
+So the addition reversal does not survive its own symmetric test. It may be real
+and underpowered at 101 deletion events, or the addition result may be the 218th
+thing I tried. The honest position is that one leg clearing t = 2 while the
+mirror leg does not is weak evidence, not a finding.
+
 ## Where the money actually is
 
 "Quant firms exist, so something must beat the index." True, and the public
