@@ -131,6 +131,51 @@ and underpowered at 101 deletion events, or the addition result may be the 218th
 thing I tried. The honest position is that one leg clearing t = 2 while the
 mirror leg does not is weak evidence, not a finding.
 
+## The closest thing to an edge, and why it still is not one
+
+Having exhausted daily US equities, I went to a market with an explicit
+mechanism: perpetual swap funding. A perp never expires, so an hourly payment
+tethers it to spot. When the perp trades above spot, longs pay shorts. Holding a
+short perp against long spot is delta-neutral and collects that payment as a
+contractual cash flow, not a forecast.
+
+Hyperliquid serves hourly funding back to May 2023 (Binance and Bybit return 451
+and 403 from here; OKX retains only 100 days). 233,170 hourly prints, 16 liquid
+coins, 3.4 years.
+
+The gross carry is substantial and persistent:
+
+| | |
+|---|---|
+| Median annualized funding | **10.5%** |
+| Coins with positive mean | 81% |
+| Months positive | 71% |
+| Daily Sharpe | **7.11** |
+
+**And a Sharpe of 7 is the clearest warning sign in this entire document.**
+
+It is high because the measured variance is the wobble in a *cash flow*, not the
+risk of the trade. The actual risks are basis blowout between perp and spot,
+liquidation of the short leg in a squeeze, and the venue failing while holding
+your collateral. None of those appear in a funding series. A strategy whose risk
+is a rare total loss shows a magnificent Sharpe right up until it does not.
+
+On monthly observations the Sharpe is 1.56 against a luck bar of 3.07, deflated
+probability 0.089.
+
+**And it is decaying fast:**
+
+| Year | Annualized carry |
+|---|---|
+| 2023 | 7.1% |
+| 2024 | **23.5%** |
+| 2025 | 6.3% |
+| 2026 | **1.7%** |
+
+This is what a real risk premium looks like while it is being competed away. It
+was never a mispricing; it is the price of supplying leverage to levered longs,
+and more people are now willing to supply it.
+
 ## Where the money actually is
 
 "Quant firms exist, so something must beat the index." True, and the public
