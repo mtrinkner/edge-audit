@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """OKX perpetual funding rates and prices for the cash-and-carry test.
 
-    python3 python/ingest_funding.py --top 40 --years 3
+    python3 crypto/ingest_okx.py --top 40 --years 3
 
 WHY THIS MARKET. Everything else in this project tried to predict a price. This
 does not. A perpetual swap has no expiry date, so the exchange tethers it to spot
@@ -34,11 +34,12 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pandas as pd
 
-import config
-import db
+DATA = Path(__file__).resolve().parent / "data"
+
 
 UA = {"User-Agent": "Mozilla/5.0 (edge-audit research)"}
 BASE = "https://www.okx.com/api/v5"
@@ -57,8 +58,11 @@ def get(path: str, retries: int = 3):
 
 def top_symbols(n: int) -> list[str]:
     tick = get("/market/tickers?instType=SWAP")
-    rows = [(t["instId"], float(t.get("volCcy24h") or 0)) for t in tick
-            if t["instId"].endswith("-USDT-SWAP")]
+    # volCcy24h is in coins, not dollars. Ranking on it alone puts sub-penny
+    # meme coins at the top and leaves BTC and ETH out entirely, which is what
+    # the first run of this did. Multiply by the last price to rank on notional.
+    rows = [(t["instId"], float(t.get("volCcy24h") or 0) * float(t.get("last") or 0))
+            for t in tick if t["instId"].endswith("-USDT-SWAP")]
     rows.sort(key=lambda x: -x[1])
     return [r[0] for r in rows[:n]]
 
@@ -113,11 +117,42 @@ def candles(inst: str, years: float) -> pd.DataFrame:
     return d[["inst", "ts", "open", "high", "low", "close", "vol"]]
 
 
+def basis(years: float) -> int:
+    """Daily perp and spot closes on OKX for the coins in the Hyperliquid funding
+    file. A delta-neutral carry earns funding but also marks the perp-spot spread
+    to market every day, and that spread is where the trade's actual risk lives."""
+    coins = sorted(pd.read_parquet(DATA / "hl_funding.parquet")
+                   ["coin"].unique())
+    frames = []
+    for i, c in enumerate(coins, 1):
+        p = candles(f"{c}-USDT-SWAP", years)
+        s = candles(f"{c}-USDT", years)
+        if p.empty or s.empty:
+            print(f"\n  {c}: not listed on OKX as both perp and spot, skipped")
+            continue
+        m = p[["ts", "close"]].merge(s[["ts", "close"]], on="ts", suffixes=("_perp", "_spot"))
+        m["coin"] = c
+        frames.append(m)
+        print(f"\r  {i}/{len(coins)} {c:<8}", end="", flush=True)
+    print()
+    b = pd.concat(frames, ignore_index=True).sort_values(["coin", "ts"])
+    b.to_parquet(DATA / "okx_basis.parquet", index=False)
+    print(f"basis: {len(b):,} coin-days, {b.coin.nunique()} coins, "
+          f"{b.ts.min().date()} to {b.ts.max().date()}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--top", type=int, default=40)
     ap.add_argument("--years", type=float, default=3.0)
+    ap.add_argument("--basis", action="store_true",
+                    help="only pull perp and spot candles for the Hyperliquid coins, "
+                         "to measure the basis the funding series leaves out")
     args = ap.parse_args()
+
+    if args.basis:
+        return basis(args.years)
 
     syms = top_symbols(args.top)
     print(f"{len(syms)} USDT perps by 24h volume; pulling {args.years}y of funding")
@@ -135,11 +170,11 @@ def main() -> int:
     fund = pd.concat([x for x in F if not x.empty], ignore_index=True)
     perp = pd.concat([x for x in P if not x.empty], ignore_index=True)
     spot = pd.concat([x for x in S if not x.empty], ignore_index=True)
-    out = config.DATA / "crypto"
+    out = DATA
     out.mkdir(exist_ok=True)
-    fund.to_parquet(out / "funding.parquet", index=False)
-    perp.to_parquet(out / "perp.parquet", index=False)
-    spot.to_parquet(out / "spot.parquet", index=False)
+    fund.to_parquet(out / "okx_funding.parquet", index=False)
+    perp.to_parquet(out / "okx_perp.parquet", index=False)
+    spot.to_parquet(out / "okx_spot.parquet", index=False)
     print(f"\nfunding {len(fund):,} prints, {fund.inst.nunique()} instruments, "
           f"{fund.ts.min().date()} to {fund.ts.max().date()}")
     print(f"perp    {len(perp):,} daily candles")

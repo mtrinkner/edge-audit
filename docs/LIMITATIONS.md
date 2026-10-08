@@ -110,3 +110,78 @@ point estimate, and why the conclusion rests on the statistical tests in
 It is also independent evidence for the main finding. A strategy with a real,
 robust edge does not reverse its outcome when the sixth decimal place of its
 inputs changes.
+
+---
+
+# Limitations found the hard way
+
+Everything above was written before the work. These were discovered during it,
+and several only came to light because something else went wrong first.
+
+## A silent truncation that read as a fact about the world
+
+The short-interest ingest walked an `offset` parameter forward until the API
+stopped returning rows. The API caps offsets, so it halted at 2021-03 and I wrote
+"FINRA only retains short interest back to 2021" into the README as though it
+were a property of FINRA. The archive goes back to 2017-12-29.
+
+That bug produced the project's most promising result. On the truncated sample
+the strategy showed a Sharpe of 1.66 with t = 3.90, and it survived every
+robustness check I could construct. On the full sample it is 0.24 with t = 0.69.
+
+**The lesson is structural and worth more than the result.** Dropping 2021 from a
+sample that *begins* in 2021 only moves the window to 2022-2026, which was the
+good stretch. A robustness check performed inside a truncated sample cannot
+detect that the truncation is the problem. No amount of further checking would
+have found this. Only more data did.
+
+## Measured variance is not always risk
+
+The crypto funding carry shows a daily Sharpe of 7.11. That number is arithmetic
+and meaningless: the variance being measured is the wobble in a contractual cash
+flow, not the risk of the position. The actual risks are basis blowout,
+liquidation of the short leg in a squeeze, and the venue failing while holding
+the collateral. None appear in a funding series.
+
+Any strategy whose risk is a rare total loss will show a magnificent Sharpe until
+it does not. A Sharpe above about 3 on a retail-accessible strategy should be
+treated as evidence that the wrong variance is being measured.
+
+## Survivorship, in two different directions
+
+Index **additions** are sampled only from names still in the index today, so the
+sample is biased toward additions that worked out. Index **deletions** are worse:
+only 101 of 291 have usable bars, because the rest were acquired and the data
+vendor keeps nothing for delisted tickers. Zero of ten delisted test cases
+returned any history.
+
+The deletion exclusion is less damaging than it looks, since an acquired
+company's price is pinned to deal terms and has no pressure reversal to measure.
+The addition bias plausibly runs *against* the short leg rather than for it. Both
+are stated rather than corrected, because they cannot be corrected with free data.
+
+## Vendor data that cannot be verified
+
+The earnings surprise figures come with no documentation of when the consensus
+estimate was set. Four tests support that they are genuinely pre-announcement
+(the surprise predicts the announcement-day move monotonically at +0.203, the
+day-0 move is 3.11x a normal day, and surprises do not cluster near zero). None
+of that is proof. A point-in-time estimate source would settle it and costs money.
+
+The 78.4% beat rate against 60-70% in the literature remains unexplained beyond
+"survivorship in a current-constituent universe".
+
+## The cost model is a model
+
+Corwin-Schultz estimated from daily OHLC was tried and rejected: it gives AAPL
+23bp against a real quoted spread near 1bp, because it conflates volatility with
+spread. The replacement uses a tick floor plus an inverse-square-root-of-volume
+term, anchored so large caps match a 2bp assumption. It is a reasonable shape
+fitted to two well-measured quantities, not a measurement. Everything down-cap
+depends on it.
+
+## What 226 trials actually established
+
+Not that no edge exists. That no edge was found in daily-frequency, liquid,
+retail-accessible markets using free data and this toolkit, and that the two
+things which looked like edges were a factor tilt and a sample artifact.

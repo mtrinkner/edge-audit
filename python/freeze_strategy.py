@@ -84,6 +84,47 @@ SPEC = {
         "implemented_by": ["python/alt_signals.py", "python/portfolio.py",
                            "python/spread_estimator.py"],
     }
+    ,
+    "index_v1": {
+        "description": "Short S&P 500 additions for ten sessions after the "
+                       "effective date, market-hedged",
+        "signal": {
+            "source": "S&P 500 membership changes, detected by diffing the "
+                      "constituent list",
+            "event": "a name joins the index",
+            "orientation": -1,
+            "comment": "index funds are forced to buy on the effective date. the "
+                       "pre-event run-up is SELECTION (it stretches back a full "
+                       "year, +17.5% from -250 to -126 sessions), not forced "
+                       "buying. the tradeable part is the reversal once the "
+                       "buying stops.",
+        },
+        "universe": {"members": "whatever joins the S&P 500", "min_adv_usd": 0},
+        "construction": {
+            "entry": "close of the first session on or after the effective date",
+            "holding_days": 10,
+            "hedge": "short the name, long SPY in equal dollar amount",
+            "sizing": "equal dollars per event",
+        },
+        "costs": {"model": "tick floor + inverse-sqrt-volume",
+                  "charged": "both sides of both legs"},
+        "backtest": {
+            "window": "2014-01 to 2026-09", "events": 148,
+            "mean_per_event": 0.0120, "t_stat": 2.18, "sharpe": 0.61,
+            "share_positive": 0.55,
+            "trials_registered_at_freeze": 226,
+            "luck_bar": 1.63, "deflated_probability": 0.041,
+            "verdict": "fails the bar. frozen anyway because it is the only "
+                       "result here with a mechanism that made a falsifiable "
+                       "prediction about SHAPE, and that prediction is what "
+                       "exposed the selection confound. the deletion leg does "
+                       "not confirm it (+0.59%, t=0.67 on 101 events), which is "
+                       "either low power or the honest answer.",
+        },
+        "live_sizing": {"gross_exposure_usd": 2_000,
+                        "comment": "about 12 events a year; this is a measurement"},
+        "implemented_by": ["python/spread_estimator.py"],
+    },
 }
 
 
@@ -124,9 +165,10 @@ def main() -> int:
 
     print(f"froze {args.version}")
     print(f"  {spec['description']}")
-    print(f"  backtest  Sharpe {spec['backtest']['sharpe']}, "
-          f"{spec['backtest']['independent_observations']} independent observations, "
-          f"deflated p {spec['backtest']['deflated_probability']}")
+    bt = spec["backtest"]
+    n = bt.get("independent_observations") or bt.get("events") or "?"
+    print(f"  backtest  Sharpe {bt['sharpe']}, {n} independent observations, "
+          f"deflated p {bt['deflated_probability']}")
     print(f"  sizing    ${spec['live_sizing']['gross_exposure_usd']:,} gross")
     print(f"  sha256    {manifest['code_sha256'][:40]}...")
     print(f"  manifest  {out}")

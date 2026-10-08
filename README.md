@@ -134,47 +134,26 @@ mirror leg does not is weak evidence, not a finding.
 ## The closest thing to an edge, and why it still is not one
 
 Having exhausted daily US equities, I went to a market with an explicit
-mechanism: perpetual swap funding. A perp never expires, so an hourly payment
-tethers it to spot. When the perp trades above spot, longs pay shorts. Holding a
-short perp against long spot is delta-neutral and collects that payment as a
-contractual cash flow, not a forecast.
-
-Hyperliquid serves hourly funding back to May 2023 (Binance and Bybit return 451
-and 403 from here; OKX retains only 100 days). 233,170 hourly prints, 16 liquid
-coins, 3.4 years.
-
-The gross carry is substantial and persistent:
+mechanism: perpetual swap funding. Short perp against long spot is
+delta-neutral and collects the funding payment as a contractual cash flow. Full
+write-up, code and data in [`crypto/`](crypto/).
 
 | | |
 |---|---|
-| Median annualized funding | **10.5%** |
-| Coins with positive mean | 81% |
-| Months positive | 71% |
-| Daily Sharpe | **7.11** |
+| Median coin, annualized funding | 10.0% |
+| ...of which the exchange's fixed interest constant | **11.0%** |
+| ...of which the market premium | **-0.9%** |
+| Per dollar of capital, in excess of T-bills | **4.0%** |
+| Monthly Sharpe of that excess | 0.87 vs a luck bar of 3.07 |
 
-**And a Sharpe of 7 is the clearest warning sign in this entire document.**
+The median coin's carry is a parameter Hyperliquid sets, not a price the market
+pays for leverage. All of the excess over T-bills arrived in 2024 (+12.3%). In
+2023, 2025 and 2026 it was -1.0%, +1.4% and +0.5%, with venue risk that no
+series prices.
 
-It is high because the measured variance is the wobble in a *cash flow*, not the
-risk of the trade. The actual risks are basis blowout between perp and spot,
-liquidation of the short leg in a squeeze, and the venue failing while holding
-your collateral. None of those appear in a funding series. A strategy whose risk
-is a rare total loss shows a magnificent Sharpe right up until it does not.
-
-On monthly observations the Sharpe is 1.56 against a luck bar of 3.07, deflated
-probability 0.089.
-
-**And it is decaying fast:**
-
-| Year | Annualized carry |
-|---|---|
-| 2023 | 7.1% |
-| 2024 | **23.5%** |
-| 2025 | 6.3% |
-| 2026 | **1.7%** |
-
-This is what a real risk premium looks like while it is being competed away. It
-was never a mispricing; it is the price of supplying leverage to levered longs,
-and more people are now willing to supply it.
+The first version of this section reported a daily Sharpe of 7.11 and 1.7% in
+2026. Both came from an ingest that silently truncated 9 of 16 coins when it was
+rate-limited, the same failure that killed short_v2.
 
 ## Where the money actually is
 
@@ -382,54 +361,55 @@ this.
 - **An estimator that did not measure what I needed.** Corwin-Schultz gives AAPL
   23bp against a real spread near 1bp. Thrown out rather than scaled.
 
-## Something finally survived
+## Short interest: the one that got away
 
-Every signal above residualized to nothing against beta, size and momentum. So I
-added two sources that are not functions of past prices at all: SEC Form 4
-insider filings (523,953 open-market trades, 2014-2026) and FINRA short interest
-(105,000 observations).
+Short interest was the only signal whose return *grew* under factor
+neutralization — 0.51 as measured, 1.66 residualized, t = 3.90. It survived every
+robustness check: dropping the 2021 meme-squeeze era raised it to 1.69, starting
+from mid-2022 raised it to 2.03, the best five dates were 2% of the return, and
+all six years were positive.
 
-| Signal | As measured | After removing beta, size, momentum | t |
-|---|---|---|---|
-| **Short interest ratio** | 0.51 | **1.66** | **3.90** |
-| Days to cover | 0.51 | 1.64 | 3.84 |
-| Insider buy intensity | -0.35 | -0.38 | -1.34 |
-| Insider net flow | 0.15 | -0.21 | -0.74 |
-| Earnings surprise *(previous best)* | 0.34 | -0.17 | -0.60 |
+Then I went looking for more observations and found the API returns data back to
+2017-12-29, not 2021-03. My ingest had walked an offset parameter forward until
+the API stopped returning rows; the API caps offsets, so it halted early and
+silently. I had written that truncation into this README as a fact about FINRA's
+retention policy.
 
-Short interest is the first signal in this project whose return **grows** under
-factor neutralization. That direction makes sense: heavily shorted names tend to
-be high-beta, smaller and poor-momentum, so a book that shorts them is implicitly
-short those factors, which was a losing bet in this bull market. Removing the
-tilts reveals the effect underneath.
+Before pulling the longer history I recorded a pre-commitment in the ledger:
+whatever the full sample says is the answer, no keeping the better window.
 
-I then tried to break it:
+| | 2021-2026 | 2018-2026 |
+|---|---|---|
+| Independent observations | 22 | **34** |
+| Sharpe | 1.66 | **0.24** |
+| t-statistic | 3.90 | **0.69** |
+| Max drawdown | 1.53% | **8.71%** |
 
-| Attempt | Result |
-|---|---|
-| Drop 2021 entirely (the meme-squeeze era) | 1.69, t=3.58 |
-| Start from mid-2022 | **2.03**, t=4.06 |
-| Is it a handful of dates? | Best 5 dates are 2% of the return |
-| Share of periods positive | 74%, and every one of six years |
+2018 was -0.44, 2019 +0.95, 2020 -0.54. The entire result lived in the window I
+happened to have. `short_v2` is abandoned; its manifest is kept and marked
+REFUTED so the record shows what was frozen, what it claimed, and how it died.
 
-It survives all of it. **And it still does not clear the bar.**
+**The structural lesson outlives the result.** Dropping 2021 from a sample that
+*begins* in 2021 only moves the window to 2022-2026, which was the good stretch.
+A robustness check performed inside a truncated sample cannot detect that the
+truncation is the problem. More checking would never have found this. More data
+did.
 
-| | Sharpe | Independent obs | Luck bar at 212 trials | Deflated p |
-|---|---|---|---|---|
-| Full sample | 1.66 | 22 | 4.21 | 0.052 |
-| From mid-2022 | 2.03 | 16 | 4.94 | 0.060 |
+## What is actually running
 
-FINRA's API only retains short interest back to 2021, which leaves 22
-non-overlapping observations at a 63-day horizon. The luck threshold scales with
-1/sqrt(n), so a genuinely good-looking result on five years of data cannot outrun
-212 trials. This is the correct answer, not a disappointing one: the machinery is
-refusing to call something real on 22 observations, which is exactly what it was
-built to do.
+`index_v1` is frozen and recording monthly: short each new S&P 500 addition for
+ten sessions after the effective date, hedged with SPY. It is the only candidate
+with a mechanism that made a falsifiable prediction about the *shape* of its
+effect, and testing that prediction is what exposed the selection confound in the
+headline version. It fails its own luck bar (0.61 against 1.63, deflated p 0.041)
+and is frozen anyway, because the objection against it is sample size and that is
+the one objection time answers.
 
-It is, however, the first result worth putting in the lockbox and forward-testing
-rather than abandoning.
+`v1`, the gradient-boosting price model, keeps running as a **control** rather
+than a candidate: its signal residualizes to -0.17, so if it and `index_v1` drift
+upward together that is evidence the market did it rather than either signal.
 
-## Frozen and running forward
+### How a frozen rule-based strategy differs from a frozen model
 
 Short interest is the first result worth locking rather than abandoning, so it is
 frozen as `short_v2` and its book is recorded monthly before outcomes exist.
@@ -494,6 +474,7 @@ python/
   deflated_sharpe.py      what a candidate must beat, given how many you tried
   lockbox.py              data the search is not allowed to read
   freeze_model.py         pin a model with a hash; forward_run.py scores it monthly
+crypto/                   perpetual funding carry: ingest, data, analysis, own README
 sql/                      schema, features, labels, analysis views
 R/                        stationary bootstrap, Reality Check, figures
 tests/                    lookahead audit, ledger integrity, search controls
@@ -511,3 +492,24 @@ that does not document when they were set.
 
 A research exercise. It connects to no broker, places no orders, and its central
 finding is that the strategies it studied do not beat the index.
+
+## Résumé summary
+
+> **Edge Audit** — Python, SQL, R, Excel
+> Built a research pipeline that backtests trading strategies and then audits
+> whether the edge is real. Ingested five independent point-in-time data sources
+> (4.4M daily bars across 1,500 equities, 113K earnings announcements, 453K
+> as-filed SEC XBRL facts keyed on filing date, 524K insider transactions, 287K
+> short-interest observations). Engineered features in SQL window functions and
+> proved the pipeline leak-free with a truncation-rebuild audit. **Tested 226
+> strategies, logged before each run, and found none that survives: the best was a
+> factor tilt in disguise (+0.34 to -0.17 after neutralizing beta, size and
+> momentum) and the second-best fell from a 1.66 Sharpe to 0.24 once a pagination
+> bug in my own ingest was fixed and the sample doubled.**
+
+One-bullet version:
+
+> - Built a backtesting pipeline that audits its own results across five data
+>   sources: 226 strategies tested and logged before each run so a lucky one can't
+>   pass as real; the best looked like a 1.66 Sharpe until fixing a bug in my own
+>   data pull doubled the sample and took it to 0.24

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Hyperliquid perpetual funding history: the carry trade's raw material.
 
-    python3 python/ingest_hl_funding.py --coins 25
+    python3 crypto/ingest_hl_funding.py --coins 25
 
 OKX's public funding endpoint retains about a hundred days, which is not enough
 to test anything. Binance and Bybit return 451 and 403 from this location.
@@ -30,26 +30,33 @@ import json
 import sys
 import time
 import urllib.request
+from pathlib import Path
 
 import pandas as pd
 
-import config
+DATA = Path(__file__).resolve().parent / "data"
+
 
 URL = "https://api.hyperliquid.xyz/info"
 UA = {"User-Agent": "edge-audit research", "Content-Type": "application/json"}
 START_MS = 1683849600000          # 2023-05-12, the start of available history
 
 
-def post(payload: dict, retries: int = 3):
+def post(payload: dict, retries: int = 6):
+    # Raise rather than return an empty list. The first version returned [] after
+    # three failures, and the pagination loop read that as "no more history" and
+    # stopped. Rate limiting cut nine of sixteen coins off at an exact multiple of
+    # 500 rows, AVAX after 44 days, and nothing said so.
     for a in range(retries):
         try:
             req = urllib.request.Request(URL, data=json.dumps(payload).encode(),
                                          headers=UA, method="POST")
             with urllib.request.urlopen(req, timeout=90) as f:
                 return json.loads(f.read().decode())
-        except Exception:
-            time.sleep(1.0 * (a + 1))
-    return []
+        except Exception as e:
+            err = e
+            time.sleep(2.0 * 2 ** a)
+    raise RuntimeError(f"Hyperliquid request failed after {retries} tries: {err}")
 
 
 def universe(n: int) -> list[str]:
@@ -79,7 +86,7 @@ def funding(coin: str) -> pd.DataFrame:
         if len(b) < 500 or last <= start:
             break
         start = last + 1
-        time.sleep(0.06)
+        time.sleep(0.25)
     if not out:
         return pd.DataFrame()
     d = pd.DataFrame(out).drop_duplicates("time")
@@ -93,9 +100,15 @@ def funding(coin: str) -> pd.DataFrame:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--coins", type=int, default=25)
+    ap.add_argument("--same-coins", action="store_true",
+                    help="re-pull the coins already in hl_funding.parquet rather than "
+                         "today's volume leaders, so a re-pull tests the same hypothesis")
     args = ap.parse_args()
 
-    syms = universe(args.coins)
+    if args.same_coins:
+        syms = sorted(pd.read_parquet(DATA / "hl_funding.parquet")["coin"].unique())
+    else:
+        syms = universe(args.coins)
     if not syms:
         print("could not read the Hyperliquid universe", file=sys.stderr)
         return 1
@@ -106,12 +119,15 @@ def main() -> int:
         d = funding(c)
         if not d.empty:
             frames.append(d)
+            if d.ts.max() < pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=1):
+                print(f"\n  {c}: history ends {d.ts.max().date()}, check it was delisted "
+                      f"and not truncated")
         print(f"\r  {i}/{len(syms)} {c:<10} rows={sum(len(x) for x in frames):,}",
               end="", flush=True)
     print()
 
     f = pd.concat(frames, ignore_index=True)
-    out = config.DATA / "crypto"
+    out = DATA
     out.mkdir(exist_ok=True)
     f.to_parquet(out / "hl_funding.parquet", index=False)
     print(f"\nfunding: {len(f):,} hourly prints, {f.coin.nunique()} coins, "

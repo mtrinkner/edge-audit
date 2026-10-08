@@ -55,3 +55,6 @@ data/spreads.parquet
 # output, not results. The CSVs under reports/ are the findings and stay.
 reports/*.log
 reports/*.rds
+
+data/sp500_snapshot.json
+data/crypto/

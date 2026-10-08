@@ -76,6 +76,24 @@ def main() -> int:
             [PY, "python/ingest_bars.py", flag])
 
     if "sql" in order:
+        # STALENESS GUARD. The materialized feature tables are derived from bars
+        # and silently go stale when the universe grows. That happened: `bars`
+        # reached 1,512 symbols while `features` still held 515, and the
+        # lookahead audit failed with a row-count mismatch that looked like a
+        # leak. It was not a leak, it was staleness, and the only reason it was
+        # caught is that the audit compares a fresh rebuild against the stored
+        # tables. This prints the gap before the rebuild so it is visible.
+        import sqlite3 as _s
+        _c = _s.connect(ROOT / "data" / "warehouse.db")
+        try:
+            _b = _c.execute("SELECT COUNT(DISTINCT symbol) FROM bars").fetchone()[0]
+            _f = _c.execute("SELECT COUNT(DISTINCT symbol) FROM features").fetchone()[0]
+            if _b != _f:
+                print(f"\n  note: bars has {_b} symbols, features has {_f}. "
+                      f"rebuilding brings them into line.")
+        except Exception:
+            pass
+        _c.close()
         timings["sql"] = run_sql(
             "STAGE 2  schema, features, materialization, labels",
             ["01_schema.sql", "02_features.sql", "03_materialize.sql", "04_labels.sql"])
