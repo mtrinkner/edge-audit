@@ -1,0 +1,22 @@
+  4,394,148 bars, 1499 symbols
+  insider trades: 523,953 -> 519,027 after market-price valuation
+  short interest: 105,000 observations from 2021-03-29
+  coverage: inside=100%  inside=100%  inside=100%  short=45%  short=45%  days=45%
+
+====================================================================================
+INSIDER AND SHORT-INTEREST SIGNALS — as measured, and factor-neutralized
+====================================================================================
+signal                          from  AS-IS Sh      t  RESIDUAL Sh      t  survives?
+short_ratio               2021-03-29      0.51   1.20         1.66   3.90        YES
+days_to_cover             2021-03-29      0.51   1.19         1.64   3.84        YES
+short_change              2021-03-29      0.15   0.35         0.01   0.02         no
+insider_net_flow          2014-03-03      0.15   0.51        -0.21  -0.74         no
+insider_buyer_breadth     2014-03-03     -0.35  -1.23        -0.24  -0.84         no
+insider_buy_intensity     2014-03-03     -0.35  -1.23        -0.38  -1.34         no
+
+For comparison, the previous best book (earnings surprise, large caps):
+earnings sue+surprise        2014-01      0.34   1.21        -0.17  -0.60         no
+
+A signal that keeps its Sharpe through the residual column is measuring
+something beta, size and momentum do not already explain. Nothing in this
+project has managed that yet.

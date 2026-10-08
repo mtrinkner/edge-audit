@@ -204,6 +204,53 @@ this.
 - **An estimator that did not measure what I needed.** Corwin-Schultz gives AAPL
   23bp against a real spread near 1bp. Thrown out rather than scaled.
 
+## Something finally survived
+
+Every signal above residualized to nothing against beta, size and momentum. So I
+added two sources that are not functions of past prices at all: SEC Form 4
+insider filings (523,953 open-market trades, 2014-2026) and FINRA short interest
+(105,000 observations).
+
+| Signal | As measured | After removing beta, size, momentum | t |
+|---|---|---|---|
+| **Short interest ratio** | 0.51 | **1.66** | **3.90** |
+| Days to cover | 0.51 | 1.64 | 3.84 |
+| Insider buy intensity | -0.35 | -0.38 | -1.34 |
+| Insider net flow | 0.15 | -0.21 | -0.74 |
+| Earnings surprise *(previous best)* | 0.34 | -0.17 | -0.60 |
+
+Short interest is the first signal in this project whose return **grows** under
+factor neutralization. That direction makes sense: heavily shorted names tend to
+be high-beta, smaller and poor-momentum, so a book that shorts them is implicitly
+short those factors, which was a losing bet in this bull market. Removing the
+tilts reveals the effect underneath.
+
+I then tried to break it:
+
+| Attempt | Result |
+|---|---|
+| Drop 2021 entirely (the meme-squeeze era) | 1.69, t=3.58 |
+| Start from mid-2022 | **2.03**, t=4.06 |
+| Is it a handful of dates? | Best 5 dates are 2% of the return |
+| Share of periods positive | 74%, and every one of six years |
+
+It survives all of it. **And it still does not clear the bar.**
+
+| | Sharpe | Independent obs | Luck bar at 212 trials | Deflated p |
+|---|---|---|---|---|
+| Full sample | 1.66 | 22 | 4.21 | 0.052 |
+| From mid-2022 | 2.03 | 16 | 4.94 | 0.060 |
+
+FINRA's API only retains short interest back to 2021, which leaves 22
+non-overlapping observations at a 63-day horizon. The luck threshold scales with
+1/sqrt(n), so a genuinely good-looking result on five years of data cannot outrun
+212 trials. This is the correct answer, not a disappointing one: the machinery is
+refusing to call something real on 22 observations, which is exactly what it was
+built to do.
+
+It is, however, the first result worth putting in the lockbox and forward-testing
+rather than abandoning.
+
 ## Running it
 
 ```bash
