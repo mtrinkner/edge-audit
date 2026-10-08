@@ -12,40 +12,50 @@ the one you found, and it is willing to tell you no. It has told me no 202 times
 ## The finding
 
 I tested 212 strategies for an edge that beats the index after costs. Nothing
-cleared the bar. Two results are worth stating precisely, because they fail in
-different ways.
+cleared the bar. Three results, and what makes the project worth reading is how
+each one died.
 
 | | Short interest | Earnings drift | Just buying SPY |
 |---|---|---|---|
-| Sharpe, as measured | 0.51 | 0.34 | **0.91** |
-| **Sharpe, after removing beta, size, momentum** | **1.66** | **-0.17** | — |
-| t-statistic | 3.90 | -0.60 | — |
-| Independent observations | **22** | 50 | — |
-| Luck bar at 212 trials | 4.21 | 2.78 | — |
-| Deflated probability it is real | **0.052** | 0.009 | — |
+| Sharpe, best window | 1.66 | 0.34 | **0.91** |
+| **Sharpe, full sample / factor-neutral** | **0.24** | **-0.17** | 0.91 |
+| t-statistic | 0.69 | -0.60 | — |
+| Independent observations | 34 | 50 | — |
+| Deflated probability it is real | 0.005 | 0.009 | — |
 
-**Earnings drift failed because it was never a signal.** It looked like the best
-thing here, the only book to clear a t-statistic of 2. Then I regressed it
-against factor exposures and the return went through zero: the earnings score
-correlates +0.104 with 126-day momentum, because companies that beat
-expectations have usually already gone up. Strip the tilts and nothing is
-underneath.
+**Earnings drift was never a signal.** It looked like the best thing here, the
+only book to clear a t-statistic of 2. Then I regressed it against factor
+exposures and the return went through zero: the score correlates +0.104 with
+126-day momentum, because companies that beat expectations have usually already
+gone up. Strip the tilts and nothing is underneath.
 
-**Short interest failed on sample size, which is a different problem.** It is the
-only signal here whose return *grows* under factor neutralization, from 0.51 to
-1.66. It survived every attempt I made to break it: dropping the 2021 meme-squeeze
-era raised it to 1.69, starting from mid-2022 raised it to 2.03, the best five
-dates account for 2% of the return, and every one of six years is positive. But
-FINRA only retains short interest back to 2021, so there are 22 independent
-observations, and the luck threshold after 212 trials is 4.21.
+**Short interest was a truncated sample.** It was the only signal whose return
+*grew* under factor neutralization, 0.51 to 1.66, and it survived every
+robustness check I could construct. I froze it, recorded a 603-name book, and
+went looking for more observations.
 
-So it is not a finding. It is the one unfitted, literature-oriented rule that
-fails only on a problem time can solve, which is why it is frozen as `short_v2`
-and recording a forward book rather than being written up as a result.
+The API returned data back to 2017-12-29. My first ingest had walked the offset
+parameter forward until the API stopped returning rows; the API caps offsets, so
+it halted early and silently at 2021-03. I had written that truncation into this
+README as a fact about FINRA's retention policy.
 
-And note what the 1.66 is in dollars: **2.98% a year at 2.04% volatility.** High
-ratio, small return. Earning the index's 17.3% from it would need roughly 5.8x
-leverage, which is not modeled anywhere here.
+Before pulling the longer history I recorded a pre-commitment in the ledger:
+whatever the full sample says is the answer, with no keeping the window that
+looks better. It says 0.24.
+
+| | 2021-2026 | 2018-2026 |
+|---|---|---|
+| Sharpe | 1.66 | **0.24** |
+| t-statistic | 3.90 | **0.69** |
+| Max drawdown | 1.53% | **8.71%** |
+
+2018 was -0.44, 2019 +0.95, 2020 -0.54. The entire result lived in 2021-2026.
+
+**The lesson worth keeping** is why the robustness checks all passed. Dropping
+2021 from a sample that *begins* in 2021 only moves the window to 2022-2026,
+which was the good stretch. A robustness check performed inside a truncated
+sample cannot detect that the truncation is the problem. No amount of further
+checking would have found this. Only more data did.
 
 ## What it runs on
 
