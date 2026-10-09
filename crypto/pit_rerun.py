@@ -40,7 +40,7 @@ def daily() -> pd.DataFrame:
     f["day"] = f["ts"].dt.floor("D")
     d = f.groupby(["coin", "day"]).agg(rate=("rate", "sum"), interest=("interest", "sum"),
                                        premium=("premium", "last")).reset_index()
-    c = pd.read_parquet(DATA / "hl_candles.parquet")[["coin", "day", "close", "delisted"]]
+    c = pd.read_parquet(DATA / "hl_candles.parquet")[["coin", "day", "close", "high", "delisted"]]
     d = d.merge(c, on=["coin", "day"], how="inner").sort_values(["coin", "day"])
     g = d.groupby("coin")
     d["ret"] = g["close"].pct_change()

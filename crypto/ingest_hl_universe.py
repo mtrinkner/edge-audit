@@ -3,6 +3,7 @@
 
     python3 crypto/ingest_hl_universe.py
     python3 crypto/ingest_hl_universe.py --funding-only   # resume the slow part
+    python3 crypto/ingest_hl_universe.py --candles-only   # refresh candles, keep the universe
 
 Strategies 20-22 ran on today's 16 volume leaders. That is a universe of
 survivors: a coin is a leader today partly because it went up, and its funding
@@ -46,9 +47,11 @@ def candles(coin: str) -> pd.DataFrame:
     d = pd.DataFrame(c)
     d["day"] = pd.to_datetime(d["t"].astype("int64"), unit="ms", utc=True)
     d["close"] = d["c"].astype(float)
+    # The high is what liquidates a short perp, and a daily close never shows it.
+    d["high"] = d["h"].astype(float)
     d["notional"] = d["v"].astype(float) * d["close"]
     d["coin"] = coin
-    return d[["coin", "day", "close", "notional"]]
+    return d[["coin", "day", "close", "high", "notional"]]
 
 
 def universe(c: pd.DataFrame) -> pd.DataFrame:
@@ -88,6 +91,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--funding-only", action="store_true",
                     help="reuse the saved candles and universe, pull only funding")
+    ap.add_argument("--candles-only", action="store_true",
+                    help="re-pull candles without rebuilding the universe or funding")
     args = ap.parse_args()
 
     if args.funding_only:
@@ -109,6 +114,8 @@ def main() -> int:
         c.to_parquet(DATA / "hl_candles.parquet", index=False)
         print(f"candles: {len(c):,} coin-days, {c.coin.nunique()} coins")
 
+        if args.candles_only:
+            return 0
         u = universe(c)
         u.to_parquet(DATA / "hl_universe.parquet", index=False)
         ever = sorted(u["coin"].unique())

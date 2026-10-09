@@ -52,6 +52,95 @@ The precommitment said the point-in-time numbers replace the survivor numbers
 whichever way they went. One went up, so it's reported going up. The sections
 below are the original 16-coin results, kept as the record.
 
+## Out-of-sample validation: it doesn't hold up
+
+The 1.92 above was then put through a validation protocol fixed in the registry
+before anything ran (`validate.py`). The pass bar for the goal of a defensible
+out-of-sample Sharpe of at least 1.5 required all three of: a holdout Sharpe
+after liquidations of 1.5 or more, a probabilistic Sharpe above zero of 0.95,
+and a walk-forward Sharpe of 1.5 or more.
+
+**The holdout.** The rule was conceived on 16 survivor coins. The other 94 coins
+in the point-in-time universe played no part in forming it, so they are a true
+out-of-sample cross-section.
+
+| Strategy 21 (30d, weekly, 3x) | Sharpe |
+|---|---|
+| All coins, as previously reported | 1.92 |
+| ...charging the daily margin top-up, a real cost the first model skipped | 1.66 |
+| Seen coins only | 1.64 |
+| **Holdout coins, before liquidations** | **1.70** |
+| Holdout, liquidation penalty 2% | 1.02 |
+| **Holdout, liquidation penalty 5% (precommitted headline)** | **-0.24** |
+| Holdout, liquidation penalty 10% | -1.81 |
+
+**The signal generalizes.** Coins that never shaped the idea give 1.70, the same
+as the coins that did. Walk-forward lookback selection (each quarter, pick from
+7, 14, 30 or 60 days on the trailing year) gives 1.73 against 1.82 for the fixed
+30 days. So the parameters aren't overfit, and tuning them adds nothing.
+
+**The trade's Sharpe is set by margin management, not by the signal.** A short
+perp at 3x, managed at the daily close, gets liquidated whenever the day's high
+clears the prior close by 30%. On the holdout that happened 3.1 times per
+coin-year (0.6 at 2x, 14 at 5x). Depending on the cost per liquidation, the
+Sharpe runs from 1.02 to -1.81, and that cost can't be measured from this data.
+Under the base case the bootstrap 90% interval is -1.39 to 0.84. Adding venue
+failure (losing the perp margin, 1% to 5% a year) moves the median only from
+-0.26 to -0.39, but the chance of a 20% drawdown goes from 1% to 17%.
+
+**And it is decaying.** Before liquidations, the holdout earned 12.1% excess in
+2023-24 and 1.9% in 2025-26.
+
+| Criterion | Result |
+|---|---|
+| Holdout Sharpe after liquidations >= 1.5 | **fail** (-0.24) |
+| PSR(SR > 0) >= 0.95 | **fail** (0.33) |
+| Walk-forward >= 1.5 | pass (1.73), but computed without liquidations |
+
+## Strategy 24: engineering the risk
+
+Declared before running, designed only on the seen coins, judged only on the
+holdout with 5% liquidations. Eight variants: equal or inverse-volatility
+sizing, 2x or 3x leverage, and a stablecoin-supply regime gate (on-chain,
+DefiLlama: carry off when 30-day supply growth is negative).
+
+| Variant (holdout, 5% liquidations) | Excess | Sharpe | PSR > 1.5 |
+|---|---|---|---|
+| Equal, 2x, no gate | 4.6% | **1.42** | 0.39 |
+| **Inverse-vol, 2x, no gate (primary)** | 3.8% | **1.24** | 0.19 |
+| Equal, 3x, no gate | -0.8% | -0.24 | 0.00 |
+| Gated variants | | 0.1 to 0.2 lower than ungated, every time | |
+
+- **Leverage is the only lever that works.** Going from 3x to 2x cuts
+  liquidations fivefold and takes equal weight from -0.24 to 1.42.
+- **Inverse-vol sizing hurt.** Low-volatility coins carry less funding, so
+  de-risking them cut the return more than the risk.
+- **The stablecoin gate hurt every variant.** Funding itself is a better
+  real-time measure of leverage demand than the collateral behind it.
+- **The primary decays to zero:** 7.8% excess and Sharpe 1.93 in 2023-24,
+  0.1% and Sharpe 0.13 in 2025-26.
+
+Deflated p for the primary is 0.23 against the 19 crypto trials and 0.04
+against all 304 in the repo. **Nothing here clears a defensible out-of-sample
+1.5.**
+
+## What would actually move it
+
+- **Margin architecture is the strategy.** A portfolio-margin account where the
+  spot leg collateralizes the short perp removes the liquidation tail. Before
+  liquidations the holdout is 1.70, and 1.60 even in 2025-26, but on 1.9%
+  excess that is a high Sharpe on a tiny return. That is a venue and execution
+  question this data can't answer.
+- **Cross-venue dispersion** is how a desk would run this. Short the perp where
+  funding is rich and long it where it is cheap, with no spot leg and no
+  exposure to the exchange's interest constant. dYdX v4 serves public hourly
+  funding back to late 2023 across 296 markets, so it can be tested against
+  Hyperliquid.
+- **Forward data** is the only cure for the decay question, and it accrues one
+  week at a time.
+- **Not available free:** historical order flow and open interest. Hyperliquid
+  serves only recent trades, and Coinglass and Coinalyze need paid keys.
+
 ## Result (16 survivors)
 
 | | |
@@ -204,7 +293,9 @@ python3 crypto/funding_carry.py                    # the analysis
 python3 crypto/carry_switch.py                     # strategy 21, switched on trailing funding
 python3 crypto/funding_crowding.py                 # strategy 22, funding as a crowding signal
 python3 crypto/ingest_hl_universe.py               # point-in-time universe, ~1 hour, resumable
-python3 crypto/pit_rerun.py                        # 20, 21, 22 on that universe (the headline)
+python3 crypto/pit_rerun.py                        # 20, 21, 22 on that universe
+python3 crypto/ingest_stablecoins.py               # DefiLlama total stablecoin supply
+python3 crypto/validate.py                         # holdout, liquidations, PSR, bootstrap, strategy 24
 ```
 
 The data the numbers come from is committed in `data/`.
@@ -217,6 +308,7 @@ The data the numbers come from is committed in `data/`.
 | `hl_candles.parquet` | Hyperliquid daily perp candles, all 234 coins in meta, delisted included |
 | `hl_universe.parquet` | weekly top 20 by trailing 30-day volume, point in time |
 | `hl_funding_pit.parquet` | hourly funding for the 109 coins that ever made the top 20 |
+| `stablecoins.parquet` | DefiLlama total stablecoin supply, daily since 2017 |
 | `okx_funding/perp/spot.parquet` | the original OKX pull: 100 days of funding, top 40 by coin count (see below) |
 
 ## Limits

@@ -147,6 +147,14 @@ On a point-in-time universe (each week's top 20 Hyperliquid perps by volume,
 | **Switched: hold a coin only while its trailing funding beats T-bills** | **7.6%** | **1.92** |
 | Luck bar at 232 trials | | 3.17 |
 
+**Out of sample it fails.** On 94 coins that played no part in forming the
+idea, the switched carry scores 1.70 before liquidations, so the signal
+generalizes. But a 3x short perp managed at the daily close is liquidated 3.1
+times per coin-year, and with a 5% cost per liquidation the Sharpe is -0.24.
+Cutting leverage to 2x is the only fix that worked (1.42). Volatility sizing
+and an on-chain stablecoin regime gate both made it worse. The excess also
+decays, from 12.1% in 2023-24 to 1.9% in 2025-26.
+
 The median coin's carry is mostly a parameter Hyperliquid sets: an 11% interest
 constant, with a market premium of about zero on top. The switched version is
 the strongest risk-adjusted result outside the forward test. It's positive in
