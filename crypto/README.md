@@ -37,6 +37,49 @@ the rate and can change it. It tells you nothing about demand for leverage.
 demand, with a market leg of +12.2%. The other three years pay roughly what
 T-bills pay, with venue risk on top.
 
+## Switching it on and off (strategy 21)
+
+If all the excess is 2024, could a rule that only looks backward have known it
+was in 2024? Funding is persistent, so I declared one before running it. For
+each coin, hold the carry only while its trailing funding, scaled to capital,
+beats the T-bill yield. Otherwise hold T-bills. Every switch pays the cost of
+trading out of or into both legs. There were four variants, and the primary was
+named in advance.
+
+| | Excess over T-bills | Monthly Sharpe | Worst month | Time on |
+|---|---|---|---|---|
+| Always on (strategy 20) | 4.0% | 0.87 | -2.4% | 100% |
+| **30-day lookback, weekly (primary)** | **5.9%** | **1.71** | -0.2% | 64% |
+| 30-day, monthly | 5.4% | 1.60 | -0.3% | 63% |
+| 7-day, weekly | 5.7% | 1.54 | -0.3% | 66% |
+| 7-day, monthly | 5.5% | 1.55 | -0.3% | 65% |
+
+The luck bar at 228 trials is 3.08. The primary's deflated p is 0.11.
+
+It isn't lookahead. Letting the rule peek one week ahead gives 6.5%. Delaying
+it 7, 14 and 30 days gives 5.3%, 4.8% and 4.2%, a smooth decay toward
+always-on, which is what a real but modest persistence effect looks like.
+
+**But the prediction was wrong about where the gain comes from.**
+
+| Year | Always on | Switched |
+|---|---|---|
+| 2023 | -1.0% | **+8.9%** |
+| 2024 | 12.3% | 11.6% |
+| 2025 | 1.4% | 1.9% |
+| 2026 | 0.5% | 1.1% |
+
+The prediction was that the rule would sit out 2025 and 2026. It can't. The 11%
+interest constant, scaled to capital, is 8.25% on its own, which clears T-bills,
+so the rule stays on while the negative market leg bleeds the position down to
+about 1%. The whole improvement is in 2023, and most of that is two coins: SUI
+and AVAX went through long stretches of negative funding that cost the
+always-on book 8.0% and 4.2%, and the switch sat them out. That's a handful of
+episodes in a book of 5 to 7 coins, not a regime signal.
+
+The lesson to keep: the switch is sensible risk hygiene (don't pay funding you
+expected to receive), but it doesn't turn the carry into an edge.
+
 ## What the funding series cannot show
 
 Measured on OKX daily perp and spot closes for the same 16 coins:
@@ -80,6 +123,7 @@ python3 crypto/ingest_hl_funding.py --same-coins   # Hyperliquid hourly funding
 python3 crypto/ingest_okx.py --basis               # OKX perp + spot closes, same coins
 python3 crypto/ingest_tbill.py                     # 3-month T-bill (FRED DTB3)
 python3 crypto/funding_carry.py                    # the analysis
+python3 crypto/carry_switch.py                     # strategy 21, switched on trailing funding
 ```
 
 The data the numbers come from is committed in `data/`.
