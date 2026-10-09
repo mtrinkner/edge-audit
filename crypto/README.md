@@ -80,6 +80,38 @@ episodes in a book of 5 to 7 coins, not a regime signal.
 The lesson to keep: the switch is sensible risk hygiene (don't pay funding you
 expected to receive), but it doesn't turn the carry into an edge.
 
+## Funding as a crowding signal (strategy 22)
+
+The crypto-research story is that high funding means a crowded, fragile long
+side, so high-funding coins should underperform. That predicts price, which is
+a different claim from collecting funding. A book that shorts high-funding perps
+also collects their funding, so the P&L is split. The claim stands or falls on
+the price part.
+
+| Weekly book | Price | Funding | Costs | Net | IC (t) |
+|---|---|---|---|---|---|
+| **Cross-sectional, 7-day (primary)** | **-88.0%** | +15.9% | -6.8% | -78.9% | +0.06 (2.15) |
+| Cross-sectional, 30-day | -77.0% | +15.9% | -2.9% | -64.0% | +0.07 (2.03) |
+| Time-series, 7-day | -21.6% | +9.4% | -1.9% | -14.1% | +0.06 (2.22) |
+| Time-series, 30-day | -27.0% | +8.2% | -1.0% | -19.8% | +0.07 (2.17) |
+
+Annualized, per $1 long and $1 short. The hypothesis predicted a negative IC.
+
+**The sign is wrong.** High funding was followed by *higher* returns, and all
+four variants lose. I'm not flipping it into "buy high funding":
+
+- **77% of the loss comes from 10 weeks**, mostly the December 2023 to January
+  2024 alt rally, when crowded coins kept rising. The worst week cost 49% of the
+  book. That's the squeeze risk of shorting the crowd, which is exactly the side
+  this bet took.
+- **It fades as the survivorship bias is removed.** The universe is today's
+  volume leaders, and many of them pumped while crowded. Dropping coins listed
+  after mid-2024 gives t = 1.99. The 6 oldest coins alone give IC +0.045,
+  t = 1.18, not significant.
+
+Reversing the trade now would be a hypothesis chosen after seeing the answer,
+tested on a universe built from winners.
+
 ## What the funding series cannot show
 
 Measured on OKX daily perp and spot closes for the same 16 coins:
@@ -124,6 +156,7 @@ python3 crypto/ingest_okx.py --basis               # OKX perp + spot closes, sam
 python3 crypto/ingest_tbill.py                     # 3-month T-bill (FRED DTB3)
 python3 crypto/funding_carry.py                    # the analysis
 python3 crypto/carry_switch.py                     # strategy 21, switched on trailing funding
+python3 crypto/funding_crowding.py                 # strategy 22, funding as a crowding signal
 ```
 
 The data the numbers come from is committed in `data/`.

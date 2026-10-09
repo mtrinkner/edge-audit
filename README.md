@@ -155,6 +155,12 @@ Switching each coin on only while its trailing funding beats T-bills lifts the
 excess to 5.9%, but the gain is mostly two coins avoided in 2023, not a regime
 signal (monthly Sharpe 1.71 against a bar of 3.08).
 
+Using funding the other way, as a crowding signal that should predict lower
+prices, got the sign wrong: high-funding coins kept rising, and the
+long-low/short-high book lost 88% a year on price. That reversal is mostly ten
+rally weeks and survivorship in a universe of today's winners, so it isn't an
+edge either.
+
 The first version of this section reported a daily Sharpe of 7.11 and 1.7% in
 2026. Both came from an ingest that silently truncated 9 of 16 coins when it was
 rate-limited, the same failure that killed short_v2.
