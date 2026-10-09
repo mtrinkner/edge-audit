@@ -138,32 +138,29 @@ mechanism: perpetual swap funding. Short perp against long spot is
 delta-neutral and collects the funding payment as a contractual cash flow. Full
 write-up, code and data in [`crypto/`](crypto/).
 
-| | |
-|---|---|
-| Median coin, annualized funding | 10.0% |
-| ...of which the exchange's fixed interest constant | **11.0%** |
-| ...of which the market premium | **-0.9%** |
-| Per dollar of capital, in excess of T-bills | **4.0%** |
-| Monthly Sharpe of that excess | 0.87 vs a luck bar of 3.07 |
+On a point-in-time universe (each week's top 20 Hyperliquid perps by volume,
+109 coins, 14 since delisted):
 
-The median coin's carry is a parameter Hyperliquid sets, not a price the market
-pays for leverage. All of the excess over T-bills arrived in 2024 (+12.3%). In
-2023, 2025 and 2026 it was -1.0%, +1.4% and +0.5%, with venue risk that no
-series prices.
+| | Excess over T-bills | Monthly Sharpe |
+|---|---|---|
+| Always-on carry | 3.0% | 0.51 |
+| **Switched: hold a coin only while its trailing funding beats T-bills** | **7.6%** | **1.92** |
+| Luck bar at 232 trials | | 3.17 |
 
-Switching each coin on only while its trailing funding beats T-bills lifts the
-excess to 5.9%, but the gain is mostly two coins avoided in 2023, not a regime
-signal (monthly Sharpe 1.71 against a bar of 3.08).
+The median coin's carry is mostly a parameter Hyperliquid sets: an 11% interest
+constant, with a market premium of about zero on top. The switched version is
+the strongest risk-adjusted result outside the forward test. It's positive in
+every year and broad across coins, but it still doesn't clear the bar, and its
+low volatility is the wobble of a cash flow, not the risk of a trade whose real
+tail is a squeeze or a venue failing.
 
-Using funding the other way, as a crowding signal that should predict lower
-prices, got the sign wrong: high-funding coins kept rising, and the
-long-low/short-high book lost 88% a year on price. That reversal is mostly ten
-rally weeks and survivorship in a universe of today's winners, so it isn't an
-edge either.
+Using funding as a crowding signal that predicts lower prices is nothing: an
+IC of 0.0001 once the coins that later disappeared are put back.
 
-The first version of this section reported a daily Sharpe of 7.11 and 1.7% in
-2026. Both came from an ingest that silently truncated 9 of 16 coins when it was
-rate-limited, the same failure that killed short_v2.
+Three bugs were found on the way, each of which had produced a published
+number. A rate-limited ingest silently truncated 9 of 16 coins (the same
+failure that killed short_v2), 8-hourly prints were annualized as hourly, and a
+universe of today's survivors had manufactured a crowding signal with t = 2.15.
 
 ## Where the money actually is
 

@@ -1,12 +1,58 @@
 # Crypto: perpetual funding carry
 
-Strategy 20 in the registry. Everything in the rest of this repo tried to
-predict a price. This doesn't. A perpetual swap never expires, so the exchange
-ties it to spot with a periodic funding payment: when the perp trades above
-spot, longs pay shorts. Short perp against long spot is delta-neutral and
+Strategies 20 to 22 in the registry. Everything in the rest of this repo tried
+to predict a price. The carry doesn't. A perpetual swap never expires, so the
+exchange ties it to spot with a periodic funding payment: when the perp trades
+above spot, longs pay shorts. Short perp against long spot is delta-neutral and
 collects that payment as a contractual cash flow.
 
-## Result
+## Headline: a universe without survivors
+
+All three tests first ran on today's 16 Hyperliquid volume leaders, which is a
+universe of survivors. The headline numbers below come from a point-in-time
+universe instead: each week, the top 20 listed perps by trailing 30-day
+Hyperliquid volume, using only data from before that week, delisted coins
+included. That's 109 coins over 178 weeks, 14 of them since delisted (FTT,
+MATIC, OM, TON, ...), and 2.4M hourly funding prints. Basis comes from
+Hyperliquid's own premium field, because delisted coins have no OKX spot. The
+universe rule was fixed in the registry before anything was pulled.
+
+| | 16 survivors | **Point-in-time** |
+|---|---|---|
+| 20: always-on carry, excess over T-bills | 4.0%, Sharpe 0.87 | **3.0%, Sharpe 0.51** |
+| 21: switched on trailing funding | 5.9%, Sharpe 1.71 | **7.6%, Sharpe 1.92** |
+| 22: funding as a crowding signal, IC (t) | +0.06 (2.15) | **+0.0001 (0.00)** |
+
+Excess is per dollar of capital, after costs. Sharpes are monthly. The luck bar
+is 3.17.
+
+| Year | 20 always on | 21 switched |
+|---|---|---|
+| 2023 | -8.5% | +8.4% |
+| 2024 | +15.8% | +15.5% |
+| 2025 | +1.4% | +3.4% |
+| 2026 | -2.0% | +1.9% |
+
+- **Survivorship was flattering the carry.** On the wider universe, always-on
+  pays 3.0% over T-bills, and 2026 is negative.
+- **Survivorship had manufactured the crowding result.** Strategy 22's IC was
+  zero once the coins that later disappeared were back in. Funding says nothing
+  about next week's return in either direction.
+- **The switched carry got stronger, and the gain is broad.** 62 of 109 coins
+  contribute, the top five are 36% of it, and delisted coins add 0.4 points.
+  Without the top five it's still 7.5% with a Sharpe of 1.94. A wider universe
+  has more coins whose funding goes negative, and the rule's job is to stop
+  paying on them. That makes it the best risk-adjusted result in this repo
+  outside the forward test. It still doesn't clear the bar (deflated p 0.135),
+  and its Sharpe is low-variance for the same reason strategy 20's daily Sharpe
+  was 7: the volatility is the wobble in a cash flow, and the risk is a tail
+  (squeeze, venue failure) that no series contains.
+
+The precommitment said the point-in-time numbers replace the survivor numbers
+whichever way they went. One went up, so it's reported going up. The sections
+below are the original 16-coin results, kept as the record.
+
+## Result (16 survivors)
 
 | | |
 |---|---|
@@ -37,7 +83,7 @@ the rate and can change it. It tells you nothing about demand for leverage.
 demand, with a market leg of +12.2%. The other three years pay roughly what
 T-bills pay, with venue risk on top.
 
-## Switching it on and off (strategy 21)
+## Switching it on and off (strategy 21, 16 survivors)
 
 If all the excess is 2024, could a rule that only looks backward have known it
 was in 2024? Funding is persistent, so I declared one before running it. For
@@ -80,7 +126,7 @@ episodes in a book of 5 to 7 coins, not a regime signal.
 The lesson to keep: the switch is sensible risk hygiene (don't pay funding you
 expected to receive), but it doesn't turn the carry into an edge.
 
-## Funding as a crowding signal (strategy 22)
+## Funding as a crowding signal (strategy 22, 16 survivors)
 
 The crypto-research story is that high funding means a crowded, fragile long
 side, so high-funding coins should underperform. That predicts price, which is
@@ -157,6 +203,8 @@ python3 crypto/ingest_tbill.py                     # 3-month T-bill (FRED DTB3)
 python3 crypto/funding_carry.py                    # the analysis
 python3 crypto/carry_switch.py                     # strategy 21, switched on trailing funding
 python3 crypto/funding_crowding.py                 # strategy 22, funding as a crowding signal
+python3 crypto/ingest_hl_universe.py               # point-in-time universe, ~1 hour, resumable
+python3 crypto/pit_rerun.py                        # 20, 21, 22 on that universe (the headline)
 ```
 
 The data the numbers come from is committed in `data/`.
@@ -166,13 +214,16 @@ The data the numbers come from is committed in `data/`.
 | `hl_funding.parquet` | Hyperliquid funding, 16 coins, 2023-05 to 2026-10 |
 | `okx_basis.parquet` | OKX daily perp and spot closes for those coins |
 | `tbill.parquet` | FRED DTB3 |
+| `hl_candles.parquet` | Hyperliquid daily perp candles, all 234 coins in meta, delisted included |
+| `hl_universe.parquet` | weekly top 20 by trailing 30-day volume, point in time |
+| `hl_funding_pit.parquet` | hourly funding for the 109 coins that ever made the top 20 |
 | `okx_funding/perp/spot.parquet` | the original OKX pull: 100 days of funding, top 40 by coin count (see below) |
 
 ## Limits
 
-- **Survivorship.** The 16 coins are today's Hyperliquid volume leaders. Coins
-  that were delisted or faded are missing, and today's leaders were probably
-  in demand, which means high funding, on the way up.
+- **Survivorship**, for the 16-coin sections. The headline fixes it as far as
+  Hyperliquid's API allows. Coins removed from its metadata entirely, if any,
+  are still missing, and so is anything that never listed there.
 - **Cross-venue.** Funding comes from Hyperliquid and basis from OKX. A real
   position would hold both legs on venues it can move collateral between.
 - **Costs.** Costs are a flat 8bp per leg, charged on entry and exit. Rebalancing
