@@ -136,7 +136,9 @@ mirror leg does not is weak evidence, not a finding.
 Having exhausted daily US equities, I went to a market with an explicit
 mechanism: perpetual swap funding. Short perp against long spot is
 delta-neutral and collects the funding payment as a contractual cash flow. Full
-write-up, code and data in [`crypto/`](crypto/).
+write-up, code and data now live in their own repo,
+[crypto-funding](https://github.com/mtrinkner/crypto-funding), which carries
+this registry's trial count forward.
 
 On a point-in-time universe (each week's top 20 Hyperliquid perps by volume,
 109 coins, 14 since delisted):
@@ -564,7 +566,6 @@ python/
   deflated_sharpe.py      what a candidate must beat, given how many you tried
   lockbox.py              data the search is not allowed to read
   freeze_model.py         pin a model with a hash; forward_run.py scores it monthly
-crypto/                   perpetual funding carry: ingest, data, analysis, own README
 sql/                      schema, features, labels, analysis views
 R/                        stationary bootstrap, Reality Check, figures
 tests/                    lookahead audit, ledger integrity, search controls
