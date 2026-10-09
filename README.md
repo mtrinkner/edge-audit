@@ -11,7 +11,7 @@ the one you found, and it is willing to tell you no. It has told me no 202 times
 
 ## The finding
 
-I tested 212 strategies for an edge that beats the index after costs. Nothing
+I tested 296 strategies for an edge that beats the index after costs. Nothing
 cleared the bar. Three results, and what makes the project worth reading is how
 each one died.
 
@@ -276,6 +276,7 @@ Every one of these was declared with a written hypothesis before it ran.
 | 14 | Down the cap spectrum, per-stock costs | Drift gets *weaker* down-cap |
 | 15 | Four portfolio constructions, signal held fixed | None beat the plain quintile sort |
 | 15 | Factor attribution of the best book | **The edge was beta and momentum. Residual is negative.** |
+| 23 | Effective breadth, 64 variants, 1,257 names/day | **Breadth saturates at 8 raw / 100 neutral. 0 of 64 cleared BH.** |
 
 ### Why breadth was the wrong lever
 
@@ -292,6 +293,80 @@ IR = IC x sqrt(breadth), so I went looking for independent data.
 Breadth more than doubled. Sharpe did not improve, because the added sleeves were
 negative. **More independent bets do not help when the new bets are bad bets.**
 The law has two terms and I had been treating breadth as the binding one.
+
+### Breadth, measured instead of assumed
+
+The section above counted breadth across *signals*. It never counted breadth
+across *names*, which is the term that actually appears in the law. So I measured
+it: the effective number of independent bets is the participation ratio of the
+return correlation eigenvalues,
+
+    N_eff = (sum of eigenvalues)^2 / sum of (eigenvalues squared)
+
+which equals N when names move independently and 1 when they move as one. Because
+the eigenvalues of a correlation matrix sum to N, this reduces to N^2 / sum(l^2),
+so one large market eigenvalue caps the whole thing no matter how many tickers
+get added. Measured on the 814 names with complete history over 3,190 sessions:
+
+| Universe N | N_eff, raw returns | N_eff, sector-neutral | as % of N |
+|---|---|---|---|
+| 50 | 6.9 | 38.4 | 76.8% |
+| 100 | 7.5 | 48.4 | 48.4% |
+| 200 | 7.9 | 69.9 | 34.9% |
+| 400 | 8.1 | 91.0 | 22.7% |
+| 800 | 8.3 | **100.2** | 12.5% |
+
+**An 800-name long-only book is 8 bets.** Raw breadth saturates almost
+immediately: going from 50 names to 800 moves it from 6.9 to 8.3. Everything
+beyond the first handful of names is buying the same market exposure again.
+
+Neutralization is the lever, and it is worth about **12x** (8.3 to 100). Adding
+750 names is worth about **1.2x**, and the marginal return collapses as it goes:
+the jump from 400 to 800 names bought 10% more effective breadth. That is the
+quantitative version of a thing that gets asserted constantly and almost never
+measured. Factor neutralization is usually sold as risk control. Its larger job
+is manufacturing breadth, and the cross-section is close to worthless without it.
+
+Then the obvious question: with breadth of 100 names times 12 rebalances a year,
+does anything here monetize it? No, and the reasons are specific.
+
+**The residualization works, which is why the result can be believed.** Each
+signal was regressed daily on beta, size, two momentum horizons, short-term
+reversal, volatility and sector. The variance it removed sorts exactly the way it
+should: 5-day reversal lost **92.6%**, low volatility 89.0%, 126-day momentum
+88.7%. The price scores largely *are* the factors. The non-price signals lost
+almost nothing: insider buying 1.6%, short interest change 1.6%, ROE 2.0%,
+standardized earnings surprise 2.2%. A regression that failed to absorb momentum
+would have invalidated the whole table, so this is the control, not a footnote.
+
+**Nothing survives the trial count.** 64 variants in one run. Benjamini-Hochberg
+at FDR 5%: **0 of 64**. The expected maximum |t| from 64 pure-noise tests is
+2.42, and only one signal beat it (52-week high, residualized, t=2.94), which
+then fails BH anyway. Best net Sharpe in the entire table is **0.18**. Eight of
+64 are positive at all, zero clear 0.5.
+
+**Costs are larger than the entire edge.** Median cost drag is **0.36 Sharpe
+units**. The largest predicted IR anywhere in the table is 0.62, and the median
+is far below the drag. At breadth 1,200 the IC needed just to pay for the trading
+is 0.0104, and the best residualized IC measured is 0.0179, which clears it only
+on paper: that signal's autocorrelation is 0.86, so its real independent breadth
+is nearer 89 than 1,200, and at that breadth it does not clear costs. Its
+realized net Sharpe is 0.00.
+
+**The law itself held up.** Median absolute gap between predicted IR and realized
+*gross* Sharpe across all 64 variants is **0.151**. IR = IC x sqrt(breadth) is a
+decent predictor on this data. It just predicts a number too small to survive
+costs. The constraint was never the formula, it was that costs scale with
+turnover while Sharpe scales with its square root.
+
+One thing that did not work: deflating breadth by signal persistence, using the
+AR(1) variance ratio (1-rho)/(1+rho), was supposed to close the predicted-versus-
+realized gap. It made the median fit slightly worse, 0.151 to 0.157. It explains
+the 52-week-high row specifically and fails as a general correction, and it is
+recorded here rather than dropped because it was a declared expectation.
+
+Registered as trial 23 with 64 variants **before** it ran. Trial count 232 to
+**296**, which raised the luck bar on everything above.
 
 ### Why small caps were the wrong lever
 
@@ -511,7 +586,7 @@ finding is that the strategies it studied do not beat the index.
 > (4.4M daily bars across 1,500 equities, 113K earnings announcements, 453K
 > as-filed SEC XBRL facts keyed on filing date, 524K insider transactions, 287K
 > short-interest observations). Engineered features in SQL window functions and
-> proved the pipeline leak-free with a truncation-rebuild audit. **Tested 226
+> proved the pipeline leak-free with a truncation-rebuild audit. **Tested 296
 > strategies, logged before each run, and found none that survives: the best was a
 > factor tilt in disguise (+0.34 to -0.17 after neutralizing beta, size and
 > momentum) and the second-best fell from a 1.66 Sharpe to 0.24 once a pagination
@@ -520,6 +595,6 @@ finding is that the strategies it studied do not beat the index.
 One-bullet version:
 
 > - Built a backtesting pipeline that audits its own results across five data
->   sources: 226 strategies tested and logged before each run so a lucky one can't
+>   sources: 296 strategies tested and logged before each run so a lucky one can't
 >   pass as real; the best looked like a 1.66 Sharpe until fixing a bug in my own
 >   data pull doubled the sample and took it to 0.24
