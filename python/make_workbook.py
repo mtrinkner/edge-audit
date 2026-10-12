@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 1 — generate the Excel workbook that is the human interface.
+"""Generate the Excel workbook that is the human interface.
 
     python3 python/make_workbook.py            # create, refusing to clobber
     python3 python/make_workbook.py --force    # recreate from scratch

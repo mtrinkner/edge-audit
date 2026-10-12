@@ -195,25 +195,3 @@ Longer version in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
 A research exercise. It connects to no broker, places no orders, and its central
 finding is that the strategies it studied do not beat the index.
-
-## Résumé summary
-
-> **Edge Audit** — Python, SQL, R, Excel
-> Built a research pipeline that backtests trading strategies and then audits
-> whether the edge is real. Ingested six independent point-in-time data sources
-> (4.4M daily bars across 1,500 equities, 102K federal contract actions, 113K
-> earnings announcements, 453K as-filed SEC XBRL facts keyed on filing date, 524K
-> insider transactions, 287K short-interest observations). Engineered features in
-> SQL window functions and proved the pipeline leak-free with a truncation-rebuild
-> audit. **Tested 340 strategies, logged before each run, and found none that
-> survives: the best was a factor tilt in disguise (+0.34 to -0.17 after
-> neutralizing beta, size and momentum) and the second-best fell from a 1.66
-> Sharpe to 0.24 once a pagination bug in my own ingest was fixed and the sample
-> doubled.**
-
-One-bullet version:
-
-> - Built a backtesting pipeline that audits its own results across six data
->   sources: 340 strategies tested and logged before each run so a lucky one can't
->   pass as real; the best looked like a 1.66 Sharpe until fixing a bug in my own
->   data pull doubled the sample and took it to 0.24

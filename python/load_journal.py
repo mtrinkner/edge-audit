@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 1 — load the validated Excel journal into the warehouse.
+"""Load the validated Excel journal into the warehouse.
 
     python3 python/load_journal.py
 

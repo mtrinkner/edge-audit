@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 4b — cost-aware portfolio backtest over the out-of-sample predictions.
+"""Cost-aware portfolio backtest over the out-of-sample predictions.
 
     python3 python/backtest.py --model gbm
     python3 python/backtest.py --model gbm --prob-threshold 0.55

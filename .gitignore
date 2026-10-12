@@ -74,3 +74,6 @@ data/crypto/
 
 # Per-coin resume cache for the funding pull; hl_funding_pit.parquet is the result.
 crypto/data/hl_funding_cache/
+
+# Private working notes, not part of the published project.
+notes/

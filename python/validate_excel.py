@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 1 — the data contract between Excel and the warehouse.
+"""The data contract between Excel and the warehouse.
 
     python3 python/validate_excel.py             # report problems, change nothing
     python3 python/validate_excel.py --strict    # exit 1 on warnings too

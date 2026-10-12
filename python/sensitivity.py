@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 5b — robustness: how much does the result depend on arbitrary choices?
+"""Robustness: how much does the result depend on arbitrary choices?
 
     python3 python/sensitivity.py
 

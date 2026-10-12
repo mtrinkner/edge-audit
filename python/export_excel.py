@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 6 — write results back into Excel for a non-technical reader.
+"""Write results back into Excel for a non-technical reader.
 
     python3 python/export_excel.py
 

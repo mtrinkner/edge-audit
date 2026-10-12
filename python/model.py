@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 4 — walk-forward modeling with honest evaluation.
+"""Walk-forward modeling with honest evaluation.
 
     python3 python/model.py
     python3 python/model.py --models logistic gbm --no-write

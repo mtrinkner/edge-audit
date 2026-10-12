@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Phase 2 — download daily bars and load them into the warehouse idempotently.
+"""Download daily bars and load them into the warehouse idempotently.
 
     python3 python/ingest_bars.py --snapshot      # the pinned bars, no network
     python3 python/ingest_bars.py --all           # fresh download
     python3 python/ingest_bars.py --symbols AAPL MSFT --start 2020-01-01
 
-Design points worth defending in an interview:
+Why it is built this way:
 
   * Idempotent. Re-running replays the same UPSERT and leaves row counts
     unchanged. Pipelines that create duplicates on retry cannot be trusted.
