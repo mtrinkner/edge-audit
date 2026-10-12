@@ -283,6 +283,21 @@ def oversold_in_uptrend(df):
 # ------------------------------------------------------------- the registry
 # name -> (function, kwargs). Parameter variants count as separate trials,
 # because trying 50/200 and then 20/100 is looking twice.
+#
+# TWO OF THESE 41 NAMES ARE THE SAME TEST TWICE, found by noticing that pairs of
+# rows in reports/ta_exits.csv had byte-identical trade counts and excess
+# returns:
+#
+#   bollinger_lower_touch == extreme_below_sma20
+#       both are close < sma(20) - 2*std(20). The same formula, written twice
+#       under two names.
+#   macd_cross_up == macd_hist_positive
+#       the code looks different but is algebraically the same. With h = m - sig,
+#       (h > 0) & (h.shift(1) <= 0) is exactly (m > sig) & (m.shift(1) <= sig.shift(1)).
+#
+# So 41 names are 39 distinct signals. They are LEFT IN rather than deleted, and
+# the trial count is not reduced, because a redundant look is still a look and
+# cutting the count after the fact is the move this project exists to prevent.
 SIGNALS: dict[str, tuple] = {
     "golden_cross_50_200": (golden_cross, {}),
     "golden_cross_20_100": (golden_cross, {"fast": 20, "slow": 100}),

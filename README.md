@@ -1,197 +1,197 @@
-# Edge Audit
+# Does Technical Analysis Work?
 
-**A backtester that tries to prove its own results wrong.**
+I tested **41 classic technical trading signals** on 12 years of US stock market
+data. Golden cross, death cross, support and resistance, nine candlestick
+patterns, RSI, MACD, Bollinger Bands, volume spikes, gaps.
 
-I tested 340 trading strategies against 12 years of US stock market data to find
-one that beats simply buying the S&P 500. **None of them did.** This repository
-is the evidence, including every time I fooled myself and caught it.
-
-Most backtesting projects are built to find a winning strategy. This one is built
-to check a winner you think you already have, and it is willing to say no.
+**13.5 million simulated trades.** Here is the answer.
 
 **Python · SQL · R · Excel**
 
 ---
 
-## The result
+## The answer
 
-| | Best it ever looked | What it actually is |
-|---|---|---|
-| Short interest | 1.66 Sharpe | **0.24** |
-| Earnings drift | 0.34 Sharpe | **-0.17** |
-| Contract awards | looked real on one year | **refuted** |
-| **Just buying SPY** | | **0.91** |
+**They make money. So does just owning the stock. The signal adds nothing.**
 
-Sharpe ratio measures return per unit of risk. Higher is better. The index
-returned 0.91 over this period, and nothing I built beat it once the mistakes
-were removed.
-
-## Why "nothing worked" is the finding, not a failure
-
-If you test enough strategies, one will look good by pure chance. This is the
-single most important idea in the project, and it is why the result is a real
-answer rather than a shrug.
-
-Here is how high a Sharpe ratio pure luck hands you, if you test strategies that
-have **zero** real edge:
-
-```
- strategies tested    best Sharpe you get from luck alone
-                 1                                  0.00
-                10                                  0.60
-               100                                  0.96     <- SPY itself was 0.91
-               340                                  1.12     <- where this project sits
-```
-
-Read the last line. Test 340 worthless ideas and the luckiest one posts a 1.12,
-which looks better than the index. So a backtest number means nothing on its own.
-What matters is whether it beats what luck would have given you at the number of
-things you tried.
-
-That is why every strategy here is **written down before it runs**, hypothesis
-first, and why abandoned attempts stay in the count forever. A 45-variant
-parameter sweep counts as 45 attempts, not 1.
-
-## The three that got closest, and what killed each
-
-**Short interest looked like a 1.66 Sharpe.** It passed every robustness check I
-could build. Then I found a bug in my own data download: it had silently stopped
-early and I was testing on half the available history. On the full sample it is
-**0.24**.
-
-> The lesson worth keeping: a robustness check run inside a truncated sample
-> cannot detect that the truncation is the problem. More checking would never
-> have found this. Only more data did.
-
-**Earnings drift looked like the real thing.** It was the only strategy to clear
-the usual statistical bar. Then I checked whether it was actually new information
-or just a repackaged version of things anyone can buy for free. Stripping out
-market exposure, company size and momentum took it from +0.34 to **-0.17**. It
-was momentum in a costume, because companies that beat expectations have usually
-already gone up.
-
-**Federal contract awards looked promising for one year.** Companies winning big
-government contracts seemed to rise beforehand, which fit a clean story. So I ran
-a control: the same companies, but on random dates instead of award dates. On the
-full sample of 26,643 awards, **the random dates performed better than the real
-ones.** The one-year result was noise from a handful of defense stocks during a
-defense rally.
-
-The full account of every candidate is in **[docs/FINDINGS.md](docs/FINDINGS.md)**.
-
-## The data
-
-Six sources, chosen because each is produced by a different process. Price
-history, analyst forecast error, audited financial statements, insider filings,
-short positioning and federal spending do not share a common failure mode.
-
-| Source | What it is | Size |
-|---|---|---|
-| Daily bars | prices for the S&P 500, 400 and 600 | 4.4M rows, 1,512 stocks |
-| Earnings | announcement surprise vs consensus | 112,850 events |
-| SEC filings | as-filed fundamentals, real filing dates | 453,279 facts |
-| Insider trades | SEC Form 4 purchases and sales | 523,953 trades |
-| Short interest | FINRA bi-monthly positioning | 287,490 observations |
-| Federal contracts | USAspending awards over $10M | 101,986 actions, $4.8tn |
-
-Every source is **point-in-time**: each row is tagged with the date that
-information became public, not the date it describes. Without this a backtest
-quietly trades on facts that had not been published yet.
-
-## How it checks itself
-
-1. **A test that proves there is no peeking at the future.** It chops the
-   database off at an old date, rebuilds every calculation from scratch, and
-   checks the answers come out identical. Anything secretly reading ahead fails.
-   It caught a real bug on its first run.
-2. **A count of every strategy ever tried**, hash-chained so the number cannot be
-   quietly reduced later.
-3. **Data the search is not allowed to read.** Sealed, and opening it is a
-   one-way door that gets recorded.
-4. **A forward test, not a re-run.** The model is frozen with a fingerprint and
-   scored on data that did not exist when it was frozen. Predictions are written
-   down before the outcomes exist.
-5. **Trading costs charged at each stock's own spread**, because applying
-   large-company costs to small companies invents profit out of an assumption.
-
-## Mistakes it caught in my own work
-
-Nine arithmetic errors, and every single one had made the results look **better**,
-never worse. That is not coincidence: a bad number gets moved past, a good number
-gets investigated, so the errors that survive are the flattering ones.
+Take the most famous one, the golden cross (50-day average crossing above the
+200-day):
 
 | | |
 |---|---|
-| A 14-day average computed from 13 days | silently inflated every signal |
-| Trading costs counted twice | and in another place, cancelled to zero |
-| Overlapping returns compounded as if sequential | produced a 100% drawdown |
-| 499 blank spreadsheet rows read as real trades | |
-| A "market-neutral" book carrying real market exposure | hedging it cut 0.52 to 0.36 |
+| Buy on the golden cross, use a stop and a target | **+0.54%** per trade |
+| Just buy the same stock and hold it the same number of days | **+0.62%** per trade |
+| **What the signal added** | **−0.08%** |
 
-Detail in [docs/FINDINGS.md](docs/FINDINGS.md).
+That pattern holds across almost all 41 signals:
 
-## What is running now
+| | |
+|---|---|
+| Signals that beat buy-and-hold | **4 of 41** |
+| Signals that lost to buy-and-hold | **37 of 41** |
+| Average amount the signal added | **−0.16%** per trade |
 
-`index_v1` is frozen and recording monthly: short each new addition to the S&P
-500 for ten sessions, hedged with the index. It is the only candidate whose
-explanation made a testable prediction about the *shape* of the effect, and
-testing that prediction is what exposed the flaw in the original version.
+Every one of these signals is profitable in isolation. That is what makes them
+convincing in a blog post. The profit is the stock going up, not the signal
+finding anything.
 
-It **fails its own luck bar** (0.61 against 1.12) and is frozen anyway, because
-the objection against it is sample size, and that is the one objection that time
-answers. At roughly 12 events a year it needs years before it says anything.
+## The one signal that is statistically reliable is a reliable loser
 
-`v1`, the machine learning price model, keeps running as a **control** rather
-than a candidate. Its signal is negative once market exposure is stripped out, so
-if both it and `index_v1` drift upward together, that is evidence the market did
-it rather than either strategy.
+Only one of the 41 survived a proper statistical test for multiple comparisons:
+`new_52w_high`, buying stocks at a 52-week high, at **p = 0.000**.
 
-Two strategies were **retired as refuted**: `short_v2` after the data bug, and
-the earnings model after the factor check.
+Its effect is **−0.05%**. It reliably does worse than holding.
 
-Nothing here connects to a broker, places an order, or holds credentials.
-Execution stays a human decision.
+## Why the stop is the problem
+
+Each trade uses a stop loss 2 ATR below entry and a profit target 3 ATR above,
+which is the textbook setup. ATR is a measure of how much a stock normally moves
+in a day, so the stop and target scale with the stock's own volatility.
+
+That sounds like favorable odds: risk 2 to make 3. Here is what actually happened
+across all 41 signals:
+
+```
+  stopped out      48% to 58% of trades
+  hit the target   41% to 47% of trades
+```
+
+**The stop fires more often than the target.** Risking 2 to make 3 only wins if
+you are right more than 40% of the time, and these signals are not. The stop
+cuts the winners short while holding lets them run.
+
+## The best-looking signals were the worst
+
+This was the most surprising result:
+
+| Signal | Profit per trade | Just holding | Signal added |
+|---|---|---|---|
+| `gap_up_2pct` | **+3.30%** | +4.03% | **−0.73%** |
+| `big_down_day` | **+2.69%** | +3.75% | **−1.06%** |
+| `volume_dryup` | +0.89% | +2.21% | **−1.33%** |
+| `donchian_break_55` | +0.15% | +0.18% | −0.03% |
+
+The signals with the biggest profits did the most damage. Buying a 2% gap up
+returns a healthy +3.30%, and it still loses 0.73% to doing nothing.
+
+The reason: these signals fire on **volatile days**. A volatile stock moves a lot
+in both directions, so the raw return looks big, and the stop gets hit before the
+move finishes. The signal is selecting volatility, not direction.
+
+## Why a high Sharpe ratio fooled me first
+
+My first version of this study ranked signals by **Sharpe ratio**, which measures
+return per unit of risk. `rsi_oversold_20` came out at **1.98**, far better than
+the S&P 500's 0.91. It looked like the best thing in the project.
+
+It was wrong for two reasons.
+
+**A Sharpe ratio is a rate, and you cannot spend a rate.** A strategy that sits
+in cash most of the time has very little volatility. Small return divided by tiny
+volatility is a big ratio. It was being rewarded for *not being in the market*.
+Its actual return was worse than buy-and-hold.
+
+**The 1.98 rested on six numbers.** The signal fired 154 times, but overlapping
+trades share the same market days, so there were only **6 genuinely independent
+observations** behind it. The honest confidence interval was **[−2.79, +6.75]**.
+
+That is why this project reports **excess return over buy-and-hold** as the
+headline number, and prints the independent observation count next to every
+result.
+
+## How I kept myself honest
+
+The hardest part of this kind of project is not the code. It is that if you test
+enough ideas, one will look good by pure chance.
+
+Here is how high a result pure luck gives you, if you test strategies with
+**zero** real edge:
+
+```
+ strategies tested    best result luck alone produces
+                 1                              0.00
+                10                              0.60
+               100                              0.96    <- the S&P 500 itself was 0.91
+               381                              1.13    <- where this project sits
+```
+
+Test 381 worthless ideas and the luckiest one looks better than the index. So
+five rules:
+
+1. **Every strategy is written down before it runs**, with the hypothesis stated
+   first. Abandoned attempts stay in the count forever.
+2. **The exit rules were fixed in advance and never tuned.** 2 ATR stop, 3 ATR
+   target, straight from the textbook. Searching for the best stop distance is
+   where technical strategies get overfit, so I did not search.
+3. **Ties go against me.** A daily bar cannot tell you whether the high or the
+   low came first. When one bar touched both the stop and the target, I assumed
+   the stop. Every number here is a lower bound.
+4. **A test that proves there is no peeking at the future.** It chops the
+   database off at an old date, rebuilds every calculation, and checks the
+   answers match. It caught a real bug the first time it ran.
+5. **Real trading costs**, charged at each individual stock's own estimated
+   spread, on both sides of every trade.
+
+## Mistakes this caught in my own work
+
+Every single arithmetic error I made had pushed the results to look **better**,
+never worse. That is not bad luck. A disappointing number gets accepted and moved
+past; a good number gets investigated. So the errors that survive are the
+flattering ones.
+
+| What broke | What it did |
+|---|---|
+| Minimum-trade filter applied per stock | **Deleted the golden cross entirely.** A crossover fires ~3 times per stock in 12 years, so it failed a 50-trade test everywhere and vanished with no error |
+| `NaN` is truthy in Python | Untested signals printed as passing the statistical test |
+| Spread model returns `NaN` for a stock's first 20 days | One `NaN` silently killed a whole signal's p-value |
+| A 14-day average computed from 13 days | inflated every signal |
+| Two signals were the same formula twice | 41 names are really 39 distinct tests |
+
+The duplicates are left in and the trial count was **not** reduced, because a
+redundant look is still a look.
 
 ## Run it
 
 ```bash
 python3 build.py --from ingest      # whole pipeline, pinned data, no network
-python3 python/forward_run.py       # the monthly pre-registered forward test
+python3 python/zoo.py               # 41 signals, fixed-horizon exits
+python3 python/ta_exits.py          # 41 signals, real stops and targets
 python3 python/registry.py status   # what have I tried, and what is the bar now
-python3 python/lockbox.py status    # what am I not allowed to look at
 ```
-
-The exact prices behind the published numbers are committed in
-`data/raw/bars_snapshot.csv.gz`, because data vendors quietly revise historical
-prices and a fresh download will not reproduce them.
 
 ## Layout
 
 ```
-python/     ingest, signals, portfolio construction, and the audit tools
-            registry.py          every strategy ever tried, hash-chained
-            deflated_sharpe.py   what a result must beat, given how many you tried
-            lockbox.py           data the search is not allowed to read
-            breadth.py           how many independent bets a portfolio really has
-sql/        schema, features, labels. Features and labels in separate files so
-            nothing that looks forward can leak into something that looks back
-R/          bootstrap tests and figures
+python/
+  signals.py        the 41 technical signals
+  zoo.py            tests them with fixed-horizon exits
+  ta_exits.py       tests them with real stops and targets, path by path
+  ingest_bars.py    daily price data, idempotent, quality checks stored as rows
+  registry.py       every strategy ever tried, hash-chained so it cannot shrink
+  deflated_sharpe.py  what a result must beat, given how many things you tried
+  lockbox.py        data the search is not allowed to look at
+sql/        schema and features. Anything forward-looking lives in a separate
+            file from anything backward-looking, so it cannot leak
 tests/      lookahead audit, ledger integrity, search controls (21 checks)
-docs/       FINDINGS.md, METHODOLOGY.md, LIMITATIONS.md
+reports/    the result tables, including ta_exits.csv behind every number above
 ```
 
 ## Honest limits
 
-- The stock universe is **today's** index members, so companies that went
+- **Daily data only.** Intraday patterns are untestable here, and a stop that
+  looks triggered on a daily bar might not have been.
+- **The stock universe is today's index members**, so companies that went
   bankrupt or were acquired are missing. This flatters results.
-- The data is daily, so nothing intraday is testable.
-- The cost model is an approximation of something that properly needs
-  trade-by-trade data.
-- Earnings estimates come from a vendor that does not document when they were set.
+- **One stop/target setting**, not a sweep. A different setting would give
+  different numbers. That is the point: I refused to go looking for the best one.
+- **Long only.** Short signals like the death cross are tested as long entries.
+- This project previously tested non-price data too, which is why the trial count
+  is 381 rather than 164. That search happened and the count reflects it.
 
-Longer version in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+Longer versions in [docs/LIMITATIONS.md](docs/LIMITATIONS.md) and
+[docs/METHODOLOGY.md](docs/METHODOLOGY.md).
 
 ## Not investment advice
 
 A research exercise. It connects to no broker, places no orders, and its central
-finding is that the strategies it studied do not beat the index.
+finding is that the strategies it studied do not beat simply holding the stock.

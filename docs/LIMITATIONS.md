@@ -115,6 +115,10 @@ inputs changes.
 
 # Limitations found the hard way
 
+Some of these were learned on data sources that are no longer part of this
+project, which is now technical analysis only. They are kept because the lesson
+is about method rather than about the particular dataset.
+
 Everything above was written before the work. These were discovered during it,
 and several only came to light because something else went wrong first.
 
@@ -180,7 +184,7 @@ term, anchored so large caps match a 2bp assumption. It is a reasonable shape
 fitted to two well-measured quantities, not a measurement. Everything down-cap
 depends on it.
 
-## What 226 trials actually established
+## What 381 trials actually established
 
 Not that no edge exists. That no edge was found in daily-frequency, liquid,
 retail-accessible markets using free data and this toolkit, and that the two
