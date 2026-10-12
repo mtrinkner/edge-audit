@@ -1,672 +1,195 @@
 # Edge Audit
 
-Backtests trading strategies, then audits whether the edge is real.
+**A backtester that tries to prove its own results wrong.**
 
-Most backtesting projects are built to find an edge. This one is built to check
-the one you found, and it is willing to tell you no. It has told me no 202 times.
+I tested 340 trading strategies against 12 years of US stock market data to find
+one that beats simply buying the S&P 500. **None of them did.** This repository
+is the evidence, including every time I fooled myself and caught it.
+
+Most backtesting projects are built to find a winning strategy. This one is built
+to check a winner you think you already have, and it is willing to say no.
 
 **Python · SQL · R · Excel**
 
 ---
 
-## The finding
+## The result
 
-I tested 340 strategies for an edge that beats the index after costs. Nothing
-cleared the bar. Three results, and what makes the project worth reading is how
-each one died.
-
-| | Short interest | Earnings drift | Just buying SPY |
-|---|---|---|---|
-| Sharpe, best window | 1.66 | 0.34 | **0.91** |
-| **Sharpe, full sample / factor-neutral** | **0.24** | **-0.17** | 0.91 |
-| t-statistic | 0.69 | -0.60 | — |
-| Independent observations | 34 | 50 | — |
-| Deflated probability it is real | 0.005 | 0.009 | — |
-
-**Earnings drift was never a signal.** It looked like the best thing here, the
-only book to clear a t-statistic of 2. Then I regressed it against factor
-exposures and the return went through zero: the score correlates +0.104 with
-126-day momentum, because companies that beat expectations have usually already
-gone up. Strip the tilts and nothing is underneath.
-
-**Short interest was a truncated sample.** It was the only signal whose return
-*grew* under factor neutralization, 0.51 to 1.66, and it survived every
-robustness check I could construct. I froze it, recorded a 603-name book, and
-went looking for more observations.
-
-The API returned data back to 2017-12-29. My first ingest had walked the offset
-parameter forward until the API stopped returning rows; the API caps offsets, so
-it halted early and silently at 2021-03. I had written that truncation into this
-README as a fact about FINRA's retention policy.
-
-Before pulling the longer history I recorded a pre-commitment in the ledger:
-whatever the full sample says is the answer, with no keeping the window that
-looks better. It says 0.24.
-
-| | 2021-2026 | 2018-2026 |
+| | Best it ever looked | What it actually is |
 |---|---|---|
-| Sharpe | 1.66 | **0.24** |
-| t-statistic | 3.90 | **0.69** |
-| Max drawdown | 1.53% | **8.71%** |
+| Short interest | 1.66 Sharpe | **0.24** |
+| Earnings drift | 0.34 Sharpe | **-0.17** |
+| Contract awards | looked real on one year | **refuted** |
+| **Just buying SPY** | | **0.91** |
 
-2018 was -0.44, 2019 +0.95, 2020 -0.54. The entire result lived in 2021-2026.
+Sharpe ratio measures return per unit of risk. Higher is better. The index
+returned 0.91 over this period, and nothing I built beat it once the mistakes
+were removed.
 
-**The lesson worth keeping** is why the robustness checks all passed. Dropping
-2021 from a sample that *begins* in 2021 only moves the window to 2022-2026,
-which was the good stretch. A robustness check performed inside a truncated
-sample cannot detect that the truncation is the problem. No amount of further
-checking would have found this. Only more data did.
+## Why "nothing worked" is the finding, not a failure
 
-## Testing a mechanism instead of a pattern
+If you test enough strategies, one will look good by pure chance. This is the
+single most important idea in the project, and it is why the result is a real
+answer rather than a shrug.
 
-Every signal above was a *pattern*: momentum, earnings surprise, short interest.
-The r/algotrading framing that reads best is that an edge should be *"a reason
-someone pays you"* — a participant who is structurally forced to transact at a
-bad price. So I tested one: when a stock joins the S&P 500, index funds must buy
-it on the effective date regardless of price.
+Here is how high a Sharpe ratio pure luck hands you, if you test strategies that
+have **zero** real edge:
 
-The headline result looked excellent and was almost entirely an artifact:
+```
+ strategies tested    best Sharpe you get from luck alone
+                 1                                  0.00
+                10                                  0.60
+               100                                  0.96     <- SPY itself was 0.91
+               340                                  1.12     <- where this project sits
+```
 
-| Window around the effective date | Abnormal return | t |
-|---|---|---|
-| -250 to -126 sessions | **+17.53%** | 7.14 |
-| -125 to -61 | +11.37% | 6.42 |
-| -60 to -21 | +10.61% | 5.19 |
-| -20 to -6 | +3.02% | 4.21 |
-| -5 to -1 | +1.36% | 3.25 |
-| **0 to +5** | **-0.79%** | **-2.09** |
+Read the last line. Test 340 worthless ideas and the luckiest one posts a 1.12,
+which looks better than the index. So a backtest number means nothing on its own.
+What matters is whether it beats what luck would have given you at the number of
+things you tried.
 
-A forced buyer would move the price in the days around the event. This run-up
-stretches back a full year, which is not index funds — it is the selection rule.
-S&P adds companies *because* they already grew 17% over the prior year.
+That is why every strategy here is **written down before it runs**, hypothesis
+first, and why abandoned attempts stay in the count forever. A 45-variant
+parameter sweep counts as 45 attempts, not 1.
 
-The last row is the part a forced buyer could actually explain: a reversal once
-the buying stops. Shorting each addition for ten days after the effective date,
-market-adjusted and net of costs:
+## The three that got closest, and what killed each
 
-| | |
-|---|---|
-| Mean per event | **+1.20%** |
-| t-statistic | **2.18** |
-| Event dates | 148 over 12.7 years |
-| Share positive | 55% |
-| Sharpe | 0.61 |
-| Luck bar at 218 trials | 1.63 |
-| Deflated probability | **0.041** |
+**Short interest looked like a 1.66 Sharpe.** It passed every robustness check I
+could build. Then I found a bug in my own data download: it had silently stopped
+early and I was testing on half the available history. On the full sample it is
+**0.24**.
 
-It does not decay across the sample — 2014-2017 +0.44%, 2018-2021 +1.47%,
-2022-2026 +1.80% — which is unusual for a published effect and the opposite of
-what the literature predicts. It still fails the bar.
+> The lesson worth keeping: a robustness check run inside a truncated sample
+> cannot detect that the truncation is the problem. More checking would never
+> have found this. Only more data did.
 
-Two caveats that matter more than the t-statistic. The sample is only additions
-*still in the index today*, so it is survivorship-biased, though plausibly against
-the short rather than for it. And 12 events a year is not a business.
+**Earnings drift looked like the real thing.** It was the only strategy to clear
+the usual statistical bar. Then I checked whether it was actually new information
+or just a repackaged version of things anyone can buy for free. Stripping out
+market exposure, company size and momentum took it from +0.34 to **-0.17**. It
+was momentum in a costume, because companies that beat expectations have usually
+already gone up.
 
-### The symmetric test does not confirm it
+**Federal contract awards looked promising for one year.** Companies winning big
+government contracts seemed to rise beforehand, which fit a clean story. So I ran
+a control: the same companies, but on random dates instead of award dates. On the
+full sample of 26,643 awards, **the random dates performed better than the real
+ones.** The one-year result was noise from a handful of defense stocks during a
+defense rally.
 
-Deletions are the mirror experiment: index funds are forced to *sell*. Using
-historical constituent data (fja05680/sp500) there are 291 deletions in the
-window, but only 101 have usable bars, because the rest were acquired and the
-data vendor keeps nothing for delisted tickers. That exclusion is less damaging
-than it sounds — an acquired company's price is pinned to the deal terms, so
-there is no pressure reversal to measure either way.
+The full account of every candidate is in **[docs/FINDINGS.md](docs/FINDINGS.md)**.
 
-The pre-event side mirrors additions exactly, which confirms the selection story
-from the other direction:
+## The data
 
-| Window | Additions | Deletions |
-|---|---|---|
-| -250 to -126 | +17.53% | **-15.93%** |
-| -125 to -61 | +11.37% | -13.04% |
-| -60 to -21 | +10.61% | -9.43% |
-| **0 to +5** | **-0.79% (t = -2.09)** | **+0.59% (t = 0.67)** |
-
-Same sign as predicted, half the significance. Combining both into one
-market-neutral event book — short additions, long deletions, 10-day hold — gives
-0.82% per event, t = 1.65, Sharpe 0.46 against a luck bar of 1.55 and a deflated
-probability of 0.025.
-
-So the addition reversal does not survive its own symmetric test. It may be real
-and underpowered at 101 deletion events, or the addition result may be the 218th
-thing I tried. The honest position is that one leg clearing t = 2 while the
-mirror leg does not is weak evidence, not a finding.
-
-## The closest thing to an edge, and why it still is not one
-
-Having exhausted daily US equities, I went to a market with an explicit
-mechanism: perpetual swap funding. Short perp against long spot is
-delta-neutral and collects the funding payment as a contractual cash flow. Full
-write-up, code and data now live in their own repo,
-[crypto-funding](https://github.com/mtrinkner/crypto-funding), which carries
-this registry's trial count forward.
-
-On a point-in-time universe (each week's top 20 Hyperliquid perps by volume,
-109 coins, 14 since delisted):
-
-| | Excess over T-bills | Monthly Sharpe |
-|---|---|---|
-| Always-on carry | 3.0% | 0.51 |
-| **Switched: hold a coin only while its trailing funding beats T-bills** | **7.6%** | **1.92** |
-| Luck bar at 232 trials | | 3.17 |
-
-**Out of sample it fails.** On 94 coins that played no part in forming the
-idea, the switched carry scores 1.70 before liquidations, so the signal
-generalizes. But a 3x short perp managed at the daily close is liquidated 3.1
-times per coin-year, and with a 5% cost per liquidation the Sharpe is -0.24.
-Cutting leverage to 2x is the only fix that worked (1.42). Volatility sizing
-and an on-chain stablecoin regime gate both made it worse. The excess also
-decays, from 12.1% in 2023-24 to 1.9% in 2025-26.
-
-The median coin's carry is mostly a parameter Hyperliquid sets: an 11% interest
-constant, with a market premium of about zero on top. The switched version is
-the strongest risk-adjusted result outside the forward test. It's positive in
-every year and broad across coins, but it still doesn't clear the bar, and its
-low volatility is the wobble of a cash flow, not the risk of a trade whose real
-tail is a squeeze or a venue failing.
-
-Using funding as a crowding signal that predicts lower prices is nothing: an
-IC of 0.0001 once the coins that later disappeared are put back.
-
-Three bugs were found on the way, each of which had produced a published
-number. A rate-limited ingest silently truncated 9 of 16 coins (the same
-failure that killed short_v2), 8-hourly prints were annualized as hourly, and a
-universe of today's survivors had manufactured a crowding signal with t = 2.15.
-
-## Where the money actually is
-
-"Quant firms exist, so something must beat the index." True, and the public
-record says the dominant business is not forecasting.
-
-Virtu's filings state that 95% of revenue is trading income and describe the
-operation as *"making small amounts—as in $10—millions of times a day."* One
-losing day in 1,238. That is spread capture for providing liquidity, not
-prediction, and it needs exchange membership, colocation and rebates. Industry
-market-making revenue was $30.2bn in 2025.
-
-So I tested the one documented effect that daily bars can actually reach: US
-equity returns accrue disproportionately **overnight** (Lachance 2023,
-Bogousslavsky JFE 2021). The mechanism is mechanical — margin is higher overnight
-and lending fees are charged on overnight positions, so arbitrageurs flatten
-before the close.
-
-It is clearly there, across 4.4M stock-days:
-
-| | Annualized | Daily vol | Sharpe |
-|---|---|---|---|
-| **Overnight** | **9.86%** | 0.78% | **0.83** |
-| Intraday | 3.56% | 0.95% | 0.31 |
-| Total | 15.60% | 1.26% | 0.83 |
-
-62% of the return and 38% of the variance arrive overnight. And it is not
-capturable:
-
-| Capturing it | Gross | Cost of 252 round trips | Net |
-|---|---|---|---|
-| All 1,499 names | 9.82% | -32.43% | **-20.61%** |
-| Large caps only | 9.82% | -10.58% | **-1.21%** |
-| SPY at 1bp | 7.39% | -5.27% | **+2.12%** |
-
-**The breakeven half-spread is 2.01 basis points.** Large caps cost 2.1. The
-premium and the cost of harvesting it are the same size to within a tenth of a
-basis point, which is what an efficiently priced risk premium looks like: it is
-the compensation for holding overnight risk, and it is paid to whoever holds it,
-not to whoever trades it.
-
-Even the best case, SPY at sub-penny spreads, nets 2-6% against 12% for simply
-holding the thing.
-
-## What it runs on
+Six sources, chosen because each is produced by a different process. Price
+history, analyst forecast error, audited financial statements, insider filings,
+short positioning and federal spending do not share a common failure mode.
 
 | Source | What it is | Size |
 |---|---|---|
-| Daily bars | OHLCV, S&P 500 + 400 + 600 | 4.4M rows, 1,512 symbols, 3,210 sessions |
+| Daily bars | prices for the S&P 500, 400 and 600 | 4.4M rows, 1,512 stocks |
 | Earnings | announcement surprise vs consensus | 112,850 events |
-| SEC XBRL | as-filed fundamentals, real filing dates | 453,279 facts |
+| SEC filings | as-filed fundamentals, real filing dates | 453,279 facts |
+| Insider trades | SEC Form 4 purchases and sales | 523,953 trades |
+| Short interest | FINRA bi-monthly positioning | 287,490 observations |
+| Federal contracts | USAspending awards over $10M | 101,986 actions, $4.8tn |
 
-Three sources chosen because their data is generated by three different
-processes: price history, analyst forecast error, and audited financial
-statements. That matters more than it sounds, for reasons in the next section.
+Every source is **point-in-time**: each row is tagged with the date that
+information became public, not the date it describes. Without this a backtest
+quietly trades on facts that had not been published yet.
 
-## Five ways this tries to catch itself
+## How it checks itself
 
-**1. A test that proves there is no lookahead.** `tests/test_no_lookahead.py`
-chops the database off at an old date, rebuilds every feature from scratch, and
-checks they come out byte-identical to the full-history version. Anything
-secretly reading the future fails. It caught a real bug the first time it ran:
-SQLite's `AVG` was skipping a null and calling a 13-day average a 14-day ATR.
+1. **A test that proves there is no peeking at the future.** It chops the
+   database off at an old date, rebuilds every calculation from scratch, and
+   checks the answers come out identical. Anything secretly reading ahead fails.
+   It caught a real bug on its first run.
+2. **A count of every strategy ever tried**, hash-chained so the number cannot be
+   quietly reduced later.
+3. **Data the search is not allowed to read.** Sealed, and opening it is a
+   one-way door that gets recorded.
+4. **A forward test, not a re-run.** The model is frozen with a fingerprint and
+   scored on data that did not exist when it was frozen. Predictions are written
+   down before the outcomes exist.
+5. **Trading costs charged at each stock's own spread**, because applying
+   large-company costs to small companies invents profit out of an assumption.
 
-**2. A count of every strategy I ever tried.** Testing ideas until one looks good
-guarantees one will look good. With 348 independent observations, the luckiest of
-100 strategies with *zero* real edge posts a Sharpe around 0.96, which beats the
-index. So `registry.py` logs every strategy before it runs, hypothesis written
-first, and abandoned attempts stay in the count forever. A 45-variant sweep counts
-as 45, not 1.
+## Mistakes it caught in my own work
 
-```
- trials   best Sharpe expected from pure luck
-      1                                 0.000
-     10                                 0.599
-    100                                 0.963      <- SPY was 0.91
-    202                                 1.054      <- where this project sits
-```
+Nine arithmetic errors, and every single one had made the results look **better**,
+never worse. That is not coincidence: a bad number gets moved past, a good number
+gets investigated, so the errors that survive are the flattering ones.
 
-**3. Data I am not allowed to look at.** `lockbox.py` seals a date range the
-search physically cannot read, and opening it is a one-way door recorded with the
-strategy it was opened for. Being honest about the limitation: every bar from
-2014 to 2026 was already burned by the search, so the lockbox is forward-dated
-and fills as time passes. Slower, and the only version that is actually clean.
-
-**4. A forward test instead of a rerun.** Re-running a backtest monthly is the
-same question asked twelve times a year until it answers the way you want. The
-model is frozen with a SHA-256 and scored each month on bars that did not exist
-when it was frozen. Predictions are written down *before* outcomes exist, into an
-append-only hash-chained ledger. `tests/test_ledger_integrity.py` proves that
-editing a loss into a win, deleting a bad month, or reordering entries all get
-caught.
-
-**5. Costs charged at each stock's own spread.** A flat large-cap cost assumption
-applied to small caps invents an edge out of an accounting choice.
-
-## The research log
-
-Every one of these was declared with a written hypothesis before it ran.
-
-| # | What I tried | Result |
-|---|---|---|
-| 1-5 | Price-based ML (logistic, gradient boosting, sweeps) | Best 0.83 vs a luck bar of 0.86. Fails. |
-| 8 | 41 classic technical signals x 3 horizons | **0 of 122 cleared.** 0 survived Benjamini-Hochberg. |
-| 9 | Cross-sectional long/short, 480 names, IC-based | Best IC 0.049 but t=1.90. Sharpe 0.35. |
-| 10 | Earnings surprise / PEAD | **0.52**, the first thing that looked real |
-| 11 | SEC as-filed fundamentals | -0.60. Negative. |
-| 12 | Four quality fixes to the earnings sleeve | All four made it worse |
-| 13 | Regime-conditioning the fundamentals | Negative in all four regimes |
-| 14 | Down the cap spectrum, per-stock costs | Drift gets *weaker* down-cap |
-| 15 | Four portfolio constructions, signal held fixed | None beat the plain quintile sort |
-| 15 | Factor attribution of the best book | **The edge was beta and momentum. Residual is negative.** |
-| 23 | Effective breadth, 64 variants, 1,257 names/day | **Breadth saturates at 8 raw / 100 neutral. 0 of 64 cleared BH.** |
-| 26 | Federal contract awards, 101,986 actions, $4.8tn | **Refuted on both declared shape tests. Placebo beat the real dates.** |
-
-### Why breadth was the wrong lever
-
-Thirteen price signals turned out to be **2.9 effective independent strategies**,
-because they all transform one series. The fundamental law says
-IR = IC x sqrt(breadth), so I went looking for independent data.
-
-| Sources | Nominal | Effective | Avg correlation |
-|---|---|---|---|
-| Price only | 13 | 2.9 | +0.19 |
-| Price + earnings | 19 | 5.0 | +0.11 |
-| Earnings + fundamentals | 12 | **7.0** | **+0.04** |
-
-Breadth more than doubled. Sharpe did not improve, because the added sleeves were
-negative. **More independent bets do not help when the new bets are bad bets.**
-The law has two terms and I had been treating breadth as the binding one.
-
-### Breadth, measured instead of assumed
-
-The section above counted breadth across *signals*. It never counted breadth
-across *names*, which is the term that actually appears in the law. So I measured
-it: the effective number of independent bets is the participation ratio of the
-return correlation eigenvalues,
-
-    N_eff = (sum of eigenvalues)^2 / sum of (eigenvalues squared)
-
-which equals N when names move independently and 1 when they move as one. Because
-the eigenvalues of a correlation matrix sum to N, this reduces to N^2 / sum(l^2),
-so one large market eigenvalue caps the whole thing no matter how many tickers
-get added. Measured on the 814 names with complete history over 3,190 sessions:
-
-| Universe N | N_eff, raw returns | N_eff, sector-neutral | as % of N |
-|---|---|---|---|
-| 50 | 6.9 | 38.4 | 76.8% |
-| 100 | 7.5 | 48.4 | 48.4% |
-| 200 | 7.9 | 69.9 | 34.9% |
-| 400 | 8.1 | 91.0 | 22.7% |
-| 800 | 8.3 | **100.2** | 12.5% |
-
-**An 800-name long-only book is 8 bets.** Raw breadth saturates almost
-immediately: going from 50 names to 800 moves it from 6.9 to 8.3. Everything
-beyond the first handful of names is buying the same market exposure again.
-
-Neutralization is the lever, and it is worth about **12x** (8.3 to 100). Adding
-750 names is worth about **1.2x**, and the marginal return collapses as it goes:
-the jump from 400 to 800 names bought 10% more effective breadth. That is the
-quantitative version of a thing that gets asserted constantly and almost never
-measured. Factor neutralization is usually sold as risk control. Its larger job
-is manufacturing breadth, and the cross-section is close to worthless without it.
-
-Then the obvious question: with breadth of 100 names times 12 rebalances a year,
-does anything here monetize it? No, and the reasons are specific.
-
-**The residualization works, which is why the result can be believed.** Each
-signal was regressed daily on beta, size, two momentum horizons, short-term
-reversal, volatility and sector. The variance it removed sorts exactly the way it
-should: 5-day reversal lost **92.6%**, low volatility 89.0%, 126-day momentum
-88.7%. The price scores largely *are* the factors. The non-price signals lost
-almost nothing: insider buying 1.6%, short interest change 1.6%, ROE 2.0%,
-standardized earnings surprise 2.2%. A regression that failed to absorb momentum
-would have invalidated the whole table, so this is the control, not a footnote.
-
-**Nothing survives the trial count.** 64 variants in one run. Benjamini-Hochberg
-at FDR 5%: **0 of 64**. The expected maximum |t| from 64 pure-noise tests is
-2.42, and only one signal beat it (52-week high, residualized, t=2.94), which
-then fails BH anyway. Best net Sharpe in the entire table is **0.18**. Eight of
-64 are positive at all, zero clear 0.5.
-
-**Costs are larger than the entire edge.** Median cost drag is **0.36 Sharpe
-units**. The largest predicted IR anywhere in the table is 0.62, and the median
-is far below the drag. At breadth 1,200 the IC needed just to pay for the trading
-is 0.0104, and the best residualized IC measured is 0.0179, which clears it only
-on paper: that signal's autocorrelation is 0.86, so its real independent breadth
-is nearer 89 than 1,200, and at that breadth it does not clear costs. Its
-realized net Sharpe is 0.00.
-
-**The law itself held up.** Median absolute gap between predicted IR and realized
-*gross* Sharpe across all 64 variants is **0.151**. IR = IC x sqrt(breadth) is a
-decent predictor on this data. It just predicts a number too small to survive
-costs. The constraint was never the formula, it was that costs scale with
-turnover while Sharpe scales with its square root.
-
-One thing that did not work: deflating breadth by signal persistence, using the
-AR(1) variance ratio (1-rho)/(1+rho), was supposed to close the predicted-versus-
-realized gap. It made the median fit slightly worse, 0.151 to 0.157. It explains
-the 52-week-high row specifically and fails as a general correction, and it is
-recorded here rather than dropped because it was a declared expectation.
-
-Registered as trial 23 with 64 variants **before** it ran. Trial count 232 to
-**296**, which raised the luck bar on everything above.
-
-## Federal contract awards: the sixth data source, and a clean null
-
-The one category left untested was data that is not derived from price at all.
-Every signal that died in this project died the same way, residualising into
-beta, size and momentum, and the breadth work above measured exactly how much:
-5-day reversal lost 92.6% of its variance to the factor set, momentum 88.7%. The
-non-price signals lost almost nothing. So the last idea worth testing was a
-dated, public, non-price event with an obvious cash-flow channel.
-
-**USAspending, transaction level, 101,986 contract actions above $10M from
-2014-01 to 2026-09, $4,798bn obligated.** Declared as trial 26 with 32 variants,
-including both shape predictions, before a single return was computed.
-
-### Four traps, found before the result
-
-**Award-level amounts are cumulative.** A 2015 query returned a Lockheed award
-with a 1993 start date and a **$48bn** total, because `Award Amount` sums every
-modification over an award's life. Keying an event study on that imports the
-future into a 2015 decision. The transaction endpoint gives one row per action
-with its own date and obligation, which is point-in-time by construction.
-
-**Recipient names are retroactively modernised.** "RTX CORPORATION" appears on
-2015 rows, for an entity that did not exist until the 2020 merger and was not
-named RTX until 2023. Which company it actually was is settled by the award
-numbers: the 2015 "RTX" awards are N00019 (NAVAIR) and FA8611 engine contracts,
-so Pratt & Whitney, so United Technologies. The "RAYTHEON COMPANY" rows are
-HQ0276 (Missile Defense) and N00024, so missiles, so the real Raytheon.
-
-**Price series follow the acquirer, not the target.** Checked rather than
-assumed: RTX closed at **$81.94** in mid-2019, which is neither UTX (~$130) nor
-RTN (~$175). It is UTX scaled by the Carrier/Otis spinoff ratio, and $49.93 on
-2020-04-03 is merger-completion day. LHX at $144.54 in June 2018 matches Harris
-exactly. So RTX bars *are* United Technologies and LHX bars *are* Harris, which
-makes those rows priceable and makes Raytheon and L3 rows unpriceable.
-
-**The feed contains enormous source errors.** A 2015 row credits HENSEL PHELPS
-CONSTRUCTION CO with **$92.5bn** across six actions, against roughly $440bn of
-total federal contract obligations that year, for a private builder. Sixteen
-actions above $5bn are flagged rather than deleted, because a silently dropped
-row makes a sample stop matching its own description. Three of them are Lockheed
-F-35 lot awards that are probably real, which is exactly why the flag is a flag.
-
-Also checked rather than assumed: SpaceX is **not** private. It listed on
-2026-06-12 as SPCX. Every one of its contract actions here predates that, and no
-SPCX bars exist, so the rows are unpriceable for a different reason than the one
-I would have written down.
-
-### What the two declared tests said
-
-| | Prediction | Result |
-|---|---|---|
-| **1. Pre-event window** | flat before the action date | **+0.37%**, post-event **-0.01%** |
-| **1b. vs placebo** | n/a | placebo **+1.58%**, so event minus placebo is **-1.21%** |
-| **2. Materiality scaling** | positive and monotone | rank corr **+0.024**, non-monotone |
-
-The placebo is the control that makes this readable, and it is the reason the
-first answer was wrong. Measured on 2015 alone the pre-event CAR was **+12.66%**
-against a placebo of +1.03%, which looked like textbook anticipation: public
-solicitations, run-up before award, selection rather than drift. At the full
-26,643 events it collapses to +0.37% against a placebo of **+1.58%**. The
-placebo is *higher* than the real dates. The 2015 result was 318 events from a
-handful of defense names during a defense rally, and reporting it would have been
-a confident claim about noise.
-
-Implied book, long the top materiality quintile each month, market-adjusted,
-one observation per month so nothing overlaps: **Sharpe 0.159, t = 0.57** over
-152 months. Deflated probability it is real, at 340 registered trials: **0.006**.
-
-### Limitations that are not fixable by better code
-
-**Only 27.3% of actions are priceable, 40.8% of dollars.** Most federal contract
-money goes to entities that cannot be traded: private firms, joint ventures,
-FFRDC consortium LLCs, universities. Electric Boat and Bath Iron Works map to
-General Dynamics and Optum to UnitedHealth, but Hensel Phelps, TriWest, General
-Atomics and the national-laboratory LLCs do not map to anything.
-
-**Survivorship runs one direction.** $172.8bn of Raytheon actions are dropped
-because RTN has no price series, and the price database was built from CURRENT
-index constituents. Dropping acquired companies removes exactly the firms that
-became targets, which is not random with respect to performance.
-
-**Materiality is weakest where it should be strongest.** 17 of 26 tickers have
-point-in-time share counts. The missing ones are the small and mid caps, which is
-precisely where award-over-market-cap would be largest and the mechanism most
-visible.
-
-Trial count 296 to **340**.
-
-### Why small caps were the wrong lever
-
-Reg SHO gives the cleanest causal evidence that anomalies live where arbitrage is
-costly: lifting short-sale constraints cut long-short returns 94bp for small
-stocks against 48bp for large. So I expanded to 1,515 names and rebuilt the cost
-model first, since testing small caps on large-cap costs would have fabricated the
-answer.
-
-| Bucket | Gross Sharpe | Net Sharpe | Cost drag |
-|---|---|---|---|
-| **Large** | **0.71** | **0.65** | 0.41%/yr |
-| Mid | 0.41 | 0.28 | 0.90%/yr |
-| Small | 0.31 | 0.08 | 1.48%/yr |
-
-Drift declines monotonically with size, and costs triple going down. Small caps
-lose on both terms at once. My guess at why: PEAD needs the consensus estimate to
-mean something, and small-cap consensus is three analysts rather than thirty.
-
-### Why better portfolio construction did not help
-
-The signal was held fixed and only the map from signal to positions changed:
-quintile sort, signal weighting, risk-adjusted weighting, and factor-neutral
-weighting. All three alternatives lost to the plain quintile sort.
-
-| Construction | Names held | Gross Sharpe | Net Sharpe | Cost drag |
-|---|---|---|---|---|
-| **Quintile, equal weight** | 546 | **0.56** | **0.39** | 0.48%/yr |
-| Signal weighted | 1,346 | 0.20 | 0.09 | 0.50%/yr |
-| Risk adjusted | 1,346 | 0.16 | 0.02 | 0.46%/yr |
-| Factor neutral + risk | 1,340 | -0.00 | -0.16 | 0.47%/yr |
-
-Cost drag is flat across all four, so trading more was not the explanation. The
-gross column is: spreading weight across the whole cross-section dilutes the
-signal, because only the extremes carry information. And the factor-neutral book
-goes to exactly zero gross, which is what sent me looking at attribution.
-
-### Verifying the earnings data was point-in-time
-
-The best result rests on surprise figures whose estimate timing the vendor does
-not document. If those were revised after the fact, the signal is contaminated.
-Four tests on 24,028 announcements:
-
-| Test | Result |
+| | |
 |---|---|
-| Surprise predicts the announcement-day move | +0.203, monotonic across quintiles |
-| Day-0 return spread, worst to best quintile | +4.16 points |
-| 60-day drift spread (this is PEAD) | +2.50 points |
-| Volatility on announcement day | 3.11x a normal day |
-| Median absolute surprise | 6.82%, only 9.8% within 1% |
+| A 14-day average computed from 13 days | silently inflated every signal |
+| Trading costs counted twice | and in another place, cancelled to zero |
+| Overlapping returns compounded as if sequential | produced a 100% drawdown |
+| 499 blank spreadsheet rows read as real trades | |
+| A "market-neutral" book carrying real market exposure | hedging it cut 0.52 to 0.36 |
 
-Estimates revised toward the actual would cluster near zero and could not produce
-a clean monotonic same-day reaction. One caveat stands: 78.4% of announcements
-beat, against 60-70% in the literature, which I attribute to a universe of
-current index members.
+Detail in [docs/FINDINGS.md](docs/FINDINGS.md).
 
-## Bugs this found in my own work
+## What is running now
 
-Left in the history on purpose, because they are the argument for building any of
-this.
+`index_v1` is frozen and recording monthly: short each new addition to the S&P
+500 for ten sessions, hedged with the index. It is the only candidate whose
+explanation made a testable prediction about the *shape* of the effect, and
+testing that prediction is what exposed the flaw in the original version.
 
-- **A false discovery, caught by the false-discovery detector.** My first signal-zoo
-  summary reported the top result as 99.2% likely real. It had **six** independent
-  observations; I had fed the project's sample size into the correction instead of
-  each signal's own. The real number was 3.4%.
-- **Costs that cancelled themselves.** A long/short book pays on both legs, but I
-  subtracted each leg's cost and then differenced them, reporting a drag of 0.00%
-  on a book trading small caps at 7.7bp.
-- **A "market-neutral" book that was not.** Sector-neutral does not imply
-  beta-neutral. The best book carried +0.079 of market beta, and hedging it out
-  cut the Sharpe from 0.52 to 0.36. Part of what looked like alpha was the market.
-- **A 100% drawdown that was not.** Compounding overlapping 63-day returns as if
-  sequential multiplies the same stretch of market 63 times. Real figure: 9.9%.
-- **A stale table.** The SQL feature layer still had 67 symbols after the universe
-  grew to 515. The cross-sectional work reads `bars` directly so results stood, but
-  I only know that because I checked.
-- **An estimator that did not measure what I needed.** Corwin-Schultz gives AAPL
-  23bp against a real spread near 1bp. Thrown out rather than scaled.
+It **fails its own luck bar** (0.61 against 1.12) and is frozen anyway, because
+the objection against it is sample size, and that is the one objection that time
+answers. At roughly 12 events a year it needs years before it says anything.
 
-## Short interest: the one that got away
+`v1`, the machine learning price model, keeps running as a **control** rather
+than a candidate. Its signal is negative once market exposure is stripped out, so
+if both it and `index_v1` drift upward together, that is evidence the market did
+it rather than either strategy.
 
-Short interest was the only signal whose return *grew* under factor
-neutralization — 0.51 as measured, 1.66 residualized, t = 3.90. It survived every
-robustness check: dropping the 2021 meme-squeeze era raised it to 1.69, starting
-from mid-2022 raised it to 2.03, the best five dates were 2% of the return, and
-all six years were positive.
+Two strategies were **retired as refuted**: `short_v2` after the data bug, and
+the earnings model after the factor check.
 
-Then I went looking for more observations and found the API returns data back to
-2017-12-29, not 2021-03. My ingest had walked an offset parameter forward until
-the API stopped returning rows; the API caps offsets, so it halted early and
-silently. I had written that truncation into this README as a fact about FINRA's
-retention policy.
+Nothing here connects to a broker, places an order, or holds credentials.
+Execution stays a human decision.
 
-Before pulling the longer history I recorded a pre-commitment in the ledger:
-whatever the full sample says is the answer, no keeping the better window.
-
-| | 2021-2026 | 2018-2026 |
-|---|---|---|
-| Independent observations | 22 | **34** |
-| Sharpe | 1.66 | **0.24** |
-| t-statistic | 3.90 | **0.69** |
-| Max drawdown | 1.53% | **8.71%** |
-
-2018 was -0.44, 2019 +0.95, 2020 -0.54. The entire result lived in the window I
-happened to have. `short_v2` is abandoned; its manifest is kept and marked
-REFUTED so the record shows what was frozen, what it claimed, and how it died.
-
-**The structural lesson outlives the result.** Dropping 2021 from a sample that
-*begins* in 2021 only moves the window to 2022-2026, which was the good stretch.
-A robustness check performed inside a truncated sample cannot detect that the
-truncation is the problem. More checking would never have found this. More data
-did.
-
-## What is actually running
-
-`index_v1` is frozen and recording monthly: short each new S&P 500 addition for
-ten sessions after the effective date, hedged with SPY. It is the only candidate
-with a mechanism that made a falsifiable prediction about the *shape* of its
-effect, and testing that prediction is what exposed the selection confound in the
-headline version. It fails its own luck bar (0.61 against 1.63, deflated p 0.041)
-and is frozen anyway, because the objection against it is sample size and that is
-the one objection time answers.
-
-`v1`, the gradient-boosting price model, keeps running as a **control** rather
-than a candidate: its signal residualizes to -0.17, so if it and `index_v1` drift
-upward together that is evidence the market did it rather than either signal.
-
-### How a frozen rule-based strategy differs from a frozen model
-
-Short interest is the first result worth locking rather than abandoning, so it is
-frozen as `short_v2` and its book is recorded monthly before outcomes exist.
-
-Freezing a rule-based strategy is different from freezing a fitted model. There
-is no pickled object, only a set of decisions — universe, neutralization,
-bucketing, horizon — each of which is a dial that could be turned after a bad
-quarter. So the hash covers the parameter spec **and** the source of the three
-modules that implement it. Change a threshold and the hash moves, which voids
-that version's record rather than quietly extending it.
-
-That fired almost immediately. I edited an unrelated plumbing flag in
-`portfolio.py` and the next position run refused to start with a HASH MISMATCH.
-Re-freezing was legitimate only because no forward record existed yet; once one
-does, the same situation requires a new version.
-
-### It is not tradeable at small size
-
-```
-  the frozen book holds 603 names; at $5,000 gross that is $8.29 each
-  535 of 603 positions (89%) round to zero shares
-  a tradeable version of THIS strategy needs roughly $352,574 gross
-```
-
-A full sector-wise quintile sort over 1,500 names is unremarkable in a backtest
-and impossible at retail size. Concentrating into the strongest names would make
-it tradeable and would also make it a different strategy, needing its own freeze,
-its own backtest and its own entry in the trial count. The book is recorded on
-paper instead, which keeps the experiment intact.
-
-`python/v2_positions.py` produces a position list and nothing else. It places no
-orders, connects to no broker and holds no credentials. Execution stays a human
-decision.
-
-## Running it
+## Run it
 
 ```bash
 python3 build.py --from ingest      # whole pipeline, pinned data, no network
 python3 python/forward_run.py       # the monthly pre-registered forward test
 python3 python/registry.py status   # what have I tried, and what is the bar now
 python3 python/lockbox.py status    # what am I not allowed to look at
-python3 python/cap_spectrum.py      # drift by market-cap bucket
 ```
 
-The exact bars behind the published numbers are committed in
-`data/raw/bars_snapshot.csv.gz`, because the vendor quietly revises adjusted
-closes and a fresh download will not reproduce them. Use `--ingest` to check
-whether a finding survives new data.
+The exact prices behind the published numbers are committed in
+`data/raw/bars_snapshot.csv.gz`, because data vendors quietly revise historical
+prices and a fresh download will not reproduce them.
 
 ## Layout
 
 ```
-python/
-  ingest_bars.py          daily bars, idempotent, quality issues stored as rows
-  ingest_earnings.py      announcements, resolved to the first tradeable session
-  ingest_fundamentals.py  SEC XBRL, keyed on filing date so restatements cannot leak
-  cross_sectional.py      IC measurement, the metric firms actually use
-  neutral_book.py         sector-neutral construction and effective breadth
-  cap_spectrum.py         the down-cap test with per-stock costs
-  spread_estimator.py     the cost model, and why Corwin-Schultz was rejected
-  registry.py             every strategy ever tried, hash-chained
-  deflated_sharpe.py      what a candidate must beat, given how many you tried
-  lockbox.py              data the search is not allowed to read
-  freeze_model.py         pin a model with a hash; forward_run.py scores it monthly
-sql/                      schema, features, labels, analysis views
-R/                        stationary bootstrap, Reality Check, figures
-tests/                    lookahead audit, ledger integrity, search controls
+python/     ingest, signals, portfolio construction, and the audit tools
+            registry.py          every strategy ever tried, hash-chained
+            deflated_sharpe.py   what a result must beat, given how many you tried
+            lockbox.py           data the search is not allowed to read
+            breadth.py           how many independent bets a portfolio really has
+sql/        schema, features, labels. Features and labels in separate files so
+            nothing that looks forward can leak into something that looks back
+R/          bootstrap tests and figures
+tests/      lookahead audit, ledger integrity, search controls (21 checks)
+docs/       FINDINGS.md, METHODOLOGY.md, LIMITATIONS.md
 ```
 
 ## Honest limits
 
-In `docs/LIMITATIONS.md`. The short version: the universe is today's index
-members, so it carries survivorship bias; the data is daily, so nothing intraday
-is testable; the cost model is a liquidity-based approximation to something that
-properly needs trade and quote data; and the earnings estimates come from a vendor
-that does not document when they were set.
+- The stock universe is **today's** index members, so companies that went
+  bankrupt or were acquired are missing. This flatters results.
+- The data is daily, so nothing intraday is testable.
+- The cost model is an approximation of something that properly needs
+  trade-by-trade data.
+- Earnings estimates come from a vendor that does not document when they were set.
+
+Longer version in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
 ## Not investment advice
 
@@ -678,18 +201,19 @@ finding is that the strategies it studied do not beat the index.
 > **Edge Audit** — Python, SQL, R, Excel
 > Built a research pipeline that backtests trading strategies and then audits
 > whether the edge is real. Ingested six independent point-in-time data sources
-> (4.4M daily bars across 1,500 equities, 102K federal contract actions, 113K earnings announcements, 453K
-> as-filed SEC XBRL facts keyed on filing date, 524K insider transactions, 287K
-> short-interest observations). Engineered features in SQL window functions and
-> proved the pipeline leak-free with a truncation-rebuild audit. **Tested 340
-> strategies, logged before each run, and found none that survives: the best was a
-> factor tilt in disguise (+0.34 to -0.17 after neutralizing beta, size and
-> momentum) and the second-best fell from a 1.66 Sharpe to 0.24 once a pagination
-> bug in my own ingest was fixed and the sample doubled.**
+> (4.4M daily bars across 1,500 equities, 102K federal contract actions, 113K
+> earnings announcements, 453K as-filed SEC XBRL facts keyed on filing date, 524K
+> insider transactions, 287K short-interest observations). Engineered features in
+> SQL window functions and proved the pipeline leak-free with a truncation-rebuild
+> audit. **Tested 340 strategies, logged before each run, and found none that
+> survives: the best was a factor tilt in disguise (+0.34 to -0.17 after
+> neutralizing beta, size and momentum) and the second-best fell from a 1.66
+> Sharpe to 0.24 once a pagination bug in my own ingest was fixed and the sample
+> doubled.**
 
 One-bullet version:
 
-> - Built a backtesting pipeline that audits its own results across five data
+> - Built a backtesting pipeline that audits its own results across six data
 >   sources: 340 strategies tested and logged before each run so a lucky one can't
 >   pass as real; the best looked like a 1.66 Sharpe until fixing a bug in my own
 >   data pull doubled the sample and took it to 0.24
