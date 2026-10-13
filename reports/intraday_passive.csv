@@ -1,0 +1,5 @@
+execution,bars,mean,t,p
+"TAKER, all signals (the original test)",15330,-0.0007575071964050834,-2.3391605030892264,0.022
+"TAKER, only the bars that would have filled",13320,-0.0016117708617493563,-6.6657889817432965,0.0
+"TAKER, only the bars that would NOT fill",2010,0.0049035833619957715,17.18931828671601,0.0
+"PASSIVE, filled bars (1x half-spread)",13320,-0.0004968862893379928,0.37780312607343985,0.6995

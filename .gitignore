@@ -59,6 +59,14 @@ data/spreads.parquet
 !reports/portfolio.csv
 !reports/breadth.csv
 !reports/resid_r2.csv
+# Intraday panels and derived caches. Regenerate with:
+#   python3 python/ingest_intraday.py && python3 python/edge_spreads.py
+data/intraday_1h.parquet
+data/intraday_parts/
+data/intraday_trades.parquet
+data/intraday_passive.parquet
+data/vix.parquet
+
 !reports/breadth_adj.csv
 !reports/contract_car.csv
 !reports/contract_car_placebo.csv
@@ -78,3 +86,12 @@ crypto/data/hl_funding_cache/
 # Private working notes, not part of the published project.
 notes/
 Rplots.pdf
+
+!data/edge_spreads.parquet
+!reports/intraday.csv
+!reports/intraday_control.csv
+!reports/intraday_vix.csv
+!reports/intraday_passive.csv
+!reports/intraday_liquidity.csv
+!reports/calendar_edges.csv
+!reports/cost_first_screen.csv
