@@ -1,11 +1,20 @@
 # Can You Find a Trading Edge With Free Data?
 
-I tested **840 trading strategies** on US stock market data: classic technical
-analysis, day-trading setups, published market anomalies, and trades on forced
-buying and selling. Each test was written down before it ran, charged realistic
-trading costs, and checked against what pure luck would produce.
+I tested **857 trading strategies** on US stock market data: classic technical
+analysis, day-trading setups, published market anomalies, and two published AI
+models that read stock charts. Each test was written down before it ran, charged
+realistic trading costs, and checked against what pure luck would produce.
 
-**Python · SQL · R · Excel**
+**Python · SQL · R · Excel · PyTorch**
+
+## See it live
+
+- **[Edge Audit Live](https://claude.ai/artifact/3Jq6Ykv74Sf34pXKBSC1Qd)**: the
+  whole project as an interactive dashboard: how it was tested, every result,
+  the bugs caught, and the full log of all 857 tests.
+- **[Signal Charts](https://claude.ai/artifact/NfTTDBQTivhiKaU6f5xJxW)**: price
+  charts for the 100 most-traded US stocks with every tested signal marked
+  where it fired, next to that signal's tested record.
 
 ---
 
@@ -20,6 +29,7 @@ trading costs, and checked against what pure luck would produce.
 | The same setups with smarter exits, combined, or on cheaper stocks | 377 | Nothing |
 | Published anomalies (intraday momentum, index deletions) | 2 | Traded away since they were published |
 | The overnight premium (buy at the close, sell at the open) | 1 | **Real and tradeable**, but no better than holding |
+| Two published chart-reading AI models, rebuilt exactly (one on CRSP) | 8 | Matched the papers, then lost money on years they had never seen |
 
 ## The one thing that's real
 
