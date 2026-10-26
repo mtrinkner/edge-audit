@@ -1,0 +1,351 @@
+<title>Signal Charts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a trading-terminal split. Stock list on the left, one large price chart with the
+   chart-AI ribbon and volume beneath it, signal controls on the right; stacks on phones. */
+:root {
+  --paper: #f7f8f6; --panel: #ffffff; --ink: #18201d; --muted: #5f6b66; --rule: #dde3df;
+  --grid: #e8ece9; --accent: #1f6f5c; --accent-soft: #d6ebe4;
+  --up: #1f7a52; --down: #b6413a; --ai-hi: #2e8f6a; --ai-lo: #c0524a; --ai-mid: #e3e8e5;
+  --g1: #2563a6; --g2: #8a4fb0; --g3: #b7791f; --g4: #0e7c86; --g5: #a03c6e;
+  --sma50: #c27b14; --sma200: #3d5aa8;
+  --display: "Newsreader", Georgia, serif; --body: "Public Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #111614; --panel: #171e1b; --ink: #e6ece9; --muted: #98a59f; --rule: #2a3430;
+  --grid: #222b27; --accent: #5cc4a4; --accent-soft: #1d3a31;
+  --up: #4cc18b; --down: #ec7a70; --ai-hi: #3fae84; --ai-lo: #d76a61; --ai-mid: #2a3430;
+  --g1: #6ea6e6; --g2: #b58ad6; --g3: #e0aa52; --g4: #4fc0c9; --g5: #db7aa9;
+  --sma50: #e2a33f; --sma200: #8aa2e8; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #111614; --panel: #171e1b; --ink: #e6ece9; --muted: #98a59f; --rule: #2a3430;
+  --grid: #222b27; --accent: #5cc4a4; --accent-soft: #1d3a31;
+  --up: #4cc18b; --down: #ec7a70; --ai-hi: #3fae84; --ai-lo: #d76a61; --ai-mid: #2a3430;
+  --g1: #6ea6e6; --g2: #b58ad6; --g3: #e0aa52; --g4: #4fc0c9; --g5: #db7aa9;
+  --sma50: #e2a33f; --sma200: #8aa2e8; color-scheme: dark }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 14px; }
+.wrap { padding-block: 20px 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px; }
+header h1 { font-family: var(--display); font-weight: 400; font-size: 30px; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+header p { color: var(--muted); margin: 6px 0 0; max-width: 72ch; line-height: 1.5; }
+.layout { display: grid; gap: 16px; grid-template-columns: 220px minmax(0, 1fr) 290px; align-items: start; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 200px minmax(0, 1fr); } .side { grid-column: 1 / -1; } }
+@media (max-width: 720px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.box { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; min-width: 0; }
+.list { display: grid; grid-template-rows: auto minmax(0, 1fr); max-height: 640px; }
+@media (max-width: 720px) { .list { max-height: 260px; } }
+.list input { margin: 10px; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; min-width: 0; }
+.list input:focus-visible, button:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.stocks { overflow: auto; border-top: 1px solid var(--rule); }
+.stock { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 4.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline; width: 100%; padding: 7px 10px; cursor: pointer; border-bottom: 1px solid var(--grid); }
+.stock:hover { background: var(--accent-soft); }
+.stock[aria-current="true"] { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.stock .t { font-family: var(--mono); font-weight: 500; }
+.stock .n { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stock .c { font-family: var(--mono); font-size: 12px; }
+.up { color: var(--up); } .down { color: var(--down); }
+.main { padding: 14px 14px 10px; display: grid; gap: 10px; }
+.quote { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
+.quote .sym { font-family: var(--display); font-size: 26px; }
+.quote .nm { color: var(--muted); }
+.quote .px { font-family: var(--mono); font-size: 18px; margin-left: auto; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { all: unset; cursor: pointer; padding: 4px 10px; font-size: 12px; font-family: var(--mono); color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--paper); }
+.chk { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); cursor: pointer; border-radius: 4px; padding: 2px 4px; }
+.chk i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.chart { position: relative; min-height: 470px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 6px 18px rgb(0 0 0 / .12); padding: 8px 10px; font-size: 12px; min-width: 190px; z-index: 3; }
+.tip .d { color: var(--muted); margin-bottom: 4px; }
+.tip .row { display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); }
+.tip .sig { margin-top: 6px; display: grid; gap: 2px; }
+.tip .sig span { display: flex; gap: 6px; align-items: center; }
+.tip .sig i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.legend { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.legend b { font-weight: 500; color: var(--ink); }
+.ai-key { display: inline-flex; gap: 2px; vertical-align: middle; }
+.ai-key i { width: 10px; height: 10px; display: inline-block; border-radius: 2px; }
+.side { padding: 12px 12px 6px; display: grid; gap: 10px; align-content: start; }
+.side h2 { font-size: 13px; font-weight: 600; margin: 0; }
+.side .hint { color: var(--muted); font-size: 12px; line-height: 1.45; margin: 0; }
+.side .quick { display: flex; gap: 6px; flex-wrap: wrap; }
+.side .quick button { all: unset; cursor: pointer; font-size: 12px; color: var(--accent); }
+.grp { border-top: 1px solid var(--rule); padding-top: 8px; }
+.grp h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin: 0 0 4px; display: flex; align-items: center; gap: 6px; }
+.grp h3 i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.sigrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 4px 8px; align-items: center; font-size: 12px; padding: 3px 0; cursor: pointer; }
+.sigrow input { margin: 0; accent-color: var(--accent); }
+.sigrow .cnt { font-family: var(--mono); color: var(--muted); min-width: 2.2em; text-align: right; }
+.sigrow .ex { font-family: var(--mono); font-size: 11px; min-width: 4.4em; text-align: right; }
+.sigrow.none { opacity: .45; }
+.foot { color: var(--muted); font-size: 12px; line-height: 1.5; max-width: 90ch; }
+.empty { display: grid; place-items: center; min-height: 470px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .chart svg { animation: fade .25s ease-out; } @keyframes fade { from { opacity: .4 } to { opacity: 1 } } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Signal Charts</h1>
+    <p>The 100 most-traded US stocks, with every technical signal this project tested marked where it fired, plus the chart-reading model's monthly verdict. Pick a stock, then switch signals on and off. Each signal shows how it did against simply holding the stock in 13.5 million test trades.</p>
+  </header>
+
+  <div class="layout">
+    <section class="box list" aria-label="Stocks">
+      <input id="search" type="search" placeholder="Search ticker or name" aria-label="Search stocks">
+      <div class="stocks" id="stocks"></div>
+    </section>
+
+    <section class="box main">
+      <div class="quote" id="quote"><span class="sym">Loading</span></div>
+      <div class="toolbar">
+        <div class="seg" id="range" role="group" aria-label="Time range">
+          <button data-r="63" aria-pressed="false">3M</button><button data-r="126" aria-pressed="false">6M</button><button data-r="252" aria-pressed="true">1Y</button><button data-r="0" aria-pressed="false">All</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="ma50" checked><i style="background: var(--sma50)"></i>50-day avg</label>
+        <label class="chk"><input type="checkbox" id="ma200" checked><i style="background: var(--sma200)"></i>200-day avg</label>
+        <label class="chk"><input type="checkbox" id="aiShow" checked>Chart-AI ribbon</label>
+      </div>
+      <div class="chart" id="chart"><div class="empty">Loading prices…</div></div>
+      <div class="legend">
+        <span><b>Markers</b> sit under the candle on the day a signal fired; signals that point down sit above it.</span>
+        <span><b>Chart-AI ribbon</b> <span class="ai-key"><i style="background: var(--ai-lo)"></i><i style="background: var(--ai-mid)"></i><i style="background: var(--ai-hi)"></i></span> monthly rank, bottom 10% to top 10%.</span>
+      </div>
+    </section>
+
+    <aside class="box side" aria-label="Signals">
+      <h2>Signals</h2>
+      <p class="hint">Count is how often it fired on this stock in view. The right column is its tested edge: average return per trade versus holding the same stock (none was statistically positive).</p>
+      <div class="quick"><button id="allOn">All on</button><button id="allOff">All off</button><button id="defaults">Defaults</button></div>
+      <div id="groups"></div>
+    </aside>
+  </div>
+
+  <p class="foot" id="foot">Prices are split- and dividend-adjusted daily bars from the project's own database. For conditions that last for weeks, such as price above its 200-day average, the marker shows the day the condition switched on. The chart-AI rank comes from the Charting by Machines model trained on 2015–2022 and then frozen, so every month shown is out of sample. Research only, not investment advice.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+(() => {
+  const GROUP_VAR = { "Moving averages": "--g1", "Momentum oscillators": "--g2", "Bands and breakouts": "--g3", "Candlesticks": "--g4", "Gaps and volume": "--g5" };
+  const DOWN = new Set(["death_cross_50_200", "rsi_overbought_70", "bearish_engulfing", "shooting_star", "gap_down_2pct", "big_down_day", "three_down_days"]);
+  const DEFAULTS = ["golden_cross_50_200", "death_cross_50_200", "rsi_oversold_30", "macd_cross_up", "new_52w_high", "bullish_engulfing", "gap_up_2pct"];
+  const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const fmt = d3.format(",.2f"), pct = d3.format("+.1%");
+  let meta, stock, range = store.get("sc-range") ?? 252;
+  let on = new Set(store.get("sc-on") ?? DEFAULTS);
+  const cache = new Map();
+
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  async function boot() {
+    try { meta = await (await fetch("index.json")).json(); }
+    catch { document.getElementById("chart").replaceChildren(el("div", "empty", "Couldn't load the stock list.")); return; }
+    renderList("");
+    renderGroups();
+    document.querySelectorAll("#range button").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.r) === range)));
+    const want = location.hash.slice(1).toUpperCase();
+    const first = meta.stocks.find((s) => s.symbol === want) || meta.stocks.find((s) => s.symbol === store.get("sc-sym")) || meta.stocks[0];
+    select(first.symbol);
+  }
+
+  function renderList(q) {
+    const box = document.getElementById("stocks");
+    const t = q.trim().toLowerCase();
+    const rows = meta.stocks.filter((s) => !t || s.symbol.toLowerCase().includes(t) || s.name.toLowerCase().includes(t));
+    box.replaceChildren(...rows.map((s) => {
+      const b = el("button", "stock"); b.type = "button"; b.dataset.sym = s.symbol;
+      b.setAttribute("aria-current", String(stock && stock.symbol === s.symbol));
+      const ch = s.last / s.first - 1;
+      b.append(el("span", "t", s.symbol), el("span", "n", s.name), el("span", "c " + (ch >= 0 ? "up" : "down"), pct(ch)));
+      b.addEventListener("click", () => select(s.symbol));
+      return b;
+    }));
+    if (!rows.length) box.replaceChildren(el("div", "empty", "No stock matches."));
+  }
+
+  async function select(sym) {
+    store.set("sc-sym", sym);
+    try { history.replaceState(null, "", "#" + sym); } catch {}
+    if (!cache.has(sym)) {
+      try { cache.set(sym, await (await fetch(`stocks/${sym}.json`)).json()); }
+      catch { document.getElementById("chart").replaceChildren(el("div", "empty", `Couldn't load ${sym}.`)); return; }
+    }
+    stock = cache.get(sym);
+    document.querySelectorAll(".stock").forEach((b) => b.setAttribute("aria-current", String(b.dataset.sym === sym)));
+    draw();
+  }
+
+  function view() {
+    const n = stock.dates.length, from = range ? Math.max(0, n - range) : 0;
+    return { from, to: n - 1 };
+  }
+
+  function renderQuote() {
+    const q = document.getElementById("quote");
+    const { from, to } = view();
+    const ch = stock.close[to] / stock.close[from] - 1;
+    q.replaceChildren(el("span", "sym", stock.symbol), el("span", "nm", `${stock.name} · ${stock.sector || "—"}`),
+      el("span", "px", `${fmt(stock.close[to])}`), el("span", "c " + (ch >= 0 ? "up" : "down"), `${pct(ch)} in view`));
+  }
+
+  function renderGroups() {
+    const box = document.getElementById("groups");
+    const groups = d3.group(meta.signals, (s) => s.group);
+    box.replaceChildren(...[...groups].map(([g, sigs]) => {
+      const sec = el("div", "grp");
+      const h = el("h3"); const dot = el("i"); dot.style.background = `var(${GROUP_VAR[g]})`; h.append(dot, document.createTextNode(g));
+      sec.append(h);
+      for (const s of sigs) {
+        const row = el("label", "sigrow"); row.dataset.id = s.id;
+        const cb = el("input"); cb.type = "checkbox"; cb.id = "sig-" + s.id; cb.checked = on.has(s.id);
+        cb.addEventListener("change", () => { cb.checked ? on.add(s.id) : on.delete(s.id); store.set("sc-on", [...on]); draw(); });
+        const ex = el("span", "ex " + (s.excess >= 0 ? "up" : "down"), (s.excess >= 0 ? "+" : "") + s.excess.toFixed(2) + "%");
+        ex.title = `${d3.format(",")(s.trades)} test trades, t = ${s.t}`;
+        row.append(cb, el("span", null, s.label + (s.state ? " (turns on)" : "")), el("span", "cnt", "–"), ex);
+        sec.append(row);
+      }
+      return sec;
+    }));
+  }
+
+  function updateCounts() {
+    const { from, to } = view();
+    document.querySelectorAll(".sigrow").forEach((row) => {
+      const days = stock.signals[row.dataset.id] || [];
+      const n = days.filter((i) => i >= from && i <= to).length;
+      row.querySelector(".cnt").textContent = n;
+      row.classList.toggle("none", n === 0);
+    });
+  }
+
+  function draw() {
+    if (!stock) return;
+    renderQuote(); updateCounts();
+    const box = document.getElementById("chart");
+    const W = Math.max(box.clientWidth, 300), showAI = document.getElementById("aiShow").checked;
+    const priceH = 330, aiH = showAI ? 22 : 0, volH = 64, gap = 10, top = 10, bottom = 22;
+    const H = top + priceH + (showAI ? gap + aiH : 0) + gap + volH + bottom;
+    const { from, to } = view();
+    const idx = d3.range(from, to + 1);
+    const lo = d3.min(idx, (i) => stock.low[i]), hi = d3.max(idx, (i) => stock.high[i]);
+    const yP = d3.scaleLinear([lo, hi], [top + priceH - 14, top + 14]).nice();
+    const svg = d3.create("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", `${stock.symbol} daily price chart`);
+    const meas = svg.append("text").attr("font-family", "IBM Plex Mono, monospace").attr("font-size", 11).text(fmt(yP.domain()[1]));
+    document.body.appendChild(svg.node()); const axW = meas.node().getComputedTextLength() + 12; meas.remove(); svg.node().remove();
+    const x = d3.scaleBand(idx, [8, W - axW]).paddingInner(0.25);
+    const cx = (i) => x(i) + x.bandwidth() / 2;
+    const muted = css("--muted"), grid = css("--grid");
+    const g = svg.append("g").attr("font-family", "IBM Plex Mono, monospace").attr("font-size", 11);
+    for (const t of yP.ticks(6)) {
+      g.append("line").attr("x1", 8).attr("x2", W - axW).attr("y1", yP(t)).attr("y2", yP(t)).attr("stroke", grid);
+      g.append("text").attr("x", W - axW + 6).attr("y", yP(t)).attr("dy", "0.32em").attr("fill", muted).text(fmt(t));
+    }
+    const months = idx.filter((i, k) => k === 0 || stock.dates[i].slice(0, 7) !== stock.dates[idx[k - 1]].slice(0, 7));
+    const step = Math.ceil(months.length / Math.max(2, Math.floor(W / 90)));
+    const yBottom = H - 6;
+    months.forEach((i, k) => {
+      if (k % step) return;
+      g.append("line").attr("x1", cx(i)).attr("x2", cx(i)).attr("y1", top).attr("y2", H - bottom).attr("stroke", grid);
+      const lab = stock.dates[i].slice(5, 7) === "01" || k === 0 ? d3.utcFormat("%b %Y")(new Date(stock.dates[i])) : d3.utcFormat("%b")(new Date(stock.dates[i]));
+      g.append("text").attr("x", Math.min(cx(i) + 2, W - axW - 50)).attr("y", yBottom).attr("fill", muted).text(lab);
+    });
+    const up = css("--up"), down = css("--down"), bw = Math.max(1, x.bandwidth());
+    const cg = svg.append("g");
+    for (const i of idx) {
+      const o = stock.open[i], c = stock.close[i]; if (o == null || c == null) continue;
+      const col = c >= o ? up : down;
+      cg.append("line").attr("x1", cx(i)).attr("x2", cx(i)).attr("y1", yP(stock.high[i])).attr("y2", yP(stock.low[i])).attr("stroke", col).attr("stroke-width", Math.min(1.2, bw));
+      if (bw >= 2) cg.append("rect").attr("x", x(i)).attr("width", bw).attr("y", yP(Math.max(o, c))).attr("height", Math.max(1, Math.abs(yP(o) - yP(c)))).attr("fill", col);
+    }
+    for (const [id, v] of [["ma50", "--sma50"], ["ma200", "--sma200"]]) {
+      if (!document.getElementById(id).checked) continue;
+      const key = id === "ma50" ? "sma50" : "sma200";
+      svg.append("path").attr("fill", "none").attr("stroke", css(v)).attr("stroke-width", 1.6).attr("stroke-linejoin", "round")
+        .attr("d", d3.line().defined((i) => stock[key][i] != null).x(cx).y((i) => yP(stock[key][i]))(idx));
+    }
+    const mg = svg.append("g"), dayFired = new Map();
+    const sigById = new Map(meta.signals.map((s) => [s.id, s]));
+    const stackUp = new Map(), stackDown = new Map(), ms = Math.max(4, Math.min(7, bw + 2));
+    for (const id of on) {
+      const s = sigById.get(id); if (!s) continue;
+      const color = css(GROUP_VAR[s.group]);
+      for (const i of stock.signals[id] || []) {
+        if (i < from || i > to) continue;
+        if (!dayFired.has(i)) dayFired.set(i, []);
+        dayFired.get(i).push(s);
+        const isDown = DOWN.has(id), st = isDown ? stackDown : stackUp;
+        const k = st.get(i) || 0; st.set(i, k + 1);
+        const yy = isDown ? yP(stock.high[i]) - 6 - k * (ms + 2) : yP(stock.low[i]) + 6 + k * (ms + 2);
+        const p = isDown ? `M${cx(i)},${yy} l${-ms / 2},${-ms} l${ms},0 Z` : `M${cx(i)},${yy} l${-ms / 2},${ms} l${ms},0 Z`;
+        mg.append("path").attr("d", p).attr("fill", color);
+      }
+    }
+    let y0 = top + priceH;
+    const aiMap = new Map(stock.ai.map(([m, d]) => [m, d]));
+    if (showAI) {
+      y0 += gap;
+      const ramp = d3.scaleLinear([1, 5.5, 10], [css("--ai-lo"), css("--ai-mid"), css("--ai-hi")]).interpolate(d3.interpolateRgb);
+      g.append("text").attr("x", 8).attr("y", y0 - 2).attr("fill", muted).attr("font-size", 10).text("CHART-AI MONTHLY RANK");
+      for (const i of idx) {
+        const d = aiMap.get(stock.dates[i].slice(0, 7));
+        svg.append("rect").attr("x", x(i)).attr("width", x.step()).attr("y", y0 + 2).attr("height", aiH - 4).attr("fill", d ? ramp(d) : css("--grid"));
+      }
+      y0 += aiH;
+    }
+    y0 += gap;
+    const vmax = d3.max(idx, (i) => stock.volume[i]) || 1;
+    const yV = d3.scaleLinear([0, vmax], [y0 + volH, y0 + 4]);
+    g.append("text").attr("x", 8).attr("y", y0 + 2).attr("fill", muted).attr("font-size", 10).text("VOLUME");
+    const vg = svg.append("g").attr("opacity", 0.55);
+    for (const i of idx) vg.append("rect").attr("x", x(i)).attr("width", bw).attr("y", yV(stock.volume[i])).attr("height", y0 + volH - yV(stock.volume[i])).attr("fill", stock.close[i] >= stock.open[i] ? up : down);
+    const cross = svg.append("line").attr("y1", top).attr("y2", H - bottom).attr("stroke", muted).attr("stroke-dasharray", "3 3").attr("opacity", 0);
+    const tip = el("div", "tip"); tip.hidden = true;
+    svg.append("rect").attr("x", 8).attr("y", top).attr("width", W - axW - 8).attr("height", H - top - bottom).attr("fill", "transparent")
+      .on("mousemove", (ev) => {
+        const [mx] = d3.pointer(ev);
+        const i = idx[Math.max(0, Math.min(idx.length - 1, Math.round((mx - 8) / x.step() - 0.5)))];
+        cross.attr("x1", cx(i)).attr("x2", cx(i)).attr("opacity", 1);
+        tip.replaceChildren(el("div", "d", d3.utcFormat("%a %b %-d, %Y")(new Date(stock.dates[i]))));
+        for (const [k, v] of [["Open", stock.open[i]], ["High", stock.high[i]], ["Low", stock.low[i]], ["Close", stock.close[i]]]) {
+          const r = el("div", "row"); r.append(el("span", null, k), el("span", null, v == null ? "—" : fmt(v))); tip.append(r);
+        }
+        const d = aiMap.get(stock.dates[i].slice(0, 7));
+        const ar = el("div", "row"); ar.append(el("span", null, "Chart-AI"), el("span", null, d ? `decile ${d} of 10` : "—")); tip.append(ar);
+        const fired = dayFired.get(i) || [];
+        if (fired.length) {
+          const sg = el("div", "sig");
+          for (const s of fired) { const sp = el("span"); const dot = el("i"); dot.style.background = `var(${GROUP_VAR[s.group]})`; sp.append(dot, document.createTextNode(s.label)); sg.append(sp); }
+          tip.append(sg);
+        }
+        tip.hidden = false;
+        const px = cx(i) / W * box.clientWidth;
+        tip.style.left = (px > box.clientWidth / 2 ? px - tip.offsetWidth - 14 : px + 14) + "px";
+        tip.style.top = "8px";
+      })
+      .on("mouseleave", () => { tip.hidden = true; cross.attr("opacity", 0); });
+    box.replaceChildren(svg.node(), tip);
+  }
+
+  document.getElementById("search").addEventListener("input", (e) => renderList(e.target.value));
+  document.querySelectorAll("#range button").forEach((b) => b.addEventListener("click", () => {
+    range = Number(b.dataset.r); store.set("sc-range", range);
+    document.querySelectorAll("#range button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    draw();
+  }));
+  ["ma50", "ma200", "aiShow"].forEach((id) => document.getElementById(id).addEventListener("change", draw));
+  const setAll = (ids) => { on = new Set(ids); store.set("sc-on", [...on]); document.querySelectorAll(".sigrow input").forEach((cb) => { cb.checked = on.has(cb.id.slice(4)); }); draw(); };
+  document.getElementById("allOn").addEventListener("click", () => setAll(meta.signals.map((s) => s.id)));
+  document.getElementById("allOff").addEventListener("click", () => setAll([]));
+  document.getElementById("defaults").addEventListener("click", () => setAll(DEFAULTS));
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(draw, 120); });
+  window.addEventListener("hashchange", () => { const s = location.hash.slice(1).toUpperCase(); if (meta && meta.stocks.some((m) => m.symbol === s) && (!stock || stock.symbol !== s)) select(s); });
+  if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  boot();
+})();
+</script>

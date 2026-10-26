@@ -107,3 +107,32 @@ investors already do.
 
 Crypto funding carry is also the first kind, and visibly being competed away:
 23.5% annualized in 2024, 6.3% in 2025, 1.7% in 2026.
+
+Trial 44 tested this directly. Executed through the opening and closing
+auctions, the overnight premium is capturable after all: +4.88bp a night, t=3.25,
+Sharpe 0.914 over 2014–2026. But holding the same stocks scored 0.938. Being
+able to collect it doesn't make it an edge, and the pass bar now requires a
+strategy that is long the market part of the time to beat simply holding.
+
+## Scoring rules since the 2026-10-14 audit
+
+Every new study goes through `python/evaluation.py`, which exists because each
+of these went wrong at least once:
+
+- **Size every trade before it happens.** Use a fixed notional per trade, or a
+  rule that only uses signals fired so far. Splitting a day's capital across all
+  of that day's signals needs the end-of-day count, and it produced a Sharpe of
+  1.52 from a strategy whose causal Sharpe was −1.27.
+  `tests/test_causal_weights.py` checks any sizing rule by deleting future
+  trades and confirming past weights don't move.
+- **Test the quantity you report.** Use the per-trade mean, with standard errors
+  clustered by session, because a market day is one shock, not thousands.
+- **Annualize by the series' own frequency.** The registry now records it, after
+  a daily series was scored as weekly and printed "clears the bar".
+- **Report what a test could have seen.** Give the minimum detectable effect next
+  to every null.
+- **Report the break-even cost, not just the net.** No spread on these names was
+  actually measured, so a verdict shouldn't depend on one. One cent per share is
+  the only hard lower bound.
+- **Name the information family when declaring a test.** 76% of trials went to
+  price patterns before anyone counted.

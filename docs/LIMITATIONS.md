@@ -32,6 +32,13 @@ Consequences:
   here. That is a real gap between the two halves of the project, not an
   oversight.
 
+**Update, October 2026.** Hourly bars were added later: 1,489 stocks and 48 ETFs,
+November 2023 to October 2026, seven bars a session from free data. That made
+same-day entry and exit testable (trials 28–43). It still can't see anything
+inside an hour. In particular, a bar that touched both the stop and the target
+is scored as the stop, and the 09:30–10:30 bar stands in for the first
+half-hour in trial 43.
+
 ## The cost model is an estimate
 
 `python/config.py` models 5 bps slippage, a 2 bps half-spread, and per-share
@@ -41,6 +48,14 @@ measurements from a fill log. Thinner names and larger sizes would pay more.
 Mitigation: costs are a parameter, and sensitivity to them is reported rather
 than assumed. Any result that only survives at zero cost is reported as not
 surviving.
+
+**Update, October 2026: the intraday "measured" spreads were not measured.**
+Trials 32–42 replaced the model with the EDGE estimator run on hourly bars. The
+2026-10-14 audit showed that on seven bars a session EDGE returns a noise floor
+of roughly 6–11bp whatever the true spread is. It reads SPY at 1.64bp against a
+true 0.17bp, and has no relationship to the one-cent minimum spread. New work
+reports gross return and the break-even cost instead (`evaluation.py`), and
+treats one cent per share as the only hard lower bound.
 
 ## Prices are adjusted, with the usual caveats
 
@@ -184,8 +199,25 @@ term, anchored so large caps match a 2bp assumption. It is a reasonable shape
 fitted to two well-measured quantities, not a measurement. Everything down-cap
 depends on it.
 
-## What 381 trials actually established
+## What 840 trials actually established
 
-Not that no edge exists. That no edge was found in daily-frequency, liquid,
-retail-accessible markets using free data and this toolkit, and that the two
-things which looked like edges were a factor tilt and a sample artifact.
+Not that no edge exists. That no edge was found in liquid, retail-accessible US
+markets using free data and this toolkit, at daily or hourly frequency.
+Specifically:
+
+- **Technical patterns carry no detectable information.** On daily data, 37 of
+  41 signals lost to holding the same stock. On hourly data, scored per trade
+  at zero cost, 0 of 12 day-trading rules have a significant positive return,
+  with tests able to detect about 6bp.
+- **Published anomalies have decayed.** Intraday market momentum (trial 43) and
+  the index-deletion bounce (trial 45) are absent in recent data.
+- **The one robust effect is a risk premium.** The overnight premium is real and
+  tradeable through the auctions (trial 44), but no better risk-adjusted than
+  holding.
+- **Every result that looked like an edge was an error.** That includes a factor
+  tilt, a truncated sample (short interest, 1.66 → 0.24), and a sizing rule that
+  used information from later in the day (1.52 → −1.27).
+
+76% of the trials went to one family of information, price patterns. That's the
+main reason the search was less informative than its trial count suggests. See
+`docs/AUDIT_2026-10-14.md`.

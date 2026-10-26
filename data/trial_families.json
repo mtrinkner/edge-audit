@@ -1,0 +1,15 @@
+{
+  "_doc": "Which INFORMATION each declared study used. Added by the 2026-10-14 audit; the registry itself is not edited. Families are defined by the data a signal is computed from, not by its name: two rules computed from one price series are one source of information however different they look.",
+  "price_ta": {"label": "price and volume patterns (technical analysis, ML on price features)",
+               "ids": [1, 2, 3, 4, 5, 6, 8, 27, 28, 29, 30, 31, 38, 39, 40, 41, 42]},
+  "xs_factors": {"label": "cross-sectional factors and fundamentals (momentum, reversal, value, quality, combinations)",
+                 "ids": [7, 9, 11, 13, 15, 23, 35, 36, 37]},
+  "earnings_info": {"label": "earnings announcements and information diffusion",
+                    "ids": [10, 12, 14, 34]},
+  "flows_altdata": {"label": "institutional flows and alternative data (short interest, insider filings, index rebalancing, government contracts)",
+                    "ids": [16, 18, 19, 26]},
+  "microstructure": {"label": "market microstructure and costs (overnight premium, measured spreads)",
+                     "ids": [17, 32]},
+  "calendar": {"label": "calendar effects", "ids": [33]},
+  "crypto_carry": {"label": "crypto perpetual funding carry and crowding", "ids": [20, 21, 22, 24, 25]}
+}

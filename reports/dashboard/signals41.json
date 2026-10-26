@@ -1,0 +1,248 @@
+[
+ {
+  "signal": "rsi_oversold_20",
+  "trades": 5612,
+  "excess_pct": 0.196,
+  "t": 1.55
+ },
+ {
+  "signal": "death_cross_50_200",
+  "trades": 12402,
+  "excess_pct": 0.021,
+  "t": 0.74
+ },
+ {
+  "signal": "rsi_oversold_30",
+  "trades": 47597,
+  "excess_pct": 0.02,
+  "t": 0.5
+ },
+ {
+  "signal": "golden_cross_20_100",
+  "trades": 28694,
+  "excess_pct": 0.003,
+  "t": 0.16
+ },
+ {
+  "signal": "support_bounce",
+  "trades": 266402,
+  "excess_pct": -0.024,
+  "t": -3.06
+ },
+ {
+  "signal": "bollinger_upper_break",
+  "trades": 131616,
+  "excess_pct": -0.017,
+  "t": -1.33
+ },
+ {
+  "signal": "ema_cross_12_26",
+  "trades": 75281,
+  "excess_pct": -0.02,
+  "t": -1.85
+ },
+ {
+  "signal": "cross_above_sma_20",
+  "trades": 259102,
+  "excess_pct": -0.018,
+  "t": -2.23
+ },
+ {
+  "signal": "rsi_overbought_70",
+  "trades": 79371,
+  "excess_pct": -0.03,
+  "t": -1.88
+ },
+ {
+  "signal": "three_white_soldiers",
+  "trades": 393159,
+  "excess_pct": -0.024,
+  "t": -2.95
+ },
+ {
+  "signal": "donchian_break_55",
+  "trades": 189257,
+  "excess_pct": -0.027,
+  "t": -1.71
+ },
+ {
+  "signal": "rsi_cross_50",
+  "trades": 246100,
+  "excess_pct": -0.023,
+  "t": -2.8
+ },
+ {
+  "signal": "donchian_break_20",
+  "trades": 307037,
+  "excess_pct": -0.029,
+  "t": -2.34
+ },
+ {
+  "signal": "hammer",
+  "trades": 201039,
+  "excess_pct": -0.036,
+  "t": -3.91
+ },
+ {
+  "signal": "above_sma_50",
+  "trades": 2411833,
+  "excess_pct": -0.032,
+  "t": -6.5
+ },
+ {
+  "signal": "outside_bar_up",
+  "trades": 194337,
+  "excess_pct": -0.036,
+  "t": -3.64
+ },
+ {
+  "signal": "cross_above_sma_50",
+  "trades": 155420,
+  "excess_pct": -0.037,
+  "t": -3.98
+ },
+ {
+  "signal": "above_sma_200",
+  "trades": 2453366,
+  "excess_pct": -0.038,
+  "t": -8.01
+ },
+ {
+  "signal": "new_52w_high",
+  "trades": 98356,
+  "excess_pct": -0.035,
+  "t": -3.55
+ },
+ {
+  "signal": "bearish_engulfing",
+  "trades": 195280,
+  "excess_pct": -0.042,
+  "t": -4.69
+ },
+ {
+  "signal": "shooting_star",
+  "trades": 182451,
+  "excess_pct": -0.037,
+  "t": -3.94
+ },
+ {
+  "signal": "oversold_in_uptrend",
+  "trades": 52602,
+  "excess_pct": -0.048,
+  "t": -2.8
+ },
+ {
+  "signal": "ma_ribbon_aligned",
+  "trades": 1616595,
+  "excess_pct": -0.045,
+  "t": -8.54
+ },
+ {
+  "signal": "resistance_break_volume",
+  "trades": 69594,
+  "excess_pct": -0.063,
+  "t": -4.42
+ },
+ {
+  "signal": "volume_spike_up",
+  "trades": 85183,
+  "excess_pct": -0.063,
+  "t": -4.36
+ },
+ {
+  "signal": "golden_cross_50_200",
+  "trades": 12480,
+  "excess_pct": -0.063,
+  "t": -2.9
+ },
+ {
+  "signal": "three_down_days",
+  "trades": 445517,
+  "excess_pct": -0.049,
+  "t": -3.81
+ },
+ {
+  "signal": "pullback_to_sma50",
+  "trades": 85550,
+  "excess_pct": -0.081,
+  "t": -6.15
+ },
+ {
+  "signal": "morning_star",
+  "trades": 280584,
+  "excess_pct": -0.018,
+  "t": -2.49
+ },
+ {
+  "signal": "stochastic_oversold",
+  "trades": 271791,
+  "excess_pct": -0.063,
+  "t": -5.29
+ },
+ {
+  "signal": "macd_hist_positive",
+  "trades": 168482,
+  "excess_pct": -0.009,
+  "t": -1.04
+ },
+ {
+  "signal": "macd_cross_up",
+  "trades": 168482,
+  "excess_pct": -0.009,
+  "t": -1.04
+ },
+ {
+  "signal": "bullish_engulfing",
+  "trades": 173226,
+  "excess_pct": -0.032,
+  "t": -3.22
+ },
+ {
+  "signal": "extreme_below_sma20",
+  "trades": 206533,
+  "excess_pct": -0.046,
+  "t": -1.96
+ },
+ {
+  "signal": "bollinger_lower_touch",
+  "trades": 206533,
+  "excess_pct": -0.046,
+  "t": -1.96
+ },
+ {
+  "signal": "inside_bar",
+  "trades": 515137,
+  "excess_pct": -0.031,
+  "t": -4.5
+ },
+ {
+  "signal": "doji",
+  "trades": 462401,
+  "excess_pct": -0.032,
+  "t": -4.95
+ },
+ {
+  "signal": "gap_down_2pct",
+  "trades": 135362,
+  "excess_pct": -0.072,
+  "t": -1.38
+ },
+ {
+  "signal": "gap_up_2pct",
+  "trades": 140865,
+  "excess_pct": -0.118,
+  "t": -3.85
+ },
+ {
+  "signal": "big_down_day",
+  "trades": 273572,
+  "excess_pct": -0.12,
+  "t": -5.21
+ },
+ {
+  "signal": "volume_dryup",
+  "trades": 253274,
+  "excess_pct": -0.082,
+  "t": -10.4
+ }
+]

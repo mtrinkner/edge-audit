@@ -30,6 +30,14 @@ the high-volume bars alone. It gives the symbol's prevailing spread over a
 window, not the spread on one specific bar. If high-volume bars really are
 tighter than their symbol's average, this still overstates the cost of trading
 them, and that remains unresolved without real quote data.
+
+AUDIT 2026-10-14: THIS ESTIMATE IS NOT A SPREAD MEASUREMENT. bidask.edge clips a
+negative estimate to zero unless sign=True. With seven hourly bars per session,
+about 47% of session estimates are negative, so the mean of clipped values is a
+noise floor of roughly 6-11bp whatever the true spread is. It has no measurable
+relationship to the one-cent floor (correlation ~0) and reports SPY at 1.64bp
+against a true ~0.17bp. Kept, unchanged, because trials 32-42 used it. New work
+reports gross return and the break-even cost instead; see evaluation.py.
 """
 
 from __future__ import annotations

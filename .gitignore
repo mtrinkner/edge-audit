@@ -95,3 +95,20 @@ Rplots.pdf
 !reports/intraday_liquidity.csv
 !reports/calendar_edges.csv
 !reports/cost_first_screen.csv
+
+# Chart images for trial 50. Regenerate with: python3 python/cnn_images.py
+data/cnn/
+
+# Jiang, Kelly & Xiu (2023) image data from dachxiu.chicagobooth.edu (568MB). Not redistributed.
+data/jkx_raw/
+data/jkx/
+
+# Local database backup before the 2026-10-17 quarantine (5GB)
+data/warehouse_backup_*.db
+
+# Murray, Xia & Xiao (2024) replication sample from Mendeley (2.6GB, CC BY 4.0). Not redistributed.
+data/cbm_raw/
+data/cbm/
+
+# CRSP data from WRDS: licensed, never committed.
+data/crsp/

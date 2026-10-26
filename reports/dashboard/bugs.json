@@ -1,0 +1,74 @@
+[
+ {
+  "n": 1,
+  "found": "Day-trading volume signal",
+  "what": "Average volume included hours later the same day",
+  "before": "+12.6bp edge",
+  "after": "-0.7bp",
+  "direction": "Made results look better"
+ },
+ {
+  "n": 2,
+  "found": "Daily budget weighting",
+  "what": "Split each day's money across signals that hadn't fired yet",
+  "before": "Sharpe 1.52",
+  "after": "Sharpe -1.27",
+  "direction": "Made results look better"
+ },
+ {
+  "n": 3,
+  "found": "Mismatched t-statistic",
+  "what": "Printed one average next to the t-stat of another",
+  "before": "t = 5.11",
+  "after": "t = 0.26",
+  "direction": "Made results look better"
+ },
+ {
+  "n": 4,
+  "found": "Spread estimator",
+  "what": "Returned a noise floor, not a spread, on hourly bars",
+  "before": "SPY 1.64bp",
+  "after": "true ~0.17bp",
+  "direction": "Made results look worse"
+ },
+ {
+  "n": 5,
+  "found": "Truncated download",
+  "what": "Short-interest history stopped at 2021",
+  "before": "Sharpe 1.66",
+  "after": "Sharpe 0.24",
+  "direction": "Made results look better"
+ },
+ {
+  "n": 6,
+  "found": "Registry frequency",
+  "what": "Scored daily data as weekly",
+  "before": "'clears the bar'",
+  "after": "fails (bar 1.92)",
+  "direction": "Made results look better"
+ },
+ {
+  "n": 7,
+  "found": "Bankruptcy re-stitch",
+  "what": "Old and new CHRD shares joined in the price data",
+  "before": "+22,500% week",
+  "after": "removed",
+  "direction": "Distorted both ways"
+ },
+ {
+  "n": 8,
+  "found": "Per-stock trade filter",
+  "what": "Silently deleted the golden cross from the study",
+  "before": "signal missing",
+  "after": "restored",
+  "direction": "Hid a result"
+ },
+ {
+  "n": 9,
+  "found": "Paper's validation split",
+  "what": "Chart AI learned which week, not which stock",
+  "before": "best validation score",
+  "after": "no stock-picking skill",
+  "direction": "Made results look better"
+ }
+]
