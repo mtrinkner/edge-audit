@@ -1,0 +1,86 @@
+[
+ {
+  "rule": "gap_down_fill",
+  "trades": 116896,
+  "gross_bp": 13.59,
+  "t": 1.47,
+  "mde_bp": 25.85
+ },
+ {
+  "rule": "midday_reversal",
+  "trades": 514033,
+  "gross_bp": 0.77,
+  "t": 0.31,
+  "mde_bp": 7.0
+ },
+ {
+  "rule": "opening_range_break_down",
+  "trades": 164399,
+  "gross_bp": 0.68,
+  "t": 0.19,
+  "mde_bp": 9.9
+ },
+ {
+  "rule": "vwap_reversion_long",
+  "trades": 404707,
+  "gross_bp": 0.58,
+  "t": 0.26,
+  "mde_bp": 6.17
+ },
+ {
+  "rule": "vwap_reclaim",
+  "trades": 574382,
+  "gross_bp": -0.21,
+  "t": -0.11,
+  "mde_bp": 5.53
+ },
+ {
+  "rule": "volume_climax_long",
+  "trades": 86696,
+  "gross_bp": -0.76,
+  "t": -0.34,
+  "mde_bp": 6.23
+ },
+ {
+  "rule": "inside_session_squeeze",
+  "trades": 689231,
+  "gross_bp": -0.99,
+  "t": -0.45,
+  "mde_bp": 6.11
+ },
+ {
+  "rule": "afternoon_momentum",
+  "trades": 525631,
+  "gross_bp": -1.76,
+  "t": -0.67,
+  "mde_bp": 7.36
+ },
+ {
+  "rule": "power_hour_long",
+  "trades": 526975,
+  "gross_bp": -1.86,
+  "t": -2.13,
+  "mde_bp": 2.44
+ },
+ {
+  "rule": "opening_range_break_up",
+  "trades": 167416,
+  "gross_bp": -1.93,
+  "t": -0.74,
+  "mde_bp": 7.34
+ },
+ {
+  "rule": "first_hour_high_break",
+  "trades": 373781,
+  "gross_bp": -2.37,
+  "t": -1.02,
+  "mde_bp": 6.54
+ },
+ {
+  "rule": "gap_up_fade",
+  "trades": 133618,
+  "gross_bp": -7.17,
+  "t": -0.96,
+  "mde_bp": 20.86
+ }
+]

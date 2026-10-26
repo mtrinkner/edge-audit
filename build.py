@@ -74,6 +74,12 @@ def main() -> int:
         timings["ingest"] = run(
             f"STAGE 1  load bars ({'fresh download' if args.ingest else 'pinned snapshot'})",
             [PY, "python/ingest_bars.py", flag])
+        # The vendor serves the same bad rows on every download (a bankruptcy
+        # re-stitch distorted trials 50 and 52), so they are quarantined again
+        # straight after every ingest. See python/quarantine_bad_rows.py.
+        timings["quarantine"] = run(
+            "STAGE 1b quarantine known-bad price rows",
+            [PY, "python/quarantine_bad_rows.py"])
 
     if "sql" in order:
         # STALENESS GUARD. The materialized feature tables are derived from bars

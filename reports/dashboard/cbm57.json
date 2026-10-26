@@ -1,0 +1,1766 @@
+[
+ {
+  "month": "2005-01",
+  "period": "Paper's own years",
+  "ours_gross": 7.145,
+  "ours_net": 6.924,
+  "authors_gross": 6.434
+ },
+ {
+  "month": "2005-02",
+  "period": "Paper's own years",
+  "ours_gross": 0.874,
+  "ours_net": 0.634,
+  "authors_gross": -0.601
+ },
+ {
+  "month": "2005-03",
+  "period": "Paper's own years",
+  "ours_gross": 2.841,
+  "ours_net": 2.573,
+  "authors_gross": 2.75
+ },
+ {
+  "month": "2005-04",
+  "period": "Paper's own years",
+  "ours_gross": -4.826,
+  "ours_net": -5.081,
+  "authors_gross": -3.345
+ },
+ {
+  "month": "2005-05",
+  "period": "Paper's own years",
+  "ours_gross": -1.499,
+  "ours_net": -1.776,
+  "authors_gross": -0.071
+ },
+ {
+  "month": "2005-06",
+  "period": "Paper's own years",
+  "ours_gross": 2.976,
+  "ours_net": 2.727,
+  "authors_gross": 2.736
+ },
+ {
+  "month": "2005-07",
+  "period": "Paper's own years",
+  "ours_gross": -2.574,
+  "ours_net": -2.841,
+  "authors_gross": -5.101
+ },
+ {
+  "month": "2005-08",
+  "period": "Paper's own years",
+  "ours_gross": 2.117,
+  "ours_net": 1.827,
+  "authors_gross": 1.342
+ },
+ {
+  "month": "2005-09",
+  "period": "Paper's own years",
+  "ours_gross": -0.321,
+  "ours_net": -0.584,
+  "authors_gross": 1.271
+ },
+ {
+  "month": "2005-10",
+  "period": "Paper's own years",
+  "ours_gross": 1.02,
+  "ours_net": 0.779,
+  "authors_gross": 1.96
+ },
+ {
+  "month": "2005-11",
+  "period": "Paper's own years",
+  "ours_gross": -0.453,
+  "ours_net": -0.769,
+  "authors_gross": -1.15
+ },
+ {
+  "month": "2005-12",
+  "period": "Paper's own years",
+  "ours_gross": 2.252,
+  "ours_net": 1.99,
+  "authors_gross": 2.113
+ },
+ {
+  "month": "2006-01",
+  "period": "Paper's own years",
+  "ours_gross": 0.398,
+  "ours_net": 0.154,
+  "authors_gross": -3.599
+ },
+ {
+  "month": "2006-02",
+  "period": "Paper's own years",
+  "ours_gross": 2.803,
+  "ours_net": 2.517,
+  "authors_gross": 4.183
+ },
+ {
+  "month": "2006-03",
+  "period": "Paper's own years",
+  "ours_gross": -3.603,
+  "ours_net": -3.852,
+  "authors_gross": -3.023
+ },
+ {
+  "month": "2006-04",
+  "period": "Paper's own years",
+  "ours_gross": 0.53,
+  "ours_net": 0.272,
+  "authors_gross": 0.013
+ },
+ {
+  "month": "2006-05",
+  "period": "Paper's own years",
+  "ours_gross": -0.906,
+  "ours_net": -1.211,
+  "authors_gross": -1.737
+ },
+ {
+  "month": "2006-06",
+  "period": "Paper's own years",
+  "ours_gross": 1.196,
+  "ours_net": 0.972,
+  "authors_gross": 0.83
+ },
+ {
+  "month": "2006-07",
+  "period": "Paper's own years",
+  "ours_gross": -1.363,
+  "ours_net": -1.609,
+  "authors_gross": 2.609
+ },
+ {
+  "month": "2006-08",
+  "period": "Paper's own years",
+  "ours_gross": -4.18,
+  "ours_net": -4.464,
+  "authors_gross": -3.219
+ },
+ {
+  "month": "2006-09",
+  "period": "Paper's own years",
+  "ours_gross": 1.684,
+  "ours_net": 1.417,
+  "authors_gross": 1.773
+ },
+ {
+  "month": "2006-10",
+  "period": "Paper's own years",
+  "ours_gross": 0.236,
+  "ours_net": -0.015,
+  "authors_gross": -1.432
+ },
+ {
+  "month": "2006-11",
+  "period": "Paper's own years",
+  "ours_gross": -2.963,
+  "ours_net": -3.217,
+  "authors_gross": -3.038
+ },
+ {
+  "month": "2006-12",
+  "period": "Paper's own years",
+  "ours_gross": 5.336,
+  "ours_net": 5.09,
+  "authors_gross": 5.186
+ },
+ {
+  "month": "2007-01",
+  "period": "Paper's own years",
+  "ours_gross": 2.739,
+  "ours_net": 2.465,
+  "authors_gross": 1.042
+ },
+ {
+  "month": "2007-02",
+  "period": "Paper's own years",
+  "ours_gross": -1.594,
+  "ours_net": -1.887,
+  "authors_gross": -1.91
+ },
+ {
+  "month": "2007-03",
+  "period": "Paper's own years",
+  "ours_gross": 3.588,
+  "ours_net": 3.348,
+  "authors_gross": 3.193
+ },
+ {
+  "month": "2007-04",
+  "period": "Paper's own years",
+  "ours_gross": 0.063,
+  "ours_net": -0.199,
+  "authors_gross": 0.7
+ },
+ {
+  "month": "2007-05",
+  "period": "Paper's own years",
+  "ours_gross": -0.163,
+  "ours_net": -0.45,
+  "authors_gross": -0.142
+ },
+ {
+  "month": "2007-06",
+  "period": "Paper's own years",
+  "ours_gross": -0.507,
+  "ours_net": -0.758,
+  "authors_gross": -1.75
+ },
+ {
+  "month": "2007-07",
+  "period": "Paper's own years",
+  "ours_gross": -0.307,
+  "ours_net": -0.578,
+  "authors_gross": -0.941
+ },
+ {
+  "month": "2007-08",
+  "period": "Paper's own years",
+  "ours_gross": -0.893,
+  "ours_net": -1.181,
+  "authors_gross": -0.147
+ },
+ {
+  "month": "2007-09",
+  "period": "Paper's own years",
+  "ours_gross": -0.318,
+  "ours_net": -0.598,
+  "authors_gross": 3.37
+ },
+ {
+  "month": "2007-10",
+  "period": "Paper's own years",
+  "ours_gross": 0.345,
+  "ours_net": 0.046,
+  "authors_gross": -0.932
+ },
+ {
+  "month": "2007-11",
+  "period": "Paper's own years",
+  "ours_gross": -0.707,
+  "ours_net": -1.031,
+  "authors_gross": 0.528
+ },
+ {
+  "month": "2007-12",
+  "period": "Paper's own years",
+  "ours_gross": 4.512,
+  "ours_net": 4.222,
+  "authors_gross": 4.958
+ },
+ {
+  "month": "2008-01",
+  "period": "Paper's own years",
+  "ours_gross": -3.642,
+  "ours_net": -3.979,
+  "authors_gross": -2.299
+ },
+ {
+  "month": "2008-02",
+  "period": "Paper's own years",
+  "ours_gross": 12.751,
+  "ours_net": 12.448,
+  "authors_gross": 12.648
+ },
+ {
+  "month": "2008-03",
+  "period": "Paper's own years",
+  "ours_gross": -0.335,
+  "ours_net": -0.586,
+  "authors_gross": 0.435
+ },
+ {
+  "month": "2008-04",
+  "period": "Paper's own years",
+  "ours_gross": 4.087,
+  "ours_net": 3.843,
+  "authors_gross": 3.0
+ },
+ {
+  "month": "2008-05",
+  "period": "Paper's own years",
+  "ours_gross": 6.907,
+  "ours_net": 6.575,
+  "authors_gross": 3.832
+ },
+ {
+  "month": "2008-06",
+  "period": "Paper's own years",
+  "ours_gross": 3.183,
+  "ours_net": 2.894,
+  "authors_gross": 4.118
+ },
+ {
+  "month": "2008-07",
+  "period": "Paper's own years",
+  "ours_gross": 1.644,
+  "ours_net": 1.427,
+  "authors_gross": 2.844
+ },
+ {
+  "month": "2008-08",
+  "period": "Paper's own years",
+  "ours_gross": -2.969,
+  "ours_net": -3.29,
+  "authors_gross": -2.968
+ },
+ {
+  "month": "2008-09",
+  "period": "Paper's own years",
+  "ours_gross": -4.556,
+  "ours_net": -4.817,
+  "authors_gross": -3.94
+ },
+ {
+  "month": "2008-10",
+  "period": "Paper's own years",
+  "ours_gross": 5.616,
+  "ours_net": 5.363,
+  "authors_gross": 3.315
+ },
+ {
+  "month": "2008-11",
+  "period": "Paper's own years",
+  "ours_gross": 9.848,
+  "ours_net": 9.594,
+  "authors_gross": -6.499
+ },
+ {
+  "month": "2008-12",
+  "period": "Paper's own years",
+  "ours_gross": -1.994,
+  "ours_net": -2.271,
+  "authors_gross": 1.27
+ },
+ {
+  "month": "2009-01",
+  "period": "Paper's own years",
+  "ours_gross": 1.13,
+  "ours_net": 0.802,
+  "authors_gross": -0.959
+ },
+ {
+  "month": "2009-02",
+  "period": "Paper's own years",
+  "ours_gross": -1.769,
+  "ours_net": -2.123,
+  "authors_gross": -3.184
+ },
+ {
+  "month": "2009-03",
+  "period": "Paper's own years",
+  "ours_gross": -3.668,
+  "ours_net": -3.993,
+  "authors_gross": -2.366
+ },
+ {
+  "month": "2009-04",
+  "period": "Paper's own years",
+  "ours_gross": -20.135,
+  "ours_net": -20.483,
+  "authors_gross": -32.916
+ },
+ {
+  "month": "2009-05",
+  "period": "Paper's own years",
+  "ours_gross": -4.429,
+  "ours_net": -4.727,
+  "authors_gross": -6.426
+ },
+ {
+  "month": "2009-06",
+  "period": "Paper's own years",
+  "ours_gross": 6.444,
+  "ours_net": 6.139,
+  "authors_gross": 7.075
+ },
+ {
+  "month": "2009-07",
+  "period": "Paper's own years",
+  "ours_gross": -6.474,
+  "ours_net": -6.718,
+  "authors_gross": -6.167
+ },
+ {
+  "month": "2009-08",
+  "period": "Paper's own years",
+  "ours_gross": -17.498,
+  "ours_net": -17.694,
+  "authors_gross": -15.321
+ },
+ {
+  "month": "2009-09",
+  "period": "Paper's own years",
+  "ours_gross": -6.329,
+  "ours_net": -6.54,
+  "authors_gross": -6.101
+ },
+ {
+  "month": "2009-10",
+  "period": "Paper's own years",
+  "ours_gross": 13.653,
+  "ours_net": 13.427,
+  "authors_gross": 13.111
+ },
+ {
+  "month": "2009-11",
+  "period": "Paper's own years",
+  "ours_gross": -0.767,
+  "ours_net": -1.022,
+  "authors_gross": 0.151
+ },
+ {
+  "month": "2009-12",
+  "period": "Paper's own years",
+  "ours_gross": 6.607,
+  "ours_net": 6.363,
+  "authors_gross": 6.902
+ },
+ {
+  "month": "2010-01",
+  "period": "Paper's own years",
+  "ours_gross": -3.628,
+  "ours_net": -3.901,
+  "authors_gross": -5.001
+ },
+ {
+  "month": "2010-02",
+  "period": "Paper's own years",
+  "ours_gross": 0.608,
+  "ours_net": 0.328,
+  "authors_gross": -0.084
+ },
+ {
+  "month": "2010-03",
+  "period": "Paper's own years",
+  "ours_gross": -5.794,
+  "ours_net": -6.023,
+  "authors_gross": -5.23
+ },
+ {
+  "month": "2010-04",
+  "period": "Paper's own years",
+  "ours_gross": -3.764,
+  "ours_net": -3.996,
+  "authors_gross": -3.658
+ },
+ {
+  "month": "2010-05",
+  "period": "Paper's own years",
+  "ours_gross": 0.938,
+  "ours_net": 0.678,
+  "authors_gross": 1.83
+ },
+ {
+  "month": "2010-06",
+  "period": "Paper's own years",
+  "ours_gross": 4.454,
+  "ours_net": 4.154,
+  "authors_gross": 2.516
+ },
+ {
+  "month": "2010-07",
+  "period": "Paper's own years",
+  "ours_gross": 0.232,
+  "ours_net": -0.05,
+  "authors_gross": -0.313
+ },
+ {
+  "month": "2010-08",
+  "period": "Paper's own years",
+  "ours_gross": 0.613,
+  "ours_net": 0.321,
+  "authors_gross": -0.134
+ },
+ {
+  "month": "2010-09",
+  "period": "Paper's own years",
+  "ours_gross": 1.408,
+  "ours_net": 1.185,
+  "authors_gross": 0.725
+ },
+ {
+  "month": "2010-10",
+  "period": "Paper's own years",
+  "ours_gross": 1.382,
+  "ours_net": 1.047,
+  "authors_gross": 2.784
+ },
+ {
+  "month": "2010-11",
+  "period": "Paper's own years",
+  "ours_gross": -1.894,
+  "ours_net": -2.195,
+  "authors_gross": 2.34
+ },
+ {
+  "month": "2010-12",
+  "period": "Paper's own years",
+  "ours_gross": -2.722,
+  "ours_net": -2.991,
+  "authors_gross": -3.027
+ },
+ {
+  "month": "2011-01",
+  "period": "Paper's own years",
+  "ours_gross": 0.031,
+  "ours_net": -0.235,
+  "authors_gross": -1.178
+ },
+ {
+  "month": "2011-02",
+  "period": "Paper's own years",
+  "ours_gross": 2.244,
+  "ours_net": 2.021,
+  "authors_gross": -1.421
+ },
+ {
+  "month": "2011-03",
+  "period": "Paper's own years",
+  "ours_gross": 3.571,
+  "ours_net": 3.336,
+  "authors_gross": 3.646
+ },
+ {
+  "month": "2011-04",
+  "period": "Paper's own years",
+  "ours_gross": 2.824,
+  "ours_net": 2.562,
+  "authors_gross": 3.257
+ },
+ {
+  "month": "2011-05",
+  "period": "Paper's own years",
+  "ours_gross": -0.799,
+  "ours_net": -1.062,
+  "authors_gross": 0.754
+ },
+ {
+  "month": "2011-06",
+  "period": "Paper's own years",
+  "ours_gross": 3.605,
+  "ours_net": 3.369,
+  "authors_gross": 4.314
+ },
+ {
+  "month": "2011-07",
+  "period": "Paper's own years",
+  "ours_gross": -1.419,
+  "ours_net": -1.692,
+  "authors_gross": -1.289
+ },
+ {
+  "month": "2011-08",
+  "period": "Paper's own years",
+  "ours_gross": 4.726,
+  "ours_net": 4.438,
+  "authors_gross": 2.65
+ },
+ {
+  "month": "2011-09",
+  "period": "Paper's own years",
+  "ours_gross": 1.969,
+  "ours_net": 1.712,
+  "authors_gross": -1.83
+ },
+ {
+  "month": "2011-10",
+  "period": "Paper's own years",
+  "ours_gross": -0.604,
+  "ours_net": -0.893,
+  "authors_gross": 4.708
+ },
+ {
+  "month": "2011-11",
+  "period": "Paper's own years",
+  "ours_gross": 5.391,
+  "ours_net": 5.09,
+  "authors_gross": 4.128
+ },
+ {
+  "month": "2011-12",
+  "period": "Paper's own years",
+  "ours_gross": 5.138,
+  "ours_net": 4.889,
+  "authors_gross": 6.347
+ },
+ {
+  "month": "2012-01",
+  "period": "Paper's own years",
+  "ours_gross": -5.608,
+  "ours_net": -5.871,
+  "authors_gross": -8.284
+ },
+ {
+  "month": "2012-02",
+  "period": "Paper's own years",
+  "ours_gross": -1.129,
+  "ours_net": -1.453,
+  "authors_gross": -2.465
+ },
+ {
+  "month": "2012-03",
+  "period": "Paper's own years",
+  "ours_gross": -3.021,
+  "ours_net": -3.216,
+  "authors_gross": -2.438
+ },
+ {
+  "month": "2012-04",
+  "period": "Paper's own years",
+  "ours_gross": 10.781,
+  "ours_net": 10.582,
+  "authors_gross": 10.782
+ },
+ {
+  "month": "2012-05",
+  "period": "Paper's own years",
+  "ours_gross": 7.655,
+  "ours_net": 7.428,
+  "authors_gross": 10.66
+ },
+ {
+  "month": "2012-06",
+  "period": "Paper's own years",
+  "ours_gross": -2.976,
+  "ours_net": -3.176,
+  "authors_gross": -3.079
+ },
+ {
+  "month": "2012-07",
+  "period": "Paper's own years",
+  "ours_gross": 5.493,
+  "ours_net": 5.288,
+  "authors_gross": 6.198
+ },
+ {
+  "month": "2012-08",
+  "period": "Paper's own years",
+  "ours_gross": 0.455,
+  "ours_net": 0.163,
+  "authors_gross": -0.692
+ },
+ {
+  "month": "2012-09",
+  "period": "Paper's own years",
+  "ours_gross": -1.047,
+  "ours_net": -1.367,
+  "authors_gross": -1.623
+ },
+ {
+  "month": "2012-10",
+  "period": "Paper's own years",
+  "ours_gross": -0.734,
+  "ours_net": -0.955,
+  "authors_gross": 1.073
+ },
+ {
+  "month": "2012-11",
+  "period": "Paper's own years",
+  "ours_gross": 1.109,
+  "ours_net": 0.921,
+  "authors_gross": 0.421
+ },
+ {
+  "month": "2012-12",
+  "period": "Paper's own years",
+  "ours_gross": -4.532,
+  "ours_net": -4.758,
+  "authors_gross": -4.674
+ },
+ {
+  "month": "2013-01",
+  "period": "Paper's own years",
+  "ours_gross": -2.644,
+  "ours_net": -2.859,
+  "authors_gross": -1.769
+ },
+ {
+  "month": "2013-02",
+  "period": "Paper's own years",
+  "ours_gross": 1.114,
+  "ours_net": 0.858,
+  "authors_gross": 1.035
+ },
+ {
+  "month": "2013-03",
+  "period": "Paper's own years",
+  "ours_gross": -1.933,
+  "ours_net": -2.179,
+  "authors_gross": -1.795
+ },
+ {
+  "month": "2013-04",
+  "period": "Paper's own years",
+  "ours_gross": 0.267,
+  "ours_net": 0.032,
+  "authors_gross": 0.54
+ },
+ {
+  "month": "2013-05",
+  "period": "Paper's own years",
+  "ours_gross": -1.223,
+  "ours_net": -1.514,
+  "authors_gross": -4.472
+ },
+ {
+  "month": "2013-06",
+  "period": "Paper's own years",
+  "ours_gross": -0.311,
+  "ours_net": -0.604,
+  "authors_gross": 0.115
+ },
+ {
+  "month": "2013-07",
+  "period": "Paper's own years",
+  "ours_gross": -1.394,
+  "ours_net": -1.674,
+  "authors_gross": -2.072
+ },
+ {
+  "month": "2013-08",
+  "period": "Paper's own years",
+  "ours_gross": -6.114,
+  "ours_net": -6.423,
+  "authors_gross": -5.021
+ },
+ {
+  "month": "2013-09",
+  "period": "Paper's own years",
+  "ours_gross": 2.47,
+  "ours_net": 2.276,
+  "authors_gross": 3.257
+ },
+ {
+  "month": "2013-10",
+  "period": "Paper's own years",
+  "ours_gross": -1.163,
+  "ours_net": -1.395,
+  "authors_gross": -2.02
+ },
+ {
+  "month": "2013-11",
+  "period": "Paper's own years",
+  "ours_gross": 0.815,
+  "ours_net": 0.505,
+  "authors_gross": 1.677
+ },
+ {
+  "month": "2013-12",
+  "period": "Paper's own years",
+  "ours_gross": 0.576,
+  "ours_net": 0.259,
+  "authors_gross": 0.411
+ },
+ {
+  "month": "2014-01",
+  "period": "Paper's own years",
+  "ours_gross": -4.92,
+  "ours_net": -5.214,
+  "authors_gross": -5.761
+ },
+ {
+  "month": "2014-02",
+  "period": "Paper's own years",
+  "ours_gross": -3.623,
+  "ours_net": -3.88,
+  "authors_gross": -2.903
+ },
+ {
+  "month": "2014-03",
+  "period": "Paper's own years",
+  "ours_gross": 0.924,
+  "ours_net": 0.675,
+  "authors_gross": 3.581
+ },
+ {
+  "month": "2014-04",
+  "period": "Paper's own years",
+  "ours_gross": -1.777,
+  "ours_net": -2.049,
+  "authors_gross": -0.342
+ },
+ {
+  "month": "2014-05",
+  "period": "Paper's own years",
+  "ours_gross": 2.78,
+  "ours_net": 2.526,
+  "authors_gross": 2.445
+ },
+ {
+  "month": "2014-06",
+  "period": "Paper's own years",
+  "ours_gross": -4.351,
+  "ours_net": -4.65,
+  "authors_gross": -5.314
+ },
+ {
+  "month": "2014-07",
+  "period": "Paper's own years",
+  "ours_gross": 0.224,
+  "ours_net": -0.082,
+  "authors_gross": 3.815
+ },
+ {
+  "month": "2014-08",
+  "period": "Paper's own years",
+  "ours_gross": 0.786,
+  "ours_net": 0.589,
+  "authors_gross": -0.785
+ },
+ {
+  "month": "2014-09",
+  "period": "Paper's own years",
+  "ours_gross": 0.737,
+  "ours_net": 0.457,
+  "authors_gross": 2.211
+ },
+ {
+  "month": "2014-10",
+  "period": "Paper's own years",
+  "ours_gross": -3.133,
+  "ours_net": -3.401,
+  "authors_gross": -3.12
+ },
+ {
+  "month": "2014-11",
+  "period": "Paper's own years",
+  "ours_gross": 1.01,
+  "ours_net": 0.741,
+  "authors_gross": 0.827
+ },
+ {
+  "month": "2014-12",
+  "period": "Paper's own years",
+  "ours_gross": -1.747,
+  "ours_net": -2.002,
+  "authors_gross": -2.175
+ },
+ {
+  "month": "2015-01",
+  "period": "Paper's own years",
+  "ours_gross": 3.439,
+  "ours_net": 3.215,
+  "authors_gross": 3.911
+ },
+ {
+  "month": "2015-02",
+  "period": "Paper's own years",
+  "ours_gross": -2.638,
+  "ours_net": -2.88,
+  "authors_gross": -3.016
+ },
+ {
+  "month": "2015-03",
+  "period": "Paper's own years",
+  "ours_gross": 1.65,
+  "ours_net": 1.355,
+  "authors_gross": 2.801
+ },
+ {
+  "month": "2015-04",
+  "period": "Paper's own years",
+  "ours_gross": -3.84,
+  "ours_net": -4.116,
+  "authors_gross": -2.659
+ },
+ {
+  "month": "2015-05",
+  "period": "Paper's own years",
+  "ours_gross": 9.82,
+  "ours_net": 9.56,
+  "authors_gross": 9.248
+ },
+ {
+  "month": "2015-06",
+  "period": "Paper's own years",
+  "ours_gross": 3.253,
+  "ours_net": 3.098,
+  "authors_gross": 2.554
+ },
+ {
+  "month": "2015-07",
+  "period": "Paper's own years",
+  "ours_gross": 15.757,
+  "ours_net": 15.524,
+  "authors_gross": 12.377
+ },
+ {
+  "month": "2015-08",
+  "period": "Paper's own years",
+  "ours_gross": -1.172,
+  "ours_net": -1.49,
+  "authors_gross": -1.318
+ },
+ {
+  "month": "2015-09",
+  "period": "Paper's own years",
+  "ours_gross": 8.615,
+  "ours_net": 8.328,
+  "authors_gross": 9.697
+ },
+ {
+  "month": "2015-10",
+  "period": "Paper's own years",
+  "ours_gross": -2.263,
+  "ours_net": -2.497,
+  "authors_gross": -2.737
+ },
+ {
+  "month": "2015-11",
+  "period": "Paper's own years",
+  "ours_gross": -0.201,
+  "ours_net": -0.493,
+  "authors_gross": -0.809
+ },
+ {
+  "month": "2015-12",
+  "period": "Paper's own years",
+  "ours_gross": 5.947,
+  "ours_net": 5.658,
+  "authors_gross": 6.455
+ },
+ {
+  "month": "2016-01",
+  "period": "Paper's own years",
+  "ours_gross": 1.773,
+  "ours_net": 1.458,
+  "authors_gross": 13.944
+ },
+ {
+  "month": "2016-02",
+  "period": "Paper's own years",
+  "ours_gross": -5.273,
+  "ours_net": -5.473,
+  "authors_gross": -3.841
+ },
+ {
+  "month": "2016-03",
+  "period": "Paper's own years",
+  "ours_gross": -0.745,
+  "ours_net": -0.977,
+  "authors_gross": -0.123
+ },
+ {
+  "month": "2016-04",
+  "period": "Paper's own years",
+  "ours_gross": -13.864,
+  "ours_net": -14.116,
+  "authors_gross": -16.113
+ },
+ {
+  "month": "2016-05",
+  "period": "Paper's own years",
+  "ours_gross": 3.572,
+  "ours_net": 3.357,
+  "authors_gross": 2.151
+ },
+ {
+  "month": "2016-06",
+  "period": "Paper's own years",
+  "ours_gross": 2.87,
+  "ours_net": 2.671,
+  "authors_gross": 4.413
+ },
+ {
+  "month": "2016-07",
+  "period": "Paper's own years",
+  "ours_gross": -1.578,
+  "ours_net": -1.759,
+  "authors_gross": -4.318
+ },
+ {
+  "month": "2016-08",
+  "period": "Paper's own years",
+  "ours_gross": -2.06,
+  "ours_net": -2.344,
+  "authors_gross": -2.368
+ },
+ {
+  "month": "2016-09",
+  "period": "Paper's own years",
+  "ours_gross": -5.355,
+  "ours_net": -5.588,
+  "authors_gross": -6.396
+ },
+ {
+  "month": "2016-10",
+  "period": "Paper's own years",
+  "ours_gross": 7.899,
+  "ours_net": 7.697,
+  "authors_gross": 6.855
+ },
+ {
+  "month": "2016-11",
+  "period": "Paper's own years",
+  "ours_gross": -4.458,
+  "ours_net": -4.739,
+  "authors_gross": -4.585
+ },
+ {
+  "month": "2016-12",
+  "period": "Paper's own years",
+  "ours_gross": 0.583,
+  "ours_net": 0.252,
+  "authors_gross": 1.604
+ },
+ {
+  "month": "2017-01",
+  "period": "Paper's own years",
+  "ours_gross": 3.202,
+  "ours_net": 2.913,
+  "authors_gross": -1.622
+ },
+ {
+  "month": "2017-02",
+  "period": "Paper's own years",
+  "ours_gross": -0.107,
+  "ours_net": -0.425,
+  "authors_gross": -0.141
+ },
+ {
+  "month": "2017-03",
+  "period": "Paper's own years",
+  "ours_gross": -3.202,
+  "ours_net": -3.491,
+  "authors_gross": 1.109
+ },
+ {
+  "month": "2017-04",
+  "period": "Paper's own years",
+  "ours_gross": -1.08,
+  "ours_net": -1.398,
+  "authors_gross": 0.256
+ },
+ {
+  "month": "2017-05",
+  "period": "Paper's own years",
+  "ours_gross": 2.16,
+  "ours_net": 1.91,
+  "authors_gross": -1.309
+ },
+ {
+  "month": "2017-06",
+  "period": "Paper's own years",
+  "ours_gross": 4.586,
+  "ours_net": 4.265,
+  "authors_gross": 1.377
+ },
+ {
+  "month": "2017-07",
+  "period": "Paper's own years",
+  "ours_gross": 4.603,
+  "ours_net": 4.245,
+  "authors_gross": 2.575
+ },
+ {
+  "month": "2017-08",
+  "period": "Paper's own years",
+  "ours_gross": 6.298,
+  "ours_net": 6.037,
+  "authors_gross": 5.805
+ },
+ {
+  "month": "2017-09",
+  "period": "Paper's own years",
+  "ours_gross": -0.403,
+  "ours_net": -0.697,
+  "authors_gross": -4.832
+ },
+ {
+  "month": "2017-10",
+  "period": "Paper's own years",
+  "ours_gross": 6.222,
+  "ours_net": 5.9,
+  "authors_gross": 6.452
+ },
+ {
+  "month": "2017-11",
+  "period": "Paper's own years",
+  "ours_gross": -0.104,
+  "ours_net": -0.366,
+  "authors_gross": -2.786
+ },
+ {
+  "month": "2017-12",
+  "period": "Paper's own years",
+  "ours_gross": -2.669,
+  "ours_net": -2.997,
+  "authors_gross": -3.337
+ },
+ {
+  "month": "2018-01",
+  "period": "Paper's own years",
+  "ours_gross": 6.921,
+  "ours_net": 6.628,
+  "authors_gross": 1.186
+ },
+ {
+  "month": "2018-02",
+  "period": "Paper's own years",
+  "ours_gross": 1.319,
+  "ours_net": 1.026,
+  "authors_gross": -0.253
+ },
+ {
+  "month": "2018-03",
+  "period": "Paper's own years",
+  "ours_gross": 0.315,
+  "ours_net": 0.005,
+  "authors_gross": 0.224
+ },
+ {
+  "month": "2018-04",
+  "period": "Paper's own years",
+  "ours_gross": -2.773,
+  "ours_net": -3.077,
+  "authors_gross": -0.209
+ },
+ {
+  "month": "2018-05",
+  "period": "Paper's own years",
+  "ours_gross": 2.096,
+  "ours_net": 1.84,
+  "authors_gross": 1.134
+ },
+ {
+  "month": "2018-06",
+  "period": "Paper's own years",
+  "ours_gross": -2.0,
+  "ours_net": -2.245,
+  "authors_gross": -4.111
+ },
+ {
+  "month": "2018-07",
+  "period": "Paper's own years",
+  "ours_gross": 4.541,
+  "ours_net": 4.304,
+  "authors_gross": 3.74
+ },
+ {
+  "month": "2018-08",
+  "period": "Paper's own years",
+  "ours_gross": 6.045,
+  "ours_net": 5.839,
+  "authors_gross": 6.231
+ },
+ {
+  "month": "2018-09",
+  "period": "Paper's own years",
+  "ours_gross": 1.76,
+  "ours_net": 1.461,
+  "authors_gross": 3.023
+ },
+ {
+  "month": "2018-10",
+  "period": "Paper's own years",
+  "ours_gross": 2.516,
+  "ours_net": 2.187,
+  "authors_gross": 4.256
+ },
+ {
+  "month": "2018-11",
+  "period": "Paper's own years",
+  "ours_gross": 0.051,
+  "ours_net": -0.185,
+  "authors_gross": 3.568
+ },
+ {
+  "month": "2018-12",
+  "period": "Paper's own years",
+  "ours_gross": 1.419,
+  "ours_net": 1.223,
+  "authors_gross": 3.279
+ },
+ {
+  "month": "2019-01",
+  "period": "Paper's own years",
+  "ours_gross": -8.655,
+  "ours_net": -8.877,
+  "authors_gross": -9.188
+ },
+ {
+  "month": "2019-02",
+  "period": "Paper's own years",
+  "ours_gross": 2.788,
+  "ours_net": 2.515,
+  "authors_gross": 3.358
+ },
+ {
+  "month": "2019-03",
+  "period": "Paper's own years",
+  "ours_gross": 3.547,
+  "ours_net": 3.284,
+  "authors_gross": 3.305
+ },
+ {
+  "month": "2019-04",
+  "period": "Paper's own years",
+  "ours_gross": -6.646,
+  "ours_net": -6.948,
+  "authors_gross": 1.437
+ },
+ {
+  "month": "2019-05",
+  "period": "Paper's own years",
+  "ours_gross": 12.646,
+  "ours_net": 12.405,
+  "authors_gross": 10.706
+ },
+ {
+  "month": "2019-06",
+  "period": "Paper's own years",
+  "ours_gross": -1.016,
+  "ours_net": -1.278,
+  "authors_gross": -2.434
+ },
+ {
+  "month": "2019-07",
+  "period": "Paper's own years",
+  "ours_gross": 0.821,
+  "ours_net": 0.598,
+  "authors_gross": 2.644
+ },
+ {
+  "month": "2019-08",
+  "period": "Paper's own years",
+  "ours_gross": 9.622,
+  "ours_net": 9.388,
+  "authors_gross": 6.751
+ },
+ {
+  "month": "2019-09",
+  "period": "Paper's own years",
+  "ours_gross": -1.479,
+  "ours_net": -1.75,
+  "authors_gross": -2.429
+ },
+ {
+  "month": "2019-10",
+  "period": "Paper's own years",
+  "ours_gross": -0.04,
+  "ours_net": -0.339,
+  "authors_gross": 1.438
+ },
+ {
+  "month": "2019-11",
+  "period": "Paper's own years",
+  "ours_gross": -2.873,
+  "ours_net": -3.146,
+  "authors_gross": -3.574
+ },
+ {
+  "month": "2019-12",
+  "period": "Paper's own years",
+  "ours_gross": -1.931,
+  "ours_net": -2.151,
+  "authors_gross": -2.093
+ },
+ {
+  "month": "2020-01",
+  "period": "Paper's own years",
+  "ours_gross": 14.006,
+  "ours_net": 13.751,
+  "authors_gross": 13.951
+ },
+ {
+  "month": "2020-02",
+  "period": "Paper's own years",
+  "ours_gross": -2.113,
+  "ours_net": -2.39,
+  "authors_gross": -4.7
+ },
+ {
+  "month": "2020-03",
+  "period": "Paper's own years",
+  "ours_gross": 6.758,
+  "ours_net": 6.479,
+  "authors_gross": 1.479
+ },
+ {
+  "month": "2020-04",
+  "period": "Paper's own years",
+  "ours_gross": -1.776,
+  "ours_net": -1.979,
+  "authors_gross": 1.929
+ },
+ {
+  "month": "2020-05",
+  "period": "Paper's own years",
+  "ours_gross": 0.891,
+  "ours_net": 0.622,
+  "authors_gross": 0.618
+ },
+ {
+  "month": "2020-06",
+  "period": "Paper's own years",
+  "ours_gross": 0.185,
+  "ours_net": -0.076,
+  "authors_gross": -6.777
+ },
+ {
+  "month": "2020-07",
+  "period": "Paper's own years",
+  "ours_gross": 9.784,
+  "ours_net": 9.5,
+  "authors_gross": 11.251
+ },
+ {
+  "month": "2020-08",
+  "period": "Paper's own years",
+  "ours_gross": 1.996,
+  "ours_net": 1.743,
+  "authors_gross": 1.003
+ },
+ {
+  "month": "2020-09",
+  "period": "Paper's own years",
+  "ours_gross": 6.519,
+  "ours_net": 6.206,
+  "authors_gross": 2.284
+ },
+ {
+  "month": "2020-10",
+  "period": "Paper's own years",
+  "ours_gross": -0.017,
+  "ours_net": -0.311,
+  "authors_gross": 0.967
+ },
+ {
+  "month": "2020-11",
+  "period": "Paper's own years",
+  "ours_gross": -14.572,
+  "ours_net": -14.799,
+  "authors_gross": -19.434
+ },
+ {
+  "month": "2020-12",
+  "period": "Paper's own years",
+  "ours_gross": -5.437,
+  "ours_net": -5.674,
+  "authors_gross": -5.662
+ },
+ {
+  "month": "2021-01",
+  "period": "Paper's own years",
+  "ours_gross": -1.973,
+  "ours_net": -2.188,
+  "authors_gross": -8.449
+ },
+ {
+  "month": "2021-02",
+  "period": "Paper's own years",
+  "ours_gross": -4.519,
+  "ours_net": -4.771,
+  "authors_gross": -1.664
+ },
+ {
+  "month": "2021-03",
+  "period": "Paper's own years",
+  "ours_gross": 5.097,
+  "ours_net": 4.832,
+  "authors_gross": 0.962
+ },
+ {
+  "month": "2021-04",
+  "period": "Paper's own years",
+  "ours_gross": 4.198,
+  "ours_net": 3.875,
+  "authors_gross": 6.264
+ },
+ {
+  "month": "2021-05",
+  "period": "Paper's own years",
+  "ours_gross": 1.296,
+  "ours_net": 0.963,
+  "authors_gross": 7.364
+ },
+ {
+  "month": "2021-06",
+  "period": "Paper's own years",
+  "ours_gross": -9.525,
+  "ours_net": -9.824,
+  "authors_gross": -9.905
+ },
+ {
+  "month": "2021-07",
+  "period": "Paper's own years",
+  "ours_gross": 3.276,
+  "ours_net": 2.951,
+  "authors_gross": 4.81
+ },
+ {
+  "month": "2021-08",
+  "period": "Paper's own years",
+  "ours_gross": -1.193,
+  "ours_net": -1.423,
+  "authors_gross": -1.194
+ },
+ {
+  "month": "2021-09",
+  "period": "Paper's own years",
+  "ours_gross": 3.469,
+  "ours_net": 3.223,
+  "authors_gross": 1.562
+ },
+ {
+  "month": "2021-10",
+  "period": "Paper's own years",
+  "ours_gross": 4.252,
+  "ours_net": 3.946,
+  "authors_gross": 3.69
+ },
+ {
+  "month": "2021-11",
+  "period": "Paper's own years",
+  "ours_gross": 3.485,
+  "ours_net": 3.221,
+  "authors_gross": 1.074
+ },
+ {
+  "month": "2021-12",
+  "period": "Paper's own years",
+  "ours_gross": 5.447,
+  "ours_net": 5.143,
+  "authors_gross": 8.694
+ },
+ {
+  "month": "2022-01",
+  "period": "Paper's own years",
+  "ours_gross": -2.858,
+  "ours_net": -3.172,
+  "authors_gross": -0.364
+ },
+ {
+  "month": "2022-02",
+  "period": "Paper's own years",
+  "ours_gross": 0.014,
+  "ours_net": -0.243,
+  "authors_gross": -0.857
+ },
+ {
+  "month": "2022-03",
+  "period": "Paper's own years",
+  "ours_gross": 5.227,
+  "ours_net": 4.981,
+  "authors_gross": 3.566
+ },
+ {
+  "month": "2022-04",
+  "period": "Paper's own years",
+  "ours_gross": 7.221,
+  "ours_net": 7.016,
+  "authors_gross": 9.22
+ },
+ {
+  "month": "2022-05",
+  "period": "Paper's own years",
+  "ours_gross": 3.844,
+  "ours_net": 3.573,
+  "authors_gross": 4.195
+ },
+ {
+  "month": "2022-06",
+  "period": "Paper's own years",
+  "ours_gross": 5.16,
+  "ours_net": 4.896,
+  "authors_gross": 7.094
+ },
+ {
+  "month": "2022-07",
+  "period": "Paper's own years",
+  "ours_gross": -7.85,
+  "ours_net": -8.116,
+  "authors_gross": -3.656
+ },
+ {
+  "month": "2022-08",
+  "period": "Paper's own years",
+  "ours_gross": 1.78,
+  "ours_net": 1.514,
+  "authors_gross": 2.173
+ },
+ {
+  "month": "2022-09",
+  "period": "Paper's own years",
+  "ours_gross": 3.637,
+  "ours_net": 3.419,
+  "authors_gross": 3.679
+ },
+ {
+  "month": "2022-10",
+  "period": "Paper's own years",
+  "ours_gross": 6.297,
+  "ours_net": 6.179,
+  "authors_gross": 6.43
+ },
+ {
+  "month": "2022-11",
+  "period": "Paper's own years",
+  "ours_gross": 1.078,
+  "ours_net": 0.868,
+  "authors_gross": 3.621
+ },
+ {
+  "month": "2022-12",
+  "period": "Paper's own years",
+  "ours_gross": 3.847,
+  "ours_net": 3.599,
+  "authors_gross": 3.474
+ },
+ {
+  "month": "2023-01",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -22.172,
+  "ours_net": -22.378,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-02",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -5.002,
+  "ours_net": -5.216,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-03",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -6.75,
+  "ours_net": -6.908,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-04",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 9.467,
+  "ours_net": 9.229,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-05",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -7.697,
+  "ours_net": -7.979,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-06",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 0.281,
+  "ours_net": -0.02,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-07",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -4.883,
+  "ours_net": -5.188,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-08",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 10.177,
+  "ours_net": 9.838,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-09",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 0.112,
+  "ours_net": -0.111,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-10",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 11.298,
+  "ours_net": 11.066,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-11",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 0.544,
+  "ours_net": 0.283,
+  "authors_gross": null
+ },
+ {
+  "month": "2023-12",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -10.08,
+  "ours_net": -10.375,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-01",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 9.587,
+  "ours_net": 9.305,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-02",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -0.112,
+  "ours_net": -0.265,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-03",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -2.178,
+  "ours_net": -2.373,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-04",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 3.689,
+  "ours_net": 3.459,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-05",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 1.788,
+  "ours_net": 1.56,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-06",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 8.49,
+  "ours_net": 8.216,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-07",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -4.371,
+  "ours_net": -4.637,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-08",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 2.677,
+  "ours_net": 2.353,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-09",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 0.165,
+  "ours_net": -0.038,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-10",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 0.402,
+  "ours_net": 0.109,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-11",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -15.131,
+  "ours_net": -15.383,
+  "authors_gross": null
+ },
+ {
+  "month": "2024-12",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 5.376,
+  "ours_net": 5.086,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-01",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 4.682,
+  "ours_net": 4.449,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-02",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 1.986,
+  "ours_net": 1.737,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-03",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -1.861,
+  "ours_net": -2.122,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-04",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 0.21,
+  "ours_net": -0.002,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-05",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -5.138,
+  "ours_net": -5.347,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-06",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -8.981,
+  "ours_net": -9.251,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-07",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -9.354,
+  "ours_net": -9.552,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-08",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -3.17,
+  "ours_net": -3.394,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-09",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -4.28,
+  "ours_net": -4.568,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-10",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -7.818,
+  "ours_net": -8.061,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-11",
+  "period": "After the paper (out of sample)",
+  "ours_gross": 3.303,
+  "ours_net": 3.032,
+  "authors_gross": null
+ },
+ {
+  "month": "2025-12",
+  "period": "After the paper (out of sample)",
+  "ours_gross": -0.363,
+  "ours_net": -0.679,
+  "authors_gross": null
+ }
+]

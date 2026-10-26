@@ -59,6 +59,14 @@ data/spreads.parquet
 !reports/portfolio.csv
 !reports/breadth.csv
 !reports/resid_r2.csv
+# Intraday panels and derived caches. Regenerate with:
+#   python3 python/ingest_intraday.py && python3 python/edge_spreads.py
+data/intraday_1h.parquet
+data/intraday_parts/
+data/intraday_trades.parquet
+data/intraday_passive.parquet
+data/vix.parquet
+
 !reports/breadth_adj.csv
 !reports/contract_car.csv
 !reports/contract_car_placebo.csv
@@ -78,3 +86,29 @@ crypto/data/hl_funding_cache/
 # Private working notes, not part of the published project.
 notes/
 Rplots.pdf
+
+!data/edge_spreads.parquet
+!reports/intraday.csv
+!reports/intraday_control.csv
+!reports/intraday_vix.csv
+!reports/intraday_passive.csv
+!reports/intraday_liquidity.csv
+!reports/calendar_edges.csv
+!reports/cost_first_screen.csv
+
+# Chart images for trial 50. Regenerate with: python3 python/cnn_images.py
+data/cnn/
+
+# Jiang, Kelly & Xiu (2023) image data from dachxiu.chicagobooth.edu (568MB). Not redistributed.
+data/jkx_raw/
+data/jkx/
+
+# Local database backup before the 2026-10-17 quarantine (5GB)
+data/warehouse_backup_*.db
+
+# Murray, Xia & Xiao (2024) replication sample from Mendeley (2.6GB, CC BY 4.0). Not redistributed.
+data/cbm_raw/
+data/cbm/
+
+# CRSP data from WRDS: licensed, never committed.
+data/crsp/

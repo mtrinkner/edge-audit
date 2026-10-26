@@ -82,8 +82,13 @@ def load_bars(max_date: str) -> pd.DataFrame:
             con, params=(max_date,))
 
 
-def simulate_symbol(g: pd.DataFrame, names: list[str]) -> list[pd.DataFrame]:
-    """Every firing of every signal for one symbol, run to its actual exit."""
+def simulate_symbol(g: pd.DataFrame, names: list[str],
+                    custom: dict | None = None) -> list[pd.DataFrame]:
+    """Every firing of every signal for one symbol, run to its actual exit.
+
+    `custom` maps a name to a function(g) -> boolean Series, so a study can put
+    its own entry rule through exactly these exits (trial 46). Without it the
+    behaviour is unchanged, so trial 27 still reproduces."""
     g = g.sort_values("dt").reset_index(drop=True)
     n = len(g)
     if n < ATR_N + TIMEOUT + 5:
@@ -114,7 +119,9 @@ def simulate_symbol(g: pd.DataFrame, names: list[str]) -> list[pd.DataFrame]:
     L = lo[idx]
 
     out = []
-    sig_cache = {nm: sg.compute(g, nm).to_numpy() for nm in names}
+    custom = custom or {}
+    sig_cache = {nm: (custom[nm](g) if nm in custom else sg.compute(g, nm)).to_numpy()
+                 for nm in names}
     for nm in names:
         fired = sig_cache[nm]
         ok = (np.nan_to_num(fired, nan=0).astype(bool) & valid_row
