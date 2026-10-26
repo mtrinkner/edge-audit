@@ -44,7 +44,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
-import db
+import data_access as da
 
 HOLD = 21
 MIN_NAMES = 50
@@ -56,20 +56,24 @@ def zs(s: pd.Series, keys) -> pd.Series:
 
 
 def build() -> tuple[pd.DataFrame, list[str]]:
-    with db.connect() as con:
-        d = pd.read_sql(
-            "SELECT b.symbol, b.dt, b.adj_close, b.close, b.volume, s.sector "
-            "FROM bars b JOIN symbols s ON s.symbol=b.symbol "
-            "WHERE s.kind='stock' ORDER BY b.symbol, b.dt", con)
-        spy = pd.read_sql("SELECT dt, adj_close AS spy FROM bars WHERE symbol='SPY'", con)
-        ev = pd.read_sql("SELECT symbol, tradeable_from AS dt, surprise_pct "
-                         "FROM earnings WHERE surprise_pct IS NOT NULL", con)
-        si = pd.read_sql("SELECT symbol, tradeable_from, short_shares, prev_short, "
-                         "avg_daily_vol FROM short_interest", con)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.sql("combine", "SELECT b.symbol, b.dt, b.open, b.adj_close, b.close, b.volume, "
+               "s.sector FROM bars b JOIN symbols s ON s.symbol=b.symbol "
+               "WHERE s.kind='stock'", order_by="symbol, dt")
+    spy = da.sql("combine", "SELECT dt, open * adj_close / close AS spy_open, adj_close AS spy "
+                 "FROM bars WHERE symbol='SPY'")
+    ev = da.sql("combine", "SELECT symbol, tradeable_from AS dt, surprise_pct "
+                "FROM earnings WHERE surprise_pct IS NOT NULL")
+    si = da.sql("combine", "SELECT symbol, tradeable_from, short_shares, prev_short, "
+                "avg_daily_vol FROM short_interest", date_col="tradeable_from")
     d = d.merge(spy, on="dt", how="left").sort_values(["symbol", "dt"]).reset_index(drop=True)
+    # Enter at the NEXT session's open, exit at the close HOLD sessions after the
+    # signal (fixed 2026-10-26; this used to enter at the signal close). The
+    # SPY leg uses the same open and close.
+    d["aopen"] = d["open"] * d["adj_close"] / d["close"].replace(0, np.nan)
     g = d.groupby("symbol")
-    d["fwd"] = g["adj_close"].shift(-HOLD) / d["adj_close"] - 1.0
-    d["abn"] = d["fwd"] - (d["spy"].shift(-HOLD) / d["spy"] - 1.0)
+    d["fwd"] = g["adj_close"].shift(-HOLD) / g["aopen"].shift(-1) - 1.0
+    d["abn"] = d["fwd"] - (d["spy"].shift(-HOLD) / d["spy_open"].shift(-1) - 1.0)
     d["dollar"] = d["close"] * d["volume"]
     d["adv"] = g["dollar"].transform(lambda s: s.shift(1).rolling(20, min_periods=15).mean())
 
@@ -165,9 +169,20 @@ def main() -> int:
     print("STEP 3  the combined signal")
     print("=" * 84)
     d["combo_eq"] = d[cols].mean(axis=1, skipna=True)
-    # expanding inverse-vol: uses only each signal's PAST volatility, never its mean
-    piv = d.groupby("dt")[cols].mean()
-    iv = 1.0 / piv.expanding(min_periods=252).std().shift(1)
+    # Expanding inverse-vol: uses only each signal's PAST volatility, never its
+    # mean. The volatility is that of each sleeve's long-short RETURN, the
+    # z-weighted average of abn on each date (fixed 2026-10-26: it was the
+    # volatility of the cross-sectional mean of z, which is identically ~0).
+    # A date's return is only known HOLD sessions later, so the window is lagged
+    # by HOLD + 1 sessions, not 1.
+    ls = {}
+    for c in cols:
+        ok = d[c].notna() & d["abn"].notna()
+        num = (d[c] * d["abn"]).where(ok).groupby(d["dt"]).sum()
+        den = d[c].abs().where(ok).groupby(d["dt"]).sum()
+        ls[c] = num / den.replace(0, np.nan)
+    piv = pd.DataFrame(ls).sort_index()
+    iv = 1.0 / piv.expanding(min_periods=252).std().shift(HOLD + 1)
     w = iv.div(iv.sum(axis=1), axis=0)
     wmap = w.reindex(d["dt"].to_numpy()).to_numpy()
     with np.errstate(invalid="ignore"):

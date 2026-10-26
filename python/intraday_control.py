@@ -42,6 +42,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import data_access as da
 import config
 from spread_estimator import liquidity_half_spread_bps
 
@@ -84,7 +85,8 @@ def report(name: str, t: pd.DataFrame) -> dict:
 
 
 def main() -> int:
-    d = pd.read_parquet(DATA)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.parquet("intraday_control", "intraday_1h")
     d = d[d["bars_in_session"] == SESSION_BARS].copy()
     d = d.sort_values(["symbol", "ts"]).reset_index(drop=True)
     d = session_stats(d)

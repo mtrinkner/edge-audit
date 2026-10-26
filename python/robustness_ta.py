@@ -17,11 +17,17 @@ This re-runs trial 27 exactly (ta_exits engine, same data window) three ways:
   trimmed         per-trade excess clipped at its 0.5% / 99.5% percentiles
 and reports whether any signal's verdict changes. It is a robustness check of
 a recorded result, not a new strategy, so it is not a registry trial.
+
+FIXED 2026-10-26: t-statistics were clustered by entry date although trades
+overlap for up to 60 sessions; they now use evaluation.block_clustered_mean.
+The ta_exits gap fill was fixed at the same time. The earlier output is
+reports/robustness_ta_pre_2026-10-26.csv.
 """
 
 from __future__ import annotations
 
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -32,13 +38,14 @@ sys.path.insert(0, str(ROOT / "python"))
 
 import lockbox
 import signals as sg
-from evaluation import clustered_mean
-from ta_exits import load_bars, simulate_symbol
+from evaluation import block_clustered_mean
+from ta_exits import TIMEOUT, load_bars, simulate_symbol
 
 
 def main() -> int:
     st = lockbox.state()
     max_date = (pd.Timestamp(st["seal_from"]) - pd.Timedelta(days=1)).date().isoformat()
+    lockbox.guard(max_date, "robustness_ta")
     d = load_bars(max_date)
     names = list(sg.SIGNALS)
     parts = []
@@ -57,15 +64,20 @@ def report(t: pd.DataFrame) -> int:
     bad = set(severe["symbol"])
     lo, hi = t["excess"].quantile([0.005, 0.995])
     rows = []
+    # Trades hold up to TIMEOUT sessions, so cluster by blocks that long, not by
+    # entry date (fixed 2026-10-26; entry-date t-statistics were ~2x too large).
+    cm = lambda r, d: block_clustered_mean(r, d, TIMEOUT)
+    warnings.filterwarnings("ignore", message="only .* blocks")
     for sig, x in t.groupby("signal"):
-        a = clustered_mean(x["excess"], x["dt"])
+        a = cm(x["excess"], x["dt"])
         c = x[~x["symbol"].isin(bad)]
-        b = clustered_mean(c["excess"], c["dt"])
-        w = clustered_mean(x["excess"].clip(lo, hi), x["dt"])
+        b = cm(c["excess"], c["dt"])
+        w = cm(x["excess"].clip(lo, hi), x["dt"])
         top5 = x["excess"].abs().nlargest(5).sum() / max(x["excess"].abs().sum(), 1e-12)
         rows.append({"signal": sig, "trades": len(x), "excess": a["mean"], "t": a["t"],
                      "clean": b["mean"], "t_clean": b["t"],
-                     "trimmed": w["mean"], "t_trim": w["t"], "top5_share": top5})
+                     "trimmed": w["mean"], "t_trim": w["t"], "blocks": w["clusters"],
+                     "top5_share": top5})
     r = pd.DataFrame(rows).sort_values("excess", ascending=False)
     r.to_csv(ROOT / "reports" / "robustness_ta.csv", index=False)
     print(f"{len(t):,} trades, {t['signal'].nunique()} signals; {len(bad)} flagged stocks removed in 'clean'\n")

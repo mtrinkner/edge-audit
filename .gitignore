@@ -112,3 +112,10 @@ data/cbm/
 
 # CRSP data from WRDS: licensed, never committed.
 data/crsp/
+
+# SEC EDGAR filings cached by python/edgar_tenders.py (odd-lot tender study)
+data/edgar/
+
+# large rerun artefacts from the 2026-10-26 fixes (regenerable)
+data/ta_exits_trades_robust.parquet
+data/intraday_trades_pre_2026-10-26.parquet

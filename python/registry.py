@@ -66,20 +66,33 @@ def cmd_declare(args) -> int:
     if not v.ok:
         print(v, file=sys.stderr)
         return 1
+    if args.mde_sharpe is None:
+        # Added 2026-10-26: a test that cannot detect the effect size it is
+        # looking for is not a pass/fail test. Warn, do not refuse, so the old
+        # workflow keeps working.
+        print("WARNING: no --mde-sharpe. State the minimum Sharpe this sample can "
+              "detect (deflated_sharpe.min_detectable_sharpe, or "
+              "`python3 python/deflated_sharpe.py --power`) before running it.",
+              file=sys.stderr)
     sid = next_id()
-    ledger.append([{
+    row = {
         "kind": "declare", "strategy_id": sid, "name": args.name,
         "hypothesis": args.hypothesis,
         "data_window": args.window,
         "variants": args.variants,
         "family": args.family,
         "declared_at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
-    }], REGISTRY)
+    }
+    if args.mde_sharpe is not None:
+        row["mde_sharpe"] = args.mde_sharpe
+    ledger.append([row], REGISTRY)
     t = trials()
     print(f"declared strategy {sid}: {args.name}")
     print(f"  hypothesis: {args.hypothesis}")
     if args.variants > 1:
         print(f"  counted as {args.variants} trials, because a sweep is a sweep")
+    if args.mde_sharpe is not None:
+        print(f"  minimum detectable Sharpe for this sample: {args.mde_sharpe:.2f}")
     print(f"\ntrials to date: {t['n_trials']}")
     print("Run it now. Whatever happens, close it out with `record` or `abandon`.")
     print("An open trial is still a trial; it counts either way.")
@@ -162,6 +175,9 @@ def cmd_status(_args) -> int:
         bar = expected_max_sharpe(t["n_trials"], 348)
         print(f"Sharpe a NEW candidate must beat to be interesting: {bar:.3f}")
         print("(that is the median best result from pure noise across this many trials)")
+        print("NOTE: the luck bar assumes a zero-return null, so it applies only to "
+              "market-neutral\n  or excess-return series. A long-only strategy clears it "
+              "by owning stocks; judge\n  those on their excess over the same-universe hold.")
         fams = {d.get("family") for d in entries() if d["kind"] == "declare"}
         try:
             fmap = json.loads((config.ROOT / "data" / "trial_families.json").read_text())
@@ -213,6 +229,9 @@ def main() -> int:
                    help="which information the signal uses; see data/trial_families.json. "
                         "Required since the 2026-10-14 audit found 76%% of all trials "
                         "spent on one family (price patterns) without anyone noticing")
+    d.add_argument("--mde-sharpe", type=float, dest="mde_sharpe", default=None,
+                   help="minimum detectable annualised Sharpe for this sample "
+                        "(deflated_sharpe.min_detectable_sharpe); warns if missing")
     d.set_defaults(func=cmd_declare)
 
     r = sub.add_parser("record", help="close a trial with its result")

@@ -49,6 +49,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+import data_access as da
 SPREADS = ROOT / "data" / "edge_spreads.parquet"
 BARS = ROOT / "data" / "intraday_1h.parquet"
 SESSIONS_PER_YEAR = 252
@@ -63,8 +64,9 @@ def main() -> int:
     if not SPREADS.exists():
         print(f"missing {SPREADS}; run python/edge_spreads.py first")
         return 1
-    s = pd.read_parquet(SPREADS)
-    b = pd.read_parquet(BARS)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    s = da.parquet("cost_first_screen", "edge_spreads")
+    b = da.parquet("cost_first_screen", "intraday_1h")
     b = b[b["bars_in_session"] == 7]
     b["month"] = b["session"].str[:7]
     g = b.groupby(["symbol", "session"])

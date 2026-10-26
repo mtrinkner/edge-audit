@@ -41,12 +41,22 @@ compared against prices that actually traded, but returns have to be adjusted, s
 every bar's open, high and low is scaled by that bar's adj_close/close ratio.
 Without this a split inside a holding period reads as a 50% loss and trips every
 stop in the sample.
+
+FIXED 2026-10-26 (audit, docs/AUDIT_2026-10-26.md). Trial 27's original output
+is kept as reports/ta_exits_pre_2026-10-26.csv and robustness_ta_pre_2026-10-26.csv.
+  * Stops and targets filled AT the level even when the bar opened through it.
+    They now fill at min(stop, open) and max(target, open), as realistic_exits.py
+    does. The benchmark is unaffected, so the old excess was overstated.
+  * The t-statistics treated overlapping trades as independent. They are now
+    clustered by calendar blocks of 2 x TIMEOUT sessions
+    (evaluation.block_clustered_mean).
 """
 
 from __future__ import annotations
 
 import argparse
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -58,6 +68,7 @@ import config
 import db
 import lockbox
 import signals as sg
+from evaluation import block_clustered_mean
 from spread_estimator import liquidity_half_spread_bps
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -117,6 +128,7 @@ def simulate_symbol(g: pd.DataFrame, names: list[str],
     idx = np.clip(idx, 0, n - 1)
     H = h[idx]
     L = lo[idx]
+    O = o[idx]
 
     out = []
     custom = custom or {}
@@ -146,8 +158,12 @@ def simulate_symbol(g: pd.DataFrame, names: list[str],
         k = np.minimum(first_s, first_t)
         timed_out = k == BIG
 
-        exit_px = np.where(stopped & ~timed_out, stop,
-                   np.where(targeted & ~timed_out, targ, c[rows + 1 + win - 1]))
+        # A bar that opens through a level fills at the open, not the level
+        # (fixed 2026-10-26; this used to fill at the stop or target itself).
+        o_hit = O[rows, np.minimum(k, win - 1)]
+        exit_px = np.where(stopped & ~timed_out, np.minimum(stop, o_hit),
+                   np.where(targeted & ~timed_out, np.maximum(targ, o_hit),
+                            c[rows + 1 + win - 1]))
         days = np.where(timed_out, win, k + 1)
 
         cost = half[rows] + half[np.clip(rows + 1 + days - 1, 0, n - 1)]
@@ -169,17 +185,18 @@ def simulate_symbol(g: pd.DataFrame, names: list[str],
     return out
 
 
-def summarize(t: pd.DataFrame, reps: int = 2000) -> dict:
-    """Stats on NON-OVERLAPPING entry dates, with a stationary bootstrap p-value."""
+def summarize(t: pd.DataFrame) -> dict:
+    """Per-trade stats; the t-statistic and p-value cluster trades by calendar
+    blocks at least as long as the longest hold (evaluation.block_clustered_mean).
+
+    Until 2026-10-26 this sampled every median-hold-th entry date and bootstrapped
+    that series. Trades hold up to TIMEOUT sessions, so entries a median hold apart
+    still overlapped and the t-statistics were too large."""
     per_date = t.groupby("dt")[["net", "bench", "excess"]].mean().sort_index()
     med_hold = int(max(1, round(t["days"].median())))
-    nonov = per_date.iloc[::med_hold]
-    d = nonov["excess"].dropna().to_numpy()
-    n = len(d)
     res = {
         "signal": t["signal"].iloc[0], "trades": len(t),
-        "dates": len(per_date), "n_nonoverlap": n,
-        "median_hold_days": med_hold,
+        "dates": len(per_date), "median_hold_days": med_hold,
         "mean_net": float(t["net"].mean()),
         "mean_bench": float(t["bench"].mean()),
         "excess": float(t["excess"].mean()),
@@ -187,23 +204,15 @@ def summarize(t: pd.DataFrame, reps: int = 2000) -> dict:
         "pct_stopped": float((t["outcome"] == "stop").mean()),
         "pct_target": float((t["outcome"] == "target").mean()),
         "pct_timeout": float((t["outcome"] == "timeout").mean()),
-        "p": None, "excess_t": None,
+        "p": None, "excess_t": None, "blocks": None,
     }
-    if n >= 20 and d.std(ddof=1) > 0:
-        res["excess_t"] = float(d.mean() / (d.std(ddof=1) / np.sqrt(n)))
-        rng = np.random.default_rng(config.RANDOM_SEED)
-        centered = d - d.mean()
-        pr = 1 / max(2, med_hold)
-
-        def draw():
-            o = []
-            while len(o) < n:
-                s = int(rng.integers(n))
-                o.extend(((s + np.arange(int(rng.geometric(pr)))) % n).tolist())
-            return np.array(o[:n])
-
-        boot = np.array([centered[draw()].mean() for _ in range(reps)])
-        res["p"] = float((np.abs(boot) >= abs(d.mean())).mean())
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")        # block count is reported instead
+        b = block_clustered_mean(t["excess"], t["dt"], TIMEOUT)
+    if b["clusters"] >= 10 and b["se"] > 0:
+        res["excess_t"] = float(b["t"])
+        res["p"] = float(b["p_two"])
+        res["blocks"] = int(b["clusters"])
     return res
 
 
@@ -258,10 +267,10 @@ def main() -> int:
     print("TECHNICAL SIGNALS WITH A REAL EXIT  —  excess over holding the same "
           "stock the same number of days")
     print("=" * 108)
-    print(f"{'signal':<25}{'trades':>8}{'indep':>7}{'hold':>6}{'stop%':>7}"
+    print(f"{'signal':<25}{'trades':>8}{'blocks':>7}{'hold':>6}{'stop%':>7}"
           f"{'tgt%':>6}{'hit%':>6}{'net':>8}{'bench':>8}{'excess':>9}{'t':>7}{'p':>7}{'BH':>5}")
     for _, r in res.iterrows():
-        print(f"{r['signal']:<25}{int(r['trades']):>8}{int(r['n_nonoverlap']):>7}"
+        print(f"{r['signal']:<25}{int(r['trades']):>8}{f(r['blocks'],'{:.0f}'):>7}"
               f"{int(r['median_hold_days']):>6}{f(r['pct_stopped'],'{:.0%}'):>7}"
               f"{f(r['pct_target'],'{:.0%}'):>6}{f(r['hit_rate'],'{:.0%}'):>6}"
               f"{f(r['mean_net'],'{:+.2%}'):>8}{f(r['mean_bench'],'{:+.2%}'):>8}"

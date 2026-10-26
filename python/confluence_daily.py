@@ -13,11 +13,17 @@ Every condition is computed on the signal day's close from adjusted prices.
 Trades go through python/ta_exits.py unchanged: next-open entry, 2 ATR stop,
 3 ATR target, 60-session timeout, ties to the stop, and a benchmark of holding
 the same stock for the same days. Data stops the day before the lockbox seal.
+
+FIXED 2026-10-26 (audit): the ta_exits gap fill (stops and targets now fill at
+the open when a bar opens through them) and the t-statistic, which clustered
+overlapping 60-session trades by entry date and now uses calendar blocks
+(evaluation.block_clustered_mean). Earlier output: reports/confluence_daily_pre_2026-10-26.csv.
 """
 
 from __future__ import annotations
 
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -28,8 +34,8 @@ sys.path.insert(0, str(ROOT / "python"))
 
 import lockbox
 import signals as sg
-from evaluation import clustered_mean, mde
-from ta_exits import load_bars, simulate_symbol
+from evaluation import block_clustered_mean, mde
+from ta_exits import TIMEOUT, load_bars, simulate_symbol
 
 
 def conditions(g: pd.DataFrame) -> dict[str, pd.Series]:
@@ -86,9 +92,13 @@ def main() -> int:
         if x.empty:
             rows.append({"setup": name, "trades": 0})
             continue
-        ce = clustered_mean(x["excess"], x["dt"])
-        cn = clustered_mean(x["net"], x["dt"])
-        rows.append({"setup": name, "trades": len(x), "dates": ce["clusters"],
+        # Holds overlap for up to TIMEOUT sessions: cluster by blocks that long
+        # (fixed 2026-10-26; this used entry-date clusters).
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ce = block_clustered_mean(x["excess"], x["dt"], TIMEOUT)
+            cn = block_clustered_mean(x["net"], x["dt"], TIMEOUT)
+        rows.append({"setup": name, "trades": len(x), "blocks": ce["clusters"],
                      "net": cn["mean"], "hold": x["bench"].mean(), "excess": ce["mean"],
                      "t": ce["t"], "mde": mde(ce["se"]),
                      "stop%": (x["outcome"] == "stop").mean(),

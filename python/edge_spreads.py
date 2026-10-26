@@ -51,6 +51,7 @@ from bidask import edge
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import data_access as da
 from spread_estimator import liquidity_half_spread_bps
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -60,7 +61,8 @@ MIN_BARS = 60
 
 
 def main() -> int:
-    d = pd.read_parquet(DATA)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.parquet("edge_spreads", "intraday_1h")
     d = d[d["bars_in_session"] == 7].sort_values(["symbol", "ts"]).reset_index(drop=True)
     d["month"] = d["session"].str[:7]
     print(f"  {len(d):,} bars, {d['symbol'].nunique()} symbols, "

@@ -145,3 +145,104 @@ def breakeven_report(gross: pd.Series, cluster: pd.Series, price: pd.Series) -> 
                         "gross edge below the one-cent floor; untradeable at any spread"
                         if c["mean"] - 1.96 * c["se"] < floor else
                         "gross edge clears the hard floor; now measure the real spread")}
+
+
+# ----------------------------------------------------------- overlapping holds
+# ADDED 2026-10-26. clustered_mean clusters by ENTRY session, which is right when
+# every trade closes within its session. It is wrong for multi-day holds: a
+# trade entered Monday and one entered Tuesday on the same stock share most of
+# their holding period, sit in different clusters, and are treated as
+# independent. On trial 27 (holds up to 60 sessions) entry-date clustering gave
+# t-statistics a median 2.3x too large: 28 of 41 signals looked significant,
+# 8 survive calendar-quarter clustering. Use this for any hold longer than a day.
+
+def block_clustered_mean(ret: pd.Series, entry_date: pd.Series, hold_days: int,
+                         block_multiple: float = 2.0) -> dict:
+    """Trade-weighted mean, clustered by calendar blocks at least as long as the hold.
+
+    Blocks are block_multiple x hold_days trading days (converted to calendar
+    days at 7/5), so trades that overlap mostly land in the same cluster and the
+    remaining dependence is confined to block boundaries. With fewer than about
+    30 blocks the standard error is itself unreliable; the count is returned so
+    that can be checked.
+    """
+    # numpy dates, not pandas: pandas datetime construction segfaults on this
+    # machine's pandas 3 / Python 3.14 build (found 2026-10-26).
+    days = np.asarray(np.asarray(entry_date, dtype=str), dtype="datetime64[D]").astype(np.int64)
+    span = max(1, int(np.ceil(hold_days * block_multiple * 7 / 5)))
+    block = (days - days.min()) // span
+    out = clustered_mean(pd.Series(np.asarray(ret, float)), pd.Series(block))
+    out["block_calendar_days"] = span
+    if out["clusters"] < 30:
+        import warnings
+        warnings.warn(f"only {out['clusters']} blocks; the clustered SE is unreliable "
+                      "below about 30", stacklevel=2)
+    return out
+
+
+def newey_west_t(series: pd.Series, lags: int | None = None) -> dict:
+    """Mean of a time series with a Newey-West (Bartlett) standard error.
+
+    For a portfolio return series, one row per period. lags=None uses the usual
+    floor(4 (T/100)^(2/9)). When periods overlap (h-day returns sampled daily),
+    pass lags >= h - 1.
+    """
+    x = pd.Series(series).dropna().to_numpy(float)
+    n = len(x)
+    if lags is None:
+        lags = int(np.floor(4 * (n / 100) ** (2 / 9)))
+    e = x - x.mean()
+    lrv = e @ e / n
+    for k in range(1, min(lags, n - 1) + 1):
+        lrv += 2 * (1 - k / (lags + 1)) * (e[k:] @ e[:-k]) / n
+    se = np.sqrt(max(lrv, 0) / n)
+    return {"mean": float(x.mean()), "se": float(se),
+            "t": float(x.mean() / se) if se > 0 else np.nan, "n": n, "lags": lags}
+
+
+def factor_alpha(ret: pd.Series, factors: pd.DataFrame, lags: int | None = None,
+                 periods_per_year: float = 252) -> dict:
+    """Regress a strategy's EXCESS return on factor returns; report alpha with HAC SEs.
+
+    ret and factors must be aligned on the same index and already net of the
+    risk-free rate where relevant (Fama-French factors are long-short, so only
+    the strategy and Mkt-RF need it). A high raw Sharpe that disappears here was
+    paid for bearing market, size, value, momentum or other priced risk.
+    """
+    df = pd.concat([pd.Series(ret, name="_y"), factors], axis=1, join="inner").dropna()
+    y = df["_y"].to_numpy(float)
+    X = np.column_stack([np.ones(len(df)), df.drop(columns="_y").to_numpy(float)])
+    n, k = X.shape
+    if lags is None:
+        lags = int(np.floor(4 * (n / 100) ** (2 / 9)))
+    XtX_inv = np.linalg.inv(X.T @ X)
+    b = XtX_inv @ X.T @ y
+    u = y - X @ b
+    Xu = X * u[:, None]
+    S = Xu.T @ Xu
+    for j in range(1, min(lags, n - 1) + 1):
+        G = Xu[j:].T @ Xu[:-j]
+        S += (1 - j / (lags + 1)) * (G + G.T)
+    V = XtX_inv @ S @ XtX_inv * n / (n - k)
+    se = np.sqrt(np.diag(V))
+    names = ["alpha"] + list(df.columns.drop("_y"))
+    resid = u + b[0]                      # alpha plus idiosyncratic return
+    return {"coef": dict(zip(names, b)), "t": dict(zip(names, b / se)),
+            "alpha_annual": float(b[0] * periods_per_year),
+            "alpha_t": float(b[0] / se[0]),
+            "information_ratio": float(resid.mean() / resid.std(ddof=1)
+                                       * np.sqrt(periods_per_year)),
+            "r2": float(1 - u @ u / ((y - y.mean()) @ (y - y.mean()))),
+            "n": n, "lags": lags}
+
+
+def rank_ic(signal: pd.Series, fwd_ret: pd.Series, date: pd.Series,
+            min_names: int = 30) -> pd.Series:
+    """Spearman rank IC per date. Test its mean with newey_west_t, with lags at
+    least the forward-return horizon minus one when dates are daily."""
+    df = pd.DataFrame({"s": np.asarray(signal, float), "r": np.asarray(fwd_ret, float),
+                       "d": np.asarray(date)}).dropna()
+    df = df[df.groupby("d")["s"].transform("size") >= min_names]
+    rs = df.groupby("d")[["s", "r"]].rank()
+    rs["d"] = df["d"]
+    return rs.groupby("d").apply(lambda g: g["s"].corr(g["r"])).sort_index()
