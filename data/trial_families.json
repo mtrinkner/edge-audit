@@ -13,5 +13,5 @@
   "calendar": {"label": "calendar effects", "ids": [33]},
   "crypto_carry": {"label": "crypto perpetual funding carry and crowding", "ids": [20, 21, 22, 24, 25]},
   "structural": {"label": "structural and corporate-action arbitrage (issuer tender offers, odd-lot priority)",
-                 "ids": []}
+                 "ids": [58]}
 }
