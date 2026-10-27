@@ -597,11 +597,31 @@ def parse() -> int:
 
 # ------------------------------------------------------------------ CRSP prices
 
+_NAME_STOP = r"\b(INC|CORP|CORPORATION|CO|COMPANY|LTD|LIMITED|PLC|THE|GROUP|HOLDINGS?|INTERNATIONAL|NEW|DE|LLC|LP|SA|NV|AG)\b"
+
+
+def same_issuer(filer: str, crsp_name: str) -> bool:
+    """Does the CRSP issuer name on the filing date belong to the filer?
+
+    A cover CUSIP can be wrong: Oppenheimer's 2023 Schedule TO gives 671005106,
+    which CRSP assigns to its SPAC, OPY Acquisition Corp I. CRSP spells names
+    differently ("S L M CORP", "BLOCK H & R INC"), so compare squashed names by
+    prefix and containment, then by shared words of three or more letters."""
+    if not isinstance(crsp_name, str) or not crsp_name.strip():
+        return True                                    # nothing to compare
+    words = lambda x: re.sub(_NAME_STOP, " ", re.sub(r"[^A-Z0-9 ]", " ", str(x).upper()))
+    a, b = (re.sub(r"[^A-Z0-9]", "", words(x)) for x in (filer, crsp_name))
+    if a[:4] == b[:4] or a in b or b in a:
+        return True
+    return bool({w for w in words(filer).split() if len(w) >= 3} & {w for w in words(crsp_name).split() if len(w) >= 3})
+
+
 def prices() -> int:
     """CRSP daily prices for every in-scope offer (WRDS), and the match report.
 
     Link order, each checked on the filing date:
-      1. the CUSIP on the Schedule TO cover, matched to a CRSP security;
+      1. the CUSIP on the Schedule TO cover, matched to a CRSP security whose
+         issuer name on that date is the filer's (same_issuer);
       2. the CCM permno found by link() (CIK -> gvkey), if the CUSIP finds nothing;
       3. the trading symbol the Offer to Purchase names, matched to a CRSP
          ordinary share carrying that ticker.
@@ -616,14 +636,16 @@ def prices() -> int:
     md = da.guard("edgar_tenders")
     d = in_scope(pd.read_csv(CACHE / "deals.csv", dtype={"cik": str, "cusip8": str}))
     db = wrds.Connection(wrds_username=username())
-    cols = "permno, ticker, cusip, secinfostartdt, secinfoenddt, sharetype, securitytype, securitysubtype"
+    cols = "permno, ticker, cusip, issuernm, secinfostartdt, secinfoenddt, sharetype, securitytype, securitysubtype"
     cus = ",".join(f"'{c}'" for c in sorted(set(d["cusip8"].dropna())))
     tks = ",".join(f"'{t}'" for t in sorted(set(d["symbol"].dropna())))
     si = db.raw_sql(f"SELECT {cols} FROM crsp.stksecurityinfohist WHERE cusip IN ({cus}) OR ticker IN ({tks})")
     si["s"], si["e"] = si["secinfostartdt"].astype(str), si["secinfoenddt"].astype(str)
     def on(r, m):
         m = m[(m["s"] <= r["date"]) & (m["e"] >= r["date"])]
-        return m["permno"].iloc[0] if m["permno"].nunique() == 1 else None
+        if m["permno"].nunique() != 1 or not same_issuer(r["company"], m["issuernm"].iloc[0]):
+            return None
+        return m["permno"].iloc[0]
     d["permno"] = pd.to_numeric(d["permno"], errors="coerce")
     method, perm = [], []
     for _, r in d.iterrows():
