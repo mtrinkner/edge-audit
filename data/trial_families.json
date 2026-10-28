@@ -5,7 +5,7 @@
   "xs_factors": {"label": "cross-sectional factors and fundamentals (momentum, reversal, value, quality, combinations)",
                  "ids": [7, 9, 11, 13, 15, 23, 35, 36, 37]},
   "earnings_info": {"label": "earnings announcements and information diffusion",
-                    "ids": [10, 12, 14, 34]},
+                    "ids": [10, 12, 14, 34, 59]},
   "flows_altdata": {"label": "institutional flows and alternative data (short interest, insider filings, index rebalancing, government contracts)",
                     "ids": [16, 18, 19, 26]},
   "microstructure": {"label": "market microstructure and costs (overnight premium, measured spreads)",
