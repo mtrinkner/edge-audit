@@ -119,3 +119,6 @@ data/edgar/
 # large rerun artefacts from the 2026-10-26 fixes (regenerable)
 data/ta_exits_trades_robust.parquet
 data/intraday_trades_pre_2026-10-26.parquet
+
+# PEAD study cache: IBES and CRSP (licensed, never commit)
+data/pead/
