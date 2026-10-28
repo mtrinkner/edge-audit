@@ -2,6 +2,7 @@
 """Odd-lot tender offer arbitrage: the deal database (Phase A).
 
     python3 python/edgar_tenders.py index      # SC TO-I / SC TO-I/A filings, 2010Q1-2026Q3
+    python3 python/edgar_tenders.py index --family "SC TO-T"   # third-party offers (merger_arb_tenders.py)
     python3 python/edgar_tenders.py link       # filer CIK -> CRSP permno (WRDS)
     python3 python/edgar_tenders.py download   # cache every candidate submission
     python3 python/edgar_tenders.py parse      # terms and outcome of each offer
@@ -39,8 +40,19 @@ import data_access as da
 USER_AGENT = "Mason Trinkner edge-audit research mtrinkner@wisc.edu"
 MIN_INTERVAL = 0.125                     # seconds between requests: 8 a second
 CACHE = ROOT / "data" / "edgar"
-FORMS = ("SC TO-I", "SC TO-I/A")
-FIRST, LAST = (2010, 1), (2026, 3)
+# Form families: the forms each study keeps from the quarterly indexes, the quarters
+# read, and where the kept rows are cached. SC TO-I is trial 58 and keeps its
+# original cache paths. SC TO-T (trial 60) also keeps the target's SC 14D9, any
+# SC 13E3 (going private) and SC TO-C (pre-commencement communications), because
+# they are needed to read those offers and cost nothing extra to keep.
+FAMILIES = {
+    "SC TO-I": {"forms": ("SC TO-I", "SC TO-I/A"), "first": (2010, 1), "last": (2026, 3),
+                "index": "index", "filings": "filings.csv"},
+    "SC TO-T": {"forms": ("SC TO-T", "SC TO-T/A", "SC 14D9", "SC 14D9/A", "SC 13E3", "SC 13E3/A", "SC TO-C"),
+                "first": (2001, 1), "last": (2026, 3), "index": "index_tot", "filings": "filings_tot.csv"},
+}
+FORMS = FAMILIES["SC TO-I"]["forms"]
+FIRST, LAST = FAMILIES["SC TO-I"]["first"], FAMILIES["SC TO-I"]["last"]
 
 _last_request = 0.0
 
@@ -66,47 +78,65 @@ def fetch(url: str) -> bytes:
     raise RuntimeError("unreachable")
 
 
-def quarters():
-    y, q = FIRST
-    while (y, q) <= LAST:
+def quarters(first=FIRST, last=LAST):
+    y, q = first
+    while (y, q) <= last:
         yield y, q
         y, q = (y, q + 1) if q < 4 else (y + 1, 1)
 
 
-def index_rows(y: int, q: int) -> list[list[str]]:
-    """SC TO-I rows of one quarterly form index: form, company, cik, date, path."""
-    path = CACHE / "index" / f"{y}Q{q}.tsv"
+def form_index_rows(text: str, forms: tuple) -> list[list[str]]:
+    """The rows of a form.idx whose form type is one of `forms`."""
+    rows = []
+    for line in text.splitlines():
+        if not line.startswith(forms):
+            continue
+        form = line[:12].strip()
+        if form not in forms:
+            continue
+        # Fixed-width columns; the company name can contain spaces, the rest cannot.
+        parts = line[12:].rstrip().rsplit(None, 3)
+        if len(parts) != 4:
+            continue
+        company, cik, date, fname = parts
+        rows.append([form, company.strip(), cik, date, fname])
+    return rows
+
+
+def index_rows(y: int, q: int, family: str = "SC TO-I") -> list[list[str]]:
+    """One family's rows of one quarterly form index: form, company, cik, date, path.
+
+    A filing appears once per party: an SC TO-T is listed under the bidder and
+    under the subject company, with the same accession number in both paths."""
+    fam = FAMILIES[family]
+    path = CACHE / fam["index"] / f"{y}Q{q}.tsv"
     if not path.exists():
-        raw = fetch(f"https://www.sec.gov/Archives/edgar/full-index/{y}/QTR{q}/form.idx")
-        rows = []
-        for line in raw.decode("latin-1").splitlines():
-            if not line.startswith("SC TO-I"):
-                continue
-            form = line[:12].strip()
-            if form not in FORMS:
-                continue
-            # Fixed-width columns; the company name can contain spaces, the rest cannot.
-            parts = line[12:].rstrip().rsplit(None, 3)
-            if len(parts) != 4:
-                continue
-            company, cik, date, fname = parts
-            rows.append([form, company.strip(), cik, date, fname])
+        import gzip
+        raw = gzip.decompress(fetch(f"https://www.sec.gov/Archives/edgar/full-index/{y}/QTR{q}/form.gz"))
+        rows = form_index_rows(raw.decode("latin-1"), fam["forms"])
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("\n".join("\t".join(r) for r in rows) + "\n")
     return [l.split("\t") for l in path.read_text().splitlines() if l]
 
 
-def build_index() -> int:
+def build_index(family: str = "SC TO-I") -> int:
     import pandas as pd
     md = da.guard("edgar_tenders")
+    fam = FAMILIES[family]
     rows = []
-    for y, q in quarters():
-        r = index_rows(y, q)
+    for y, q in quarters(fam["first"], fam["last"]):
+        r = index_rows(y, q, family)
         rows += r
-        print(f"  {y}Q{q}: {len(r)} SC TO-I filings", flush=True)
+        print(f"  {y}Q{q}: {len(r)} {family} family rows", flush=True)
     f = pd.DataFrame(rows, columns=["form", "company", "cik", "date", "path"])
     f = f[f["date"] <= md].drop_duplicates("path").sort_values(["cik", "date"])
-    f.to_csv(CACHE / "filings.csv", index=False)
+    if family != "SC TO-I":                  # one row per party; merger_arb_tenders dedupes by accession
+        f["accession"] = f["path"].str.rsplit("/", n=1).str[-1].str.replace(".txt", "", regex=False)
+        f.to_csv(CACHE / fam["filings"], index=False)
+        print(f"\n{len(f):,} rows, {f['accession'].nunique():,} filings through {md}:")
+        print(f.drop_duplicates("accession")["form"].value_counts().to_string())
+        return 0
+    f.to_csv(CACHE / fam["filings"], index=False)
     print(f"\n{len(f):,} filings through {md}: "
           f"{(f['form'] == 'SC TO-I').sum():,} originals, "
           f"{(f['form'] == 'SC TO-I/A').sum():,} amendments, {f['cik'].nunique():,} filers")
@@ -691,6 +721,13 @@ def prices() -> int:
 
 
 if __name__ == "__main__":
-    cmd = sys.argv[1] if len(sys.argv) > 1 else "index"
-    sys.exit({"index": build_index, "link": link, "download": download, "eightk": eightk,
-              "parse": parse, "prices": prices}[cmd]())
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", nargs="?", default="index",
+                    choices=["index", "link", "download", "eightk", "parse", "prices"])
+    ap.add_argument("--family", default="SC TO-I", choices=list(FAMILIES),
+                    help="form family for index (the other commands are SC TO-I only)")
+    a = ap.parse_args()
+    if a.cmd == "index":
+        sys.exit(build_index(a.family))
+    sys.exit({"link": link, "download": download, "eightk": eightk, "parse": parse, "prices": prices}[a.cmd]())
