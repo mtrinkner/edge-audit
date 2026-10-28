@@ -202,6 +202,8 @@ def leg_returns(pos: pd.DataFrame, px: pd.DataFrame, calendar: np.ndarray) -> pd
     px: permno, d (ISO date), open, close, ret, half_spread.
     The entry day earns close / open - 1; later days earn CRSP's dlyret (delisting
     returns included); the half-spread is charged on the entry day and the exit day.
+    No opening price on the entry day means the position is never entered; a
+    missing daily return later in the hold counts as zero.
     A position whose stock stops trading is closed on its last row."""
     px = px.assign(i=np.searchsorted(calendar, px["d"].to_numpy(str)))
     by = {p: g.set_index("i").sort_index() for p, g in px.groupby("permno")}
@@ -214,8 +216,11 @@ def leg_returns(pos: pd.DataFrame, px: pd.DataFrame, calendar: np.ndarray) -> pd
             w = s.loc[(s.index >= e) & (s.index <= x)]
             if w.empty or w.index[0] != e:
                 continue                                  # no row on the entry day: never entered
-            r = w["ret"].to_numpy(float).copy()
-            r[0] = w["close"].iloc[0] / w["open"].iloc[0] - 1
+            o, c0 = w["open"].iloc[0], w["close"].iloc[0]
+            if not (np.isfinite(o) and np.isfinite(c0) and o > 0):
+                continue                                  # no opening trade on the entry day: never entered
+            r = np.nan_to_num(w["ret"].to_numpy(float), nan=0.0)   # a missing daily return counts as zero
+            r[0] = c0 / o - 1
             c = np.zeros(len(w))
             c[0] += w["half_spread"].iloc[0]
             c[-1] += w["half_spread"].iloc[-1]
@@ -225,6 +230,16 @@ def leg_returns(pos: pd.DataFrame, px: pd.DataFrame, calendar: np.ndarray) -> pd
     a = pd.concat(rows)
     out = a.groupby("i").agg(gross=("gross", "mean"), net=("net", "mean"), n=("gross", "size")).reset_index()
     return out
+
+
+def long_short_net(long_net, short_gross, short_net, short_n):
+    """Daily net return of long minus short.
+
+    leg_returns charges costs as a long would (net = return - cost). A short
+    pays the same cost on top of the return it gives up, so its contribution is
+    -(gross + cost), plus borrow on the days it holds anything."""
+    short_cost = short_gross - short_net
+    return long_net - (short_gross + short_cost) - BORROW / 252 * (short_n > 0)
 
 
 def build() -> int:
@@ -276,6 +291,8 @@ def load_prices(md: str) -> pd.DataFrame:
     px = px[px["dlycaldt"] <= md]
     px = px.rename(columns={"dlycaldt": "d", "dlyopen": "open", "dlyret": "ret", "dlycap": "cap",
                             "dlycumfacpr": "cumfac"})
+    for c in ("dlyprc", "open", "ret", "dlybid", "dlyask", "cap", "cumfac"):
+        px[c] = pd.to_numeric(px[c], errors="coerce").astype(float)   # CRSP nulls arrive as pd.NA
     px["close"] = px["dlyprc"].abs().where(px["dlyprc"].abs() > 0)
     mid = (px["dlybid"] + px["dlyask"]) / 2
     hs = ((px["dlyask"] - px["dlybid"]) / mid / 2).where((px["dlyask"] > px["dlybid"]) & (px["dlybid"] > 0))
@@ -308,7 +325,7 @@ def run(period: str) -> int:
         dly[f"{leg}_n"] = t["n"].reindex(dly.index).fillna(0)
     mkt = (ff["mktrf"] + ff["rf"]).reindex(dly["d"]).to_numpy()
     dly["v1_gross"] = dly["long_gross"] - dly["short_gross"]
-    dly["v1_net"] = dly["long_net"] - dly["short_net"] - BORROW / 252 * (dly["short_n"] > 0)
+    dly["v1_net"] = long_short_net(dly["long_net"], dly["short_gross"], dly["short_net"], dly["short_n"])
     dly["v2_gross"] = dly["long_gross"] - mkt
     dly["v2_net"] = dly["long_net"] - mkt
     dly["month"] = dly["d"].str[:7]

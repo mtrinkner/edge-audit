@@ -71,3 +71,21 @@ def test_leg_returns_equal_weights_open_positions_and_skips_missing_entry():
     # Stock 2's position from day 1 has no row that day, so it is never entered.
     assert out.loc[2, "n"] == 2 and np.isclose(out.loc[2, "gross"], (0.10 - 0.10) / 2)
     assert np.isclose(out.loc[3, "gross"], (0.04 + 0.0) / 2)
+
+
+def test_leg_returns_skips_entry_without_an_open_and_zeroes_missing_returns():
+    px = pd.DataFrame({"permno": [1, 1, 1, 2, 2], "d": [CAL[2], CAL[3], CAL[4], CAL[2], CAL[3]],
+                       "open": [10, 10, 10, np.nan, 10.0], "close": [11, 10, 10, 9, 10.0],
+                       "ret": [0, np.nan, 0.05, 0, 0.0], "half_spread": 0.0})
+    pos = pd.DataFrame({"permno": [1, 2], "entry": [2, 2], "exit": [4, 3]})
+    out = pead.leg_returns(pos, px, CAL).set_index("i")
+    assert (out["n"] == 1).all()                      # stock 2 had no open on its entry day
+    assert np.allclose(out["gross"].to_numpy(), [0.10, 0.0, 0.05])
+
+
+def test_long_short_net_charges_both_legs():
+    # Long earns 1% gross, 0.8% net; short leg's stocks earn 0.5% gross, 0.3% net (0.2% cost).
+    net = pead.long_short_net(pd.Series([0.008]), pd.Series([0.005]), pd.Series([0.003]), pd.Series([10]))
+    gross = 0.010 - 0.005
+    assert np.isclose(net.iloc[0], 0.008 - 0.005 - 0.002 - pead.BORROW / 252)
+    assert net.iloc[0] < gross
