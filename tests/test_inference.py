@@ -95,3 +95,9 @@ def test_power_functions_agree():
     assert abs(ds.sharpe_se(0.0, 10, periods_per_year=252) - 1 / np.sqrt(10)) < 0.01
     assert abs(ds.sharpe_se(0.0, 10, periods_per_year=12) - 1 / np.sqrt(10)) < 0.02
     assert 1.4 < ds.min_detectable_sharpe(3) < 1.5
+
+
+def test_pass_probability_is_one_half_at_the_bar():
+    # A true Sharpe of exactly 3/sqrt(T) reaches t = 3 half the time.
+    assert abs(ds.pass_probability(3 / np.sqrt(13), 13) - 0.5) < 1e-9
+    assert ds.pass_probability(0.3, 13) < 0.25 < ds.pass_probability(0.8, 13)

@@ -27,8 +27,8 @@ NOT_A_STUDY = {
 
 # Studies that predate this check and still read data unguarded. On 2026-10-26
 # the other 17 were routed through python/data_access.py, which calls
-# lockbox.guard; index_deletions.py waits on the recycled-ticker review (trial 45).
-KNOWN_UNGUARDED = {"index_deletions.py"}
+# lockbox.guard; index_deletions.py followed on 2026-10-28.
+KNOWN_UNGUARDED: set = set()
 
 # A study is guarded if it calls lockbox.guard itself or loads through
 # data_access. A comment that merely mentions the lockbox does not count.
@@ -45,3 +45,16 @@ def test_studies_guard_the_lockbox():
     assert not new, f"new studies read market data without lockbox.guard: {sorted(new)}"
     fixed = KNOWN_UNGUARDED - unguarded
     assert not fixed, f"guarded now, remove from KNOWN_UNGUARDED: {sorted(fixed)}"
+
+
+def test_index_deletions_refuses_sealed_dates():
+    import sys
+    import pytest
+    sys.path.insert(0, str(ROOT / "python"))
+    import index_deletions
+    import lockbox
+    st = lockbox.state()
+    if not st["sealed"] or st["opened"]:
+        pytest.skip("lockbox not sealed")
+    with pytest.raises(lockbox.LockboxViolation):
+        index_deletions.prices({"SPY"}, max_date=st["seal_from"])

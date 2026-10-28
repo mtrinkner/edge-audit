@@ -26,6 +26,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+import data_access as da
 import db
 from evaluation import clustered_mean, mde
 
@@ -47,10 +48,13 @@ def events() -> tuple[pd.DataFrame, pd.DataFrame]:
     return dele[["symbol", "eff"]], add[["symbol", "eff"]]
 
 
-def prices(symbols: set) -> pd.DataFrame:
+def prices(symbols: set, max_date: str | None = None) -> pd.DataFrame:
+    """Daily adjusted closes through max_date (default: the day before the seal)."""
+    md = da.guard("index_deletions", max_date)
     with db.connect() as con:
         q = ",".join(f"'{s}'" for s in symbols | {"SPY"})
-        p = pd.read_sql(f"SELECT symbol, dt, adj_close FROM bars WHERE symbol IN ({q})", con)
+        p = pd.read_sql(f"SELECT symbol, dt, adj_close FROM bars WHERE symbol IN ({q}) AND dt <= ?",
+                        con, params=(md,))
     missing = sorted(symbols - set(p["symbol"]))
     extra = pd.read_parquet(CACHE) if CACHE.exists() else pd.DataFrame(
         columns=["symbol", "dt", "adj_close"])
@@ -70,7 +74,8 @@ def prices(symbols: set) -> pd.DataFrame:
         if rows:
             extra = pd.concat([extra] + rows, ignore_index=True)
             extra.to_parquet(CACHE, index=False)
-    return pd.concat([p, extra], ignore_index=True)
+    px = pd.concat([p, extra], ignore_index=True)
+    return px[px["dt"].astype(str).str[:10] <= md]
 
 
 def event_returns(ev: pd.DataFrame, px: pd.DataFrame, offset: int, hold: int,

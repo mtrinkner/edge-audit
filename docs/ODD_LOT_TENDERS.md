@@ -1,7 +1,8 @@
 # Odd-lot tender offer arbitrage (trial 58)
 
-**Result: no edge.** Declared 2026-10-26, run once on 2019-2025 with frozen
-code (commit 8ac13fc), recorded FAIL.
+**Result: real edge, economically trivial.** Declared 2026-10-26, run once on
+2019-2025 with frozen code (commit 8ac13fc), recorded FAIL. The declared rule
+fails. The contractual payoff inside it is real but worth about $200 a year.
 
 ## The idea
 
@@ -105,6 +106,31 @@ It is rejected either way.
   deals under $5M a day lose money.
 - **The supply is shrinking.** Listed issuers with odd-lot priority went from
   about 20 offers a year to 1 in 2025.
+
+## Looked at after the fact: entries below the guaranteed price
+
+The declared rule entered whether or not the stock was below the guaranteed
+price (the fixed price, or the low end of a Dutch auction). So only a minority
+of entries were arbitrage setups: 31% of E1 entries in the design period and
+19% in the confirmation period were below that floor. The rest were bets that
+the price would hold or rise.
+
+Restricting E1 to entries below the floor minus $40/99 (the $40 fee per
+share), excluding the Canadian-dollar Imperial Oil offers and the Herbalife
+split:
+
+| | Design 2010-2018 | Confirmation 2019-2025 |
+|---|---|---|
+| Deals | 23 | 9 |
+| Losers | 0 | 0 |
+| Median / mean profit per deal | +$59 / +$82 | +$80 / +$147 |
+| Total, and per year | $1,892, $210 | $1,319, $188 |
+
+The contract does what it says: never a loss in 32 deals. But at 99 shares a
+deal and one to three such deals a year (none in 2017-2019, 2024 or 2025), it
+pays about $200 a year. That is
+descriptive only. Both periods had been seen before this cut was made, so it
+is not a test, and the FAIL stands for the declared rule.
 
 ## Limits and errors found
 

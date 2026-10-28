@@ -110,6 +110,12 @@ def min_detectable_sharpe(years: float, alpha: float = 0.05, power: float = 0.8)
     return (_ppf(1 - alpha) + _ppf(power)) / math.sqrt(years)
 
 
+def pass_probability(prior_sharpe: float, years: float, bar_t: float = 3.0) -> float:
+    """Chance a strategy with this true annual Sharpe reaches t >= bar_t over `years`
+    (the pre-declaration gate in docs/METHODOLOGY.md): 1 - Phi(bar_t - S sqrt(T))."""
+    return 1.0 - _cdf(bar_t - prior_sharpe * math.sqrt(years))
+
+
 def probabilistic_sharpe_ratio(observed_sharpe: float, benchmark_sharpe: float,
                                n_obs: int, periods_per_year: float,
                                skew: float = 0.0, kurtosis: float = 3.0) -> float:
@@ -141,6 +147,10 @@ def main() -> int:
     ap.add_argument("--power", action="store_true",
                     help="what Sharpe each sample length can detect, and how long "
                          "each Sharpe takes to confirm")
+    ap.add_argument("--prior-sharpe", type=float,
+                    help="with --power: the cited prior Sharpe, after decay and costs")
+    ap.add_argument("--years", type=float, default=13.0,
+                    help="with --power: confirmation years (default 13)")
     args = ap.parse_args()
 
     if args.power:
@@ -150,6 +160,11 @@ def main() -> int:
         print("\nYears of data before a true Sharpe is confirmed at 95% (daily, normal)\n")
         for s in (0.3, 0.5, 0.7, 1.0, 1.5, 2.0):
             print(f"  Sharpe {s:.1f}   {min_track_record_years(s):6.1f} years")
+        if args.prior_sharpe is not None:
+            pp = pass_probability(args.prior_sharpe, args.years)
+            print(f"\nP(pass) at t >= 3 over {args.years:g} years with prior Sharpe "
+                  f"{args.prior_sharpe:.2f}: {pp:.3f}  "
+                  f"({'spend the trial' if pp >= 0.25 else 'KILL: below 0.25'})")
         return 0
 
     if args.table or args.sharpe is None:
