@@ -1,0 +1,18 @@
+check,value
+spacs_checked,50
+groups,12 liquidated / 18 extension / 20 merged (sampled)
+hand_meetings,105
+hand_meetings_matched_by_parser,0.962
+redemption_right_agrees,0.941
+meeting_date_within_1bd,0.891
+deadline_within_1bd,0.832
+stated_amount_within_2c,0.693
+paid_amount_within_2c,0.554
+settlement_amount_used_median_error,-0.02
+settlement_within_10c,0.875
+settlement_more_than_5c_low,0.162
+settlement_more_than_5c_high,0.062
+liquidations_by_hand,7
+liquidation_flagged_by_parser,0.857
+liquidation_amount_within_2c,0.286
+payment_date,not compared: parser uses meeting + 5 business days (assumption); 8-Ks rarely state it

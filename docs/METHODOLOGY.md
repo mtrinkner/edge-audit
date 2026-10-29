@@ -152,6 +152,16 @@ that depends on outcomes. Never from the outcomes themselves. The
 declaration states the kill threshold in dollars a year and the account size
 it assumes.
 
+- **Size the ceiling first.** Perfect-foresight entries, limited only by
+  capacity. If the ceiling fails, kill. If only the declared rule fails,
+  redesign the rule before declaring. (Trial 60's first gate sized only the
+  rule: $186 a year against a ceiling of $1,213.)
+- **Required excess return = dollar bar / account.** Screen out any class
+  whose typical excess yield over T-bills is below that before building
+  anything. A $1,500 bar on $25k needs 6% a year over T-bills.
+- **The dollar bar is set per study** and written in its declaration. A
+  research-grade study may set it low, and says so.
+
 **b. Pass probability.** With a cited prior Sharpe S, after realistic
 post-publication decay and costs, and T confirmation years:
 
