@@ -3,6 +3,13 @@
 **Result: killed at the pre-declaration gate, 2026-10-28. Nothing registered;
 no trial spent.**
 
+The kill rests on the pass probability (check b), which fails even with no
+post-2000 decay. The dollar check (a) is a literature preview, not computed
+from deal data. It fails in the base and pessimistic cases, but passes in the
+optimistic case once the $40 fee is removed, so it is supporting evidence, not
+a second independent failure. (Corrected 2026-10-29; the first version said
+nothing about this and charged a fee that need not apply.)
+
 ## The idea
 
 A third-party cash tender offer (SEC Schedule TO-T) is a contract: a bidder
@@ -38,6 +45,12 @@ T-bills, cut for the post-2000 shrinkage of spreads.
   volatility does not shrink with it. Scaling the 4.4%/yr excess return by
   0.37 gives **Sharpe 0.21.** McLean and Pontiff's (2016) average 58%
   post-publication decline gives 0.24.
+- **Scope of the prior.** Mitchell and Pulvino's sample covers all cash and
+  stock mergers, including stock swaps and slow-closing cash mergers, not only
+  cash tender offers. Tender offers close faster and, in their probit, fail no
+  more often than other deals. I found no cited after-cost Sharpe for cash
+  tender offers alone, so the all-deal figure is the closest available prior,
+  not a matched one.
 - **Concentration.** Neither figure allows for this portfolio's 20% position
   cap (at most 5 deals at once on $25k). That is twice RAIM's 10% cap, which
   raises volatility and lowers the Sharpe further.
@@ -71,13 +84,38 @@ every in-scope offer: the full parser plus two WRDS pulls. That work was not
 done after the kill. A preview from the literature alone, per deal, with a
 $5,000 position (20% of $25k):
 
-    net = $5,000 × (spread − 0.1% half-spread − break rate × loss given break) − $40 fee
+    net = $5,000 × (spread − 0.1% half-spread − break rate × loss given break) − fee
 
-| Break rate / loss given break | Spread 1.74% | 2.22% | 2.63% |
-|---|---|---|---|
-| 7% / 25% (base) | −$46 | −$22 | −$1 |
-| 5% / 15% | +$4 | +$28 | +$49 |
-| 10% / 35% | −$133 | −$109 | −$88 |
+**The fee.** A tender through a retail broker can carry a voluntary
+reorganization fee (assumed $40, the figure used in trial 58). It is avoidable
+in merger arbitrage: shares not tendered are cashed out at the same price in
+the second-step merger, a mandatory reorganization, or can be sold in the
+market before the close. So $0 is the primary case and $40 the sensitivity
+row. (The first version of this table charged $40 throughout.)
+
+Per deal:
+
+| Break rate / loss given break | Fee | Spread 1.74% | 2.22% | 2.63% |
+|---|---|---|---|---|
+| 7% / 25% (base) | $0 | −$6 | +$18 | +$39 |
+| 7% / 25% (base) | $40 | −$46 | −$22 | −$1 |
+| 5% / 15% | $0 | +$44 | +$68 | +$89 |
+| 5% / 15% | $40 | +$4 | +$28 | +$49 |
+| 10% / 35% | $0 | −$93 | −$69 | −$48 |
+| 10% / 35% | $40 | −$133 | −$109 | −$88 |
+
+Per year, assuming about 30 deals a year: five $5,000 slots, each turned over
+about six times a year on one- to three-month deals. That is an assumption,
+not a measured deal count, and the gate's kill line is $1,500 a year.
+
+| Break rate / loss given break | Fee | Spread 1.74% | 2.22% | 2.63% |
+|---|---|---|---|---|
+| 7% / 25% (base) | $0 | −$180 | +$540 | +$1,170 |
+| 7% / 25% (base) | $40 | −$1,380 | −$660 | −$30 |
+| 5% / 15% | $0 | +$1,320 | **+$2,040** | **+$2,670** |
+| 5% / 15% | $40 | +$120 | +$840 | +$1,470 |
+| 10% / 35% | $0 | −$2,790 | −$2,070 | −$1,440 |
+| 10% / 35% | $40 | −$3,990 | −$3,270 | −$2,640 |
 
 - The spreads are Jetley and Ji's post-2001 median first-day range for all
   deals, not cash tender offers alone.
@@ -85,10 +123,10 @@ $5,000 position (20% of $25k):
   Pulvino report a 5.0% monthly fail-to-active ratio. In their probit, a 5%
   market fall raises the failure probability by 2.25 points, and a hostile
   bid raises it by 12.8 points.
-- **In the base case the expected net per deal is negative at every
-  post-2001 median spread.** The $40 fee alone is 0.8% of a $5,000 position.
-  That points to a second kill on check (c), the median net spread ≤ 0, but it
-  is not confirmed on deal data.
+- **In the base case, with no fee, the best spread earns $1,170 a year, under
+  the $1,500 line.** Only the optimistic priors clear it (bold). The dollar
+  check therefore leans toward a kill but is not one on its own, and none of
+  it is measured on deal data.
 
 ### c. Benchmark fit
 

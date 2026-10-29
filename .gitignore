@@ -122,3 +122,4 @@ data/intraday_trades_pre_2026-10-26.parquet
 
 # PEAD study cache: IBES and CRSP (licensed, never commit)
 data/pead/
+data/spac/
