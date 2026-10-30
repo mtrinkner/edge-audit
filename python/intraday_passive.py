@@ -74,9 +74,16 @@ def sess_stat(df, col):
             boot_p(s), len(s))
 
 
-def main() -> int:
-    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
-    d = da.parquet("intraday_passive", "intraday_1h")
+def signals(d: pd.DataFrame) -> pd.DataFrame:
+    """Every volume_climax_long bar and both of its executions.
+
+    Two fixes on 2026-10-30 (docs/AUDIT_2026-10-26.md, addendum):
+      - the causal volume baseline is NaN on each session's first bar, and
+        dropping those rows left 6-bar sessions that the 7-bar check then
+        skipped, so no signal ever came out. A NaN ratio now just means no
+        signal; bar 0 can't signal anyway.
+      - the spread was priced from the session's own total dollar volume and
+        final close, known only at 16:00. It now uses the PRIOR session's."""
     d = d[d["bars_in_session"] == SESSION_BARS].copy()
     d = d.sort_values(["symbol", "ts"]).reset_index(drop=True)
     g = d.groupby(["symbol", "session"])
@@ -88,12 +95,15 @@ def main() -> int:
     # catches it by swapping the future and checking the decision is unchanged.
     d["vm"] = (g["volume"].transform(
         lambda x: x.shift(1).expanding().mean()))
-    d["dollar"] = g["volume"].transform("sum") * d["fin"]
-    d["half"] = liquidity_half_spread_bps(d["fin"], d["dollar"]) / 1e4
+    ses = d.groupby(["symbol", "session"], sort=False).agg(vol=("volume", "sum"), last=("close", "last")).reset_index()
+    ses["dollar"] = ses["vol"] * ses["last"]
+    ses[["prev_dollar", "prev_close"]] = ses.groupby("symbol")[["dollar", "last"]].shift(1)
+    d = d.merge(ses[["symbol", "session", "prev_dollar", "prev_close"]], on=["symbol", "session"], how="left")
+    d["half"] = liquidity_half_spread_bps(d["prev_close"], d["prev_dollar"]) / 1e4
     d["vr"] = d["volume"] / d["vm"].replace(0, np.nan)
     d["down"] = d["close"] < d["open"]
     d["sym_i"] = d.groupby(["symbol", "session"]).ngroup()
-    d = d.dropna(subset=["vr", "half", "fin"])
+    d = d.dropna(subset=["half", "fin"])                  # whole sessions: a symbol's first has no prior
 
     print(f"  {len(d):,} bars, {d['symbol'].nunique()} symbols, "
           f"{d['session'].nunique()} sessions")
@@ -108,7 +118,7 @@ def main() -> int:
     vr = d["vr"].to_numpy()
     down = d["down"].to_numpy()
     sym = d["symbol"].to_numpy()
-    ses = d["session"].to_numpy()
+    ses_ = d["session"].to_numpy()
     grp = d["sym_i"].to_numpy()
 
     starts = np.flatnonzero(np.r_[True, grp[1:] != grp[:-1]])
@@ -129,10 +139,15 @@ def main() -> int:
             filled = len(hit) > 0
             # Passive entry pays no spread; the exit still crosses once.
             passive = (fin[i] / bid - 1.0 - h) if filled else np.nan
-            rows.append((sym[i], ses[i], int(bar[i]), h, taker, passive, filled))
+            rows.append((sym[i], ses_[i], int(bar[i]), h, taker, passive, filled))
 
-    T = pd.DataFrame(rows, columns=["symbol", "session", "bar", "half",
-                                    "taker", "passive", "filled"])
+    return pd.DataFrame(rows, columns=["symbol", "session", "bar", "half",
+                                       "taker", "passive", "filled"])
+
+
+def main() -> int:
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    T = signals(da.parquet("intraday_passive", "intraday_1h"))
     T.to_parquet(ROOT / "data" / "intraday_passive.parquet", index=False)
     print(f"  {len(T):,} signal bars\n")
 
