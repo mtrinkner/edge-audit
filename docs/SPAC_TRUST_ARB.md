@@ -1,6 +1,7 @@
 # SPAC trust-value arbitrage (proposed trial 60)
 
-**Result: killed twice at the pre-declaration gate, both on 2026-10-29.
+**Result: killed at the pre-declaration gate on 2026-10-29: twice, then
+again after a symmetric data audit (run 4, the last design-period run).
 Nothing registered; no trial spent.**
 
 1. **First gate, as a dollar study** (the original section below): $186 a
@@ -11,6 +12,10 @@ Nothing registered; no trial spent.**
    1.21, halved to a prior of 0.60, gives P(pass) = 0.050 over five
    confirmation years, against the 0.25 required. That needed a design
    Sharpe of 2.08.
+3. **Symmetric data audit and run 4** (the section after the second gate):
+   the gains were audited as the drops had been. 22 of 78 sampled trades had
+   been bought after the last chance to redeem. Fixed by rule, run 4 gives
+    a year, t 2.73, Sharpe 0.93, P(pass) 0.025. Still killed.
 
 # Second gate: a research-grade test (2026-10-29)
 
@@ -342,6 +347,188 @@ declaration. Nothing from 2021-2025 is parsed, simulated or printed.
 **Disclosed before the audit:** to check the trade file's columns, I
 printed its header and first two rows (permnos 12350 and 12792, both
 long-hold redemptions earning $24 and $8). Nothing else was inspected.
+
+## Audit results (2026-10-29, after the commit above)
+
+The sample is 78 of run 3's 180 trades: top 20, bottom 20, random 20, all
+17 `unparsed_meeting` exits and all 33 holds of 14 days or less. Groups
+overlap. Each trade was checked against its EDGAR filings and CRSP rows.
+Scratch evidence (accession numbers, CRSP dates) is in the session notes;
+the aggregates are in `reports/spac_audit_design.csv`.
+
+**Trades by class and group** (a trade can carry two classes):
+
+| Class | Top 20 | Bottom 20 | Random 20 | Unparsed (17) | Short holds (33) | All 78 | PnL, all 78 |
+|---|---|---|---|---|---|---|---|
+| VALID | 14 | 12 | 15 | 2 | 13 | 49 | $2,337 |
+| PHANTOM-DEADLINE | 6 | 3 | 5 | 13 | 18 | 22 | $1,602 |
+| PHANTOM-PHASE | 1 | 0 | 0 | 1 | 1 | 2 | $128 |
+| TIMING-ERROR | 0 | 3 | 0 | 1 | 1 | 4 | −$38 |
+| PRICE-ERROR | 0 | 1 | 0 | 0 | 0 | 1 | −$19 |
+| AMOUNT-ERROR | 0 | 1 | 0 | 0 | 0 | 1 | −$12 |
+| *Rule c would mis-settle* | 0 | 0 | 1 | 3 | 1 | 3 | $111 |
+| All sampled | 20 | 20 | 20 | 17 | 33 | 78 | $3,871 |
+
+### What each class was
+
+- **PHANTOM-DEADLINE, 22 trades: one bug.** Once a filed meeting's
+  redemption deadline passed, `known_at` dropped the meeting and fell back
+  to the charter deadline, months away. The rule then saw a SPAC under
+  trust with a distant exit and bought it the next day, after the last
+  chance to redeem. Examples:
+  - permno 14994: deadline 2016-06-30 (DEFM14A 0001213900-16-014411), bought
+    2016-07-01 at $9.00;
+  - permno 16704: deadline 2018-02-15 (424B3 0001193125-18-031449), bought
+    2018-02-16 at $8.97;
+  - permno 16673: deadline 2018-11-02 (DEFM14A 0001193125-18-303530), bought
+    2018-11-06.
+
+  In all three the merger closed days later, and the shares became the
+  combined company's stock, at $4.65, $7.95 and $9.90 on the first day
+  after.
+
+  13 of the 22 were then settled at E_t as `unparsed_meeting`, worth $1,108
+  that no holder could have earned. The other 9 exited by a sale at the bid,
+  or through a liquidation after the deal failed (permno 14324). Those exits
+  are market outcomes, but no redemption right was bought.
+- **TIMING-ERROR, 4 trades.**
+  - Three were redemptions paid on mergers that never closed. Cambridge
+    Capital terminated its deal on 2015-05-07 (8-K 0001193125-15-175752,
+    item 1.02). Easterly terminated on 2016-12-31 (8-K 0001144204-17-000038).
+    Shares tendered for redemption came back; run 3 paid them.
+  - One was Aquasition's tender offer: $10.30, expired 2014-07-29 (SC TO-I/A
+    0001144204-14-046505). Run 3 settled it at E_t on 2014-11-03.
+- **PHANTOM-PHASE, 2 trades.**
+  - DD3 (permno 18193) merged with Betterware on 2020-03-13 under a new
+    permno; run 3 treated it as a liquidation and paid trust (+$127).
+  - AR Capital's rename to Axar on 2016-10-11 was read as a merger.
+- **PRICE-ERROR, 1 trade.** Permno 14878 filled at a closing ask of $10.53
+  while it traded at $9.86 (2015-12-31).
+- **AMOUNT-ERROR, 1 trade.** GTY redeemed at about $10.29 (8-K
+  0001144204-19-009918). The parser took a $10.00 promissory-note figure
+  from the same 8-K.
+- **Rule c would mis-settle 3 valid trades.** Each had a real redemption the
+  parser couldn't see:
+  - two tender-offer SPACs: Aquasition, and TKK Symphony at $10.31, expired
+    2020-02-13 (SC TO-I/A 0001213900-20-004186);
+  - one merger proxy filed under the combined company's CIK: Modern Media
+    Acquisition Corp. S.A., 424B3 0001193125-19-222306, deadline
+    2019-08-26.
+
+  Run 3's E_t settlement was close to right for these three. Rule c as
+  written would have sold each at the post-merger bid.
+
+**The random 20, as a read on the bulk.** 5 of the 20 are PHANTOM-DEADLINE,
+carrying $187 of the group's $450 (42%). Only two of those were settled at
+E_t ($46, 10%); the other three exited at market prices. That suggests a
+10-40% overstatement on an ordinary trade, depending on whether a sale is
+counted.
+
+**Short holds and unparsed exits were mostly phantom.** 18 of the 33 short
+holds and 13 of the 17 unparsed exits are PHANTOM-DEADLINE. The reviewer's
+two examples (permnos 14994 and 16704) are both in that class.
+
+**Entries above a 5% discount: mostly valid.** 27 trades, 37% of run 3's
+profit. The long holds among them (bought at $9.67-9.92 in 2017-19, sold or
+redeemed about a year later) check out: valid quotes, sales at the bid. The
+short ones are the phantom-deadline trades above.
+
+### Rule fixes applied in run 4
+
+| Rule | Basis | Test (`tests/test_spac_trial.py`) |
+|---|---|---|
+| a. Suspect check on the fill day's ask | pre-committed | `test_fill_day_ask_is_checked_for_the_suspect_filter` |
+| b. Deadline at least fill + 3 business days | pre-committed | `test_fill_needs_three_business_days_before_the_deadline` |
+| c. A merger without a parsed meeting exits at the bid on the first trading day after the charter deadline or phase end | pre-committed | `test_missed_meeting_exits_at_the_bid_after_the_phase_end` |
+| d1. No entry after a meeting's deadline until its outcome is known: a termination 8-K (item 1.02) for a merger or tender, the vote 8-K or an extension for an extension meeting | PHANTOM-DEADLINE, 22 | `test_no_entry_after_a_passed_deadline_until_the_outcome_is_known` |
+| d2. A merger or tender redemption is void unless the deal closes within 120 days of the meeting (assumption), and is paid at closing | TIMING-ERROR, 4 (3 of them this cause) | `test_redemption_is_void_when_the_merger_never_closes` |
+| d3/e. Tender offers (SC TO-I and amendments) are redemption opportunities: expiry = deadline, offer price = amount. Merger proxies filed under a co-registrant's CIK are found by EDGAR full-text search on the SPAC's name, for every merged SPAC, and kept only if the document opens as a meeting notice naming the SPAC in full | Rule c would mis-settle, 3. These fixes raise returns relative to rule c, and go in under rule e | `test_tender_offer_*` (3), `test_coregistrant_proxy_is_matched_on_the_spac_name` |
+
+**Not fixed** (fewer than 3 in the sample, reported only):
+- PHANTOM-PHASE (2);
+- PRICE-ERROR (1);
+- AMOUNT-ERROR (1);
+- the remaining TIMING-ERROR cause, a tender settled late (1). d3 now
+  parses tenders, so this one is handled anyway.
+
+The new parsers found:
+- 151 tender filings for 16 SPACs;
+- 32 co-registrant proxies with a meeting, for 26 SPACs. Many duplicate the
+  SPAC's own proxy and merge into the same meeting.
+
+### Is the paid-amount parser good enough to settle a 1-2% edge?
+
+Not on its own. Hand validation found paid amounts within $0.02 of the
+filings 55% of the time. Settlement amounts were within $0.10 88% of the
+time, with a median error of −$0.02, and errors lean low. A 1-2% edge is
+$0.10-0.20 a share, so a $0.10 miss is half the edge. Two things limit the
+damage:
+- In run 4, redemptions carry only $454 of $4,308 PnL. Most profit is sales
+  at the bid, where the paid amount only sets the sell trigger.
+- The errors push returns down.
+
+**Proposed fix (not implemented; GTY is 1 case):**
+- prefer an 8-K sentence of the form "redeemed at a per share price of
+  approximately $X";
+- tighten the plausibility check from $1.00 to $0.15 of the stated amount,
+  falling back to stated minus the haircut.
+
+## Run 4: the last gate run on the design period
+
+| | Run 1 | Run 2 | Run 3 | **Run 4** |
+|---|---|---|---|---|
+| Excess $/yr on $25k | — | — | $406 | **$277** |
+| NW t | — | — | 3.80 | **2.73** |
+| Monthly Sharpe | 0.37 | 0.59 | 1.21 | **0.93** |
+| P(pass), prior = Sharpe/2, 5 yrs | 0.005 | 0.010 | 0.050 | **0.025** |
+| Entries | — | — | 180 | 161 |
+| PnL: sold at the bid | — | — | $3,624 (98) | $3,436 (90) |
+| PnL: redeemed | — | — | $857 (59) | $454 (49) |
+| PnL: no parsed meeting | — | — | $1,220 (17) | $353 (19) |
+| PnL: liquidated | — | — | $249 (6) | $65 (3) |
+| PnL from discounts above 5% | — | — | $2,190 (37%) | $1,318 (31%) |
+| PnL from holds of 14 days or less | — | — | $1,482 | $192 |
+| 2020's share of profit | — | — | 38% | **52%** |
+| Excess $/yr, 2010-2019 | — | — | $279 | **$145** |
+
+Ceiling (perfect foresight, $0 fee): $3,056 a year. Worst month −$147
+(2014-08); maximum drawdown 4.8%; market beta 0.02. Run 4's skips:
+- 22 entries blocked by d1;
+- 19 that failed the deadline buffer;
+- 8 suspect fills;
+- 8 redemptions voided.
+
+The 19 run-4 exits with no parsed meeting are mostly SPACs that kept
+trading past the prospectus deadline, where an automatic or unparsed
+extension was missed. They exit at the SPAC's own bid, near trust.
+
+**Gate decision, as declared:**
+- (a) PASS: $277 ≥ $250, and the ceiling clears it.
+- (b) KILL: P(pass) = 0.025 < 0.25. The design Sharpe would have to be
+  2.08.
+
+Killed. Nothing registered; no trial spent. Run 4 is final for the design
+period. Any later fix is a documented correction, not a new gate decision.
+
+**How much of run 3 was real.** About two-thirds:
+- $/yr fell from $406 to $277 (68%);
+- PnL fell from $5,950 to $4,308 (72%);
+- the Sharpe fell from 1.21 to 0.93.
+
+The lost part is concentrated where the reviewer pointed: short holds fell
+from $1,482 to $192, and unparsed settlements from $1,220 to $353. What
+remains leans harder on 2020: 52% of profit, and $145 a year without it.
+
+## Correction to the second gate's "not touched" statement
+
+"Nothing from 2021-2025 was parsed" was wrong. The design cohort's scope
+holds every filing of a SPAC that IPO'd by 2020-12-31, through its phase end
+plus 60 days. That included 3,271 filings dated 2021 or later in run 3, out
+of 7,736. Run 4's new tender filings add 12 more. They were parsed as part
+of the design cohort's event timelines. The audit's inspection tables printed
+meeting dates and phase ends for sampled design SPACs, some falling in
+2021-22. No 2021-2025 quote, return or simulation was computed or printed,
+and the confirmation cohort (IPO after 2020) was never parsed.
 
 # First gate (2026-10-29 morning)
 

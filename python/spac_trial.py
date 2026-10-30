@@ -44,11 +44,14 @@ HAIRCUT = 0.02               # $/share ASSUMPTION: shortfall, excise tax, expens
 THRESH = 0.02                # annualized net yield over T-bills at entry
 MAX_DAYS = 365               # NRO at most 365 days away
 SETTLE = 2                   # ASSUMPTION: a fill must settle (T+2) before the redemption deadline
+CUTOFF = 1                   # ASSUMPTION: plus 1 business day for the broker's cutoff (audit rule b)
 SUSPECT = 0.10               # ask more than 10% below amount_t: a data error, excluded and counted
 PAY_LAG_MEETING = 5          # ASSUMPTION: business days from the meeting to payment, when not stated
 PAY_LAG_LIQ = 10             # ASSUMPTION: business days from the charter deadline to liquidation payment
 DEADLINE_LAG = 2             # redemption deadline, when the proxy gives none: 2 business days before the meeting
 SAME_MEETING_DAYS = 60       # two proxies whose meeting dates are this close describe one meeting
+CLOSE_DAYS = 120             # ASSUMPTION: a merger vote's redemptions are paid only if the deal closes within this
+EXTENSION_LIKE = ("extension", "annual")    # meetings whose redemptions are paid whatever the vote
 
 
 # ------------------------------------------------------------------ calendar
@@ -89,6 +92,8 @@ def timelines(which: str | None = None) -> dict:
     names = [f"proxy_events{'_' + w if w else ''}.csv" for w in (["design", "confirm"] if which is None else [which])]
     E = pd.concat([pd.read_csv(CACHE / n, dtype={"cik": str, "items": str}) for n in names if (CACHE / n).exists()])
     E = E[E["status"] == "ok"].sort_values(["filed", "acc"])
+    F8 = pd.read_csv(CACHE / "filings.csv", dtype=str)
+    F8 = F8[F8["form"].isin(["8-K", "8-K/A"])]
     out = {}
     for p, w in W.iterrows():
         e = E[E["permno"] == p]
@@ -157,8 +162,12 @@ def timelines(which: str | None = None) -> dict:
             dt = near["liquidation_date"].dropna() if len(near) and "liquidation_date" in near else pd.Series(dtype=str)
             liq = {"amount": float(amt.iloc[-1]) if len(amt) else None,
                    "date": dt.iloc[-1] if len(dt) else None, "found_8k": len(near) > 0}
+        f8 = F8[(F8["cik"] == w["cik"]) & (F8["filed"] > ipo)]
+        items = f8["items"].fillna("")
         out[p] = {"cik": w["cik"], "ipo": ipo, "end": w["end"], "merged": bool(w["merged"]), "last_crsp": w["last_crsp"],
                   "meetings": meetings, "revisions": revisions, "charter": charter,
+                  "votes": sorted(f8.loc[items.str.contains("5.07", regex=False), "filed"]),
+                  "terminated": sorted(f8.loc[items.str.contains("1.02", regex=False), "filed"]),
                   "held": held, "paid": paid, "paid_src": paid_src, "pay_date": pay_date, "liquidation": liq}
     return out
 
@@ -179,21 +188,35 @@ def known_at(tl: dict, t: str) -> dict:
                 m["stated"] = r["stated"]
             m["deadline"] = r.get("deadline")
     charter = [c for c in tl["charter"] if c[0] < t or c[2] == "prospectus"][-1][1]
-    pend = []
+    pend, passed = [], []
     for m in ms.values():
         dl = m["deadline"] if m["deadline"] and m["deadline"] <= m["meeting"] else bday(m["meeting"], -DEADLINE_LAG)
         if m["right"] and dl >= t:
             pend.append({**m, "deadline": dl})
+        elif m["right"]:
+            passed.append({**m, "deadline": dl})
     pend.sort(key=lambda m: m["deadline"])
+    # Audit rule d (2026-10-29): after a meeting's redemption deadline a buyer has
+    # no redemption right until the outcome is known. A merger or tender: until a
+    # termination 8-K (item 1.02); an extension: until its vote 8-K or extension.
+    blocked = False
+    if not pend:
+        for m in passed:
+            if m["kind"] in EXTENSION_LIKE:
+                done = any(m["deadline"] <= x < t for x in tl.get("votes", [])) or \
+                    any(m["deadline"] <= c[0] < t for c in tl["charter"] if c[2] != "prospectus")
+            else:
+                done = any(m["filed"] < x < t for x in tl.get("terminated", []))
+            blocked = blocked or not done
     # A filed proxy for a meeting after the charter deadline in force means the
     # deadline moved (an extension or automatic extension the parser missed):
     # the meeting is the next opportunity either way.
     if pend:
         m = pend[0]
         return {"kind": "meeting", "id": m["id"], "deadline": m["deadline"], "pay": bday(m["meeting"], PAY_LAG_MEETING),
-                "stated": m["stated"], "charter": charter}
+                "stated": m["stated"], "charter": charter, "blocked": False}
     return {"kind": "charter", "id": None, "deadline": charter, "pay": bday(charter, PAY_LAG_LIQ),
-            "stated": None, "charter": charter}
+            "stated": None, "charter": charter, "blocked": blocked}
 
 
 # ------------------------------------------------------------------ the daily panel
@@ -218,6 +241,9 @@ def panel(lo: str, hi: str, which: str | None = None) -> tuple[pd.DataFrame, dic
     px["close"] = px["dlyprc"].abs().where((px["dlyprc"] > 0) | ((px["dlyprc"] < 0) & ok))
     px["hs"] = ((px["ask"] - px["bid"]) / 2)
     px["adv20"] = px.groupby("permno")["dlyprcvol"].transform(lambda x: x.shift(1).rolling(20, min_periods=10).median())
+    # every valid bid on the permno, whatever the security has become (audit rule c's exit)
+    for p, g in px.dropna(subset=["bid"]).groupby("permno"):
+        tls[p]["bids"] = g.set_index("dlycaldt")["bid"]
     px = px[px["dlycaldt"] >= lo]
     rows = []
     for p, g in px.groupby("permno"):
@@ -245,9 +271,9 @@ def panel(lo: str, hi: str, which: str | None = None) -> tuple[pd.DataFrame, dic
             pay = k["pay"]
             amount = k["stated"] if k["stated"] else E_t * growth[pay] / growth[t]
             rows.append((p, t, r.close, r.bid, r.ask, r.hs, r.adv20, r.dlyvol, E_t, amount, bool(k["stated"]),
-                         k["kind"], k["id"], k["deadline"], pay, k["charter"]))
+                         k["kind"], k["id"], k["deadline"], pay, k["charter"], k["blocked"]))
     d = pd.DataFrame(rows, columns=["permno", "d", "close", "bid", "ask", "hs", "adv20", "vol", "E_t", "amount",
-                                    "amount_stated", "nro_kind", "nro_id", "deadline", "pay", "charter"])
+                                    "amount_stated", "nro_kind", "nro_id", "deadline", "pay", "charter", "blocked"])
     d["hs"] = d["hs"].fillna(d.groupby("d")["hs"].transform("median"))
     return d, tls
 
@@ -296,10 +322,11 @@ def simulate(d: pd.DataFrame, tls: dict, lo: str, hi: str, fee=FEE, haircut=HAIR
     cash, held, rows, trades, owed = ACCOUNT, {}, [], [], []
     pending = []
     counts = {"suspect_days": int(d["suspect"].sum()), "unparsed_meeting_exits": 0, "fallback_paid": 0,
-              "skipped_cash": 0, "skipped_no_ask": 0}
+              "skipped_cash": 0, "skipped_no_ask": 0, "skipped_suspect_fill": 0, "skipped_deadline_buffer": 0,
+              "skipped_blocked": 0, "void_redemptions": 0}
 
     def close_trade(h, day, proceeds, how, paid=None):
-        trades[h["i"]].update(exit_day=day, proceeds=proceeds, exit=how, paid=paid,
+        trades[h["i"]].update(exit_day=str(day), proceeds=proceeds, exit=how, paid=paid,
                               pnl=proceeds - trades[h["i"]]["cost"])
 
     for t in days:
@@ -313,8 +340,17 @@ def simulate(d: pd.DataFrame, tls: dict, lo: str, hi: str, fee=FEE, haircut=HAIR
             if p in held or p not in g.index:
                 continue
             q = g.loc[p]
-            if not (q["ask"] > 0) or bday(t, SETTLE) > q["deadline"]:
+            if not (q["ask"] > 0):
                 counts["skipped_no_ask"] += 1
+                continue
+            if q["suspect"]:                                  # audit rule a: the fill day's ask, too
+                counts["skipped_suspect_fill"] += 1
+                continue
+            if bday(t, SETTLE + CUTOFF) > q["deadline"]:      # audit rule b
+                counts["skipped_deadline_buffer"] += 1
+                continue
+            if q["blocked"]:                                  # audit rule d: a passed deadline, outcome unknown
+                counts["skipped_blocked"] += 1
                 continue
             usd = min(ACCOUNT * MAX_W, ADV_CAP * (q["adv20"] if q["adv20"] == q["adv20"] else 0))
             sh = np.floor(usd / q["ask"])
@@ -326,6 +362,7 @@ def simulate(d: pd.DataFrame, tls: dict, lo: str, hi: str, fee=FEE, haircut=HAIR
                 continue
             cash -= cost
             held[p] = {"shares": sh, "i": len(trades), "entry": t, "last_mark": q["ask"], "E_entry": q["E_t"],
+                       "void": set(), "last_bid": q["bid"] if q["bid"] > 0 else np.nan,
                        "nro": {"kind": q["nro_kind"], "id": q["nro_id"], "deadline": q["deadline"],
                                "stated": q["amount"] if q["amount_stated"] else None, "amount": q["amount"]}}
             trades.append({"permno": p, "entry_day": t, "cost": cost, "shares": sh, "ask": q["ask"],
@@ -341,19 +378,30 @@ def simulate(d: pd.DataFrame, tls: dict, lo: str, hi: str, fee=FEE, haircut=HAIR
                             "stated": q["amount"] if q["amount_stated"] else None, "amount": q["amount"]}
             n = h["nro"]
             bid = q["bid"] if q is not None and q["bid"] > 0 else np.nan
+            if bid == bid:
+                h["last_bid"] = bid
             if bid >= n["amount"]:
                 proceeds = h["shares"] * bid
                 cash += proceeds
                 close_trade(h, t, proceeds, "sold_above_amount")
                 del held[p]
                 continue
-            if n["kind"] == "meeting" and n["deadline"] <= t:
+            if n["kind"] == "meeting" and n["deadline"] <= t and int(n["id"]) not in h["void"]:
+                mid = int(n["id"])
+                kind = next(m["kind"] for m in tl["meetings"] if m["id"] == mid)
+                closes = tl["merged"] and pd.Timestamp(tl["held"][mid]) - pd.Timedelta(days=5) <= pd.Timestamp(tl["end"]) \
+                    <= pd.Timestamp(tl["held"][mid]) + pd.Timedelta(days=CLOSE_DAYS)
                 if n["stated"] and bid >= n["stated"]:
                     proceeds = h["shares"] * bid
                     cash += proceeds
                     close_trade(h, t, proceeds, "sold_above_amount")
+                elif kind not in EXTENSION_LIKE and not closes:
+                    # audit rule d: a merger or tender that never closed pays no redemption;
+                    # the shares come back and the position stays open
+                    h["void"].add(mid)
+                    counts["void_redemptions"] += 1
+                    continue
                 else:
-                    mid = int(n["id"])
                     paid = tl["paid"].get(mid)
                     if paid is not None and abs(paid - n["amount"]) > 1.0:
                         paid = None                           # > $1 from the amount known at entry: a misparse
@@ -363,37 +411,48 @@ def simulate(d: pd.DataFrame, tls: dict, lo: str, hi: str, fee=FEE, haircut=HAIR
                         counts["fallback_paid"] += 1
                     proceeds = h["shares"] * paid - fee
                     pay = max(tl["pay_date"][mid], bday(t, 1))
+                    if kind not in EXTENSION_LIKE:
+                        pay = max(pay, bday(tl["end"], SETTLE))      # a merger's redemptions are paid at closing
                     owed.append({"pay": pay, "amount": proceeds})
                     close_trade(h, pay, proceeds, "redeemed", paid=paid)
                     trades[h["i"]]["stated_amount"] = n["stated"]
                 del held[p]
                 continue
-            # the SPAC phase is over with the position still open
-            last_day = tl["end"] if tl["merged"] else tl["last_crsp"]
-            if q is None and (t >= last_day if tl["merged"] else t > last_day):
-                if tl["merged"]:
-                    # a business-combination meeting the parser did not find: the holder had its
-                    # proxy and could redeem; settled at the last meeting's amount, and counted
+            # Audit rule c: a merger the parser found no meeting for is not settled at E_t. The
+            # position exits at the bid on the first trading day after the charter deadline in
+            # force or the phase end, whichever is first, whatever the security has become.
+            if tl["merged"]:
+                x = tl["end"]
+                if n["kind"] == "charter" and n["deadline"] < x:
+                    x = n["deadline"]
+                if t > x:
                     counts["unparsed_meeting_exits"] += 1
+                    bids = tl.get("bids", pd.Series(dtype=float))
+                    after = bids[bids.index > x]
+                    b = float(after.iloc[0]) if len(after) and after.index[0] <= bday(x, 10) else h["last_bid"]
+                    b = b if b == b else h["last_mark"]
+                    proceeds = h["shares"] * b
+                    cash += proceeds
+                    close_trade(h, t, proceeds, "unparsed_meeting", paid=b)
+                    del held[p]
+                continue
+            # a liquidation: the SPAC's last CRSP day has passed with the position open
+            if q is None and t > tl["last_crsp"]:
+                liq = tl["liquidation"] or {}
+                amt = liq.get("amount")
+                if amt is None:
                     amt = h["E_entry"] * growth[t] / growth[h["entry"]] - haircut
-                    proceeds = h["shares"] * amt - fee
-                    owed.append({"pay": bday(t, PAY_LAG_MEETING), "amount": proceeds})
-                    close_trade(h, t, proceeds, "unparsed_meeting", paid=amt)
-                else:
-                    liq = tl["liquidation"] or {}
-                    amt = liq.get("amount")
-                    if amt is None:
-                        amt = h["E_entry"] * growth[t] / growth[h["entry"]] - haircut
-                        counts["fallback_paid"] += 1
-                    pay = liq.get("date") or bday(tl["charter"][-1][1], PAY_LAG_LIQ)
-                    pay = max(pay, bday(t, 1))
-                    proceeds = h["shares"] * amt
-                    owed.append({"pay": pay, "amount": proceeds})
-                    close_trade(h, pay, proceeds, "liquidated", paid=amt)
+                    counts["fallback_paid"] += 1
+                pay = liq.get("date") or bday(tl["charter"][-1][1], PAY_LAG_LIQ)
+                pay = max(pay, bday(t, 1))
+                proceeds = h["shares"] * amt
+                owed.append({"pay": pay, "amount": proceeds})
+                close_trade(h, pay, proceeds, "liquidated", paid=amt)
                 del held[p]
         # Never held past a meeting's redemption deadline: below the amount it is redeemed,
         # at or above it sold, so "an extension passed and the position was not closed" cannot occur.
-        assert not any(h["nro"]["kind"] == "meeting" and h["nro"]["deadline"] <= t for h in held.values()), \
+        assert not any(h["nro"]["kind"] == "meeting" and h["nro"]["deadline"] <= t and int(h["nro"]["id"]) not in h["void"]
+                       for h in held.values()), \
             f"position held past a redemption deadline on {t}"
         # 4. NAV at the bid (no quote: the close less the day's median half-spread)
         value = 0.0
@@ -415,7 +474,7 @@ def simulate(d: pd.DataFrame, tls: dict, lo: str, hi: str, fee=FEE, haircut=HAIR
         cash *= 1 + float(rf.get(t, 0.0))
         # 5. decide after the close: highest annualized net yield first
         el = g[(g["yld"] >= thresh) & (g["days_to_pay"] <= MAX_DAYS) & (g["shares"] > 0) & ~g["suspect"]
-               & (g["ask"] > 0)]
+               & (g["ask"] > 0) & ~g["blocked"].astype(bool)]
         pending = [p for p in el.sort_values("yld", ascending=False).index if p not in held]
     nav = pd.DataFrame(rows).set_index("d")
     tr = pd.DataFrame(trades)

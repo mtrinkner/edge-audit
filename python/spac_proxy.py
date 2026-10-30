@@ -48,7 +48,11 @@ DOCS = CACHE / "docs"
 PROXY_FORMS = ("DEF 14A", "DEFM14A", "DEFR14A", "424B3")
 SUPPLEMENT_FORMS = ("DEFA14A",)
 EIGHTK_FORMS = ("8-K", "8-K/A")
-FULL_SUBMISSION = set(EIGHTK_FORMS) | set(SUPPLEMENT_FORMS)     # proxies: the primary document (can exceed 5 MB)
+# SPACs that redeem by issuer tender offer instead of a vote (audit 2026-10-29,
+# rule d): the offer to purchase is an exhibit, so the full submission is read
+TENDER_FORMS = ("SC TO-I", "SC TO-I/A")
+FULL_SUBMISSION = set(EIGHTK_FORMS) | set(SUPPLEMENT_FORMS) | set(TENDER_FORMS)  # proxies: the primary document
+COREG_FORMS = ("424B3", "DEFM14A", "DEFR14A")     # a merger proxy filed by the combined company's registrant
 AFTER_END_DAYS = 60                 # liquidation and redemption-result 8-Ks follow the SPAC phase's end
 # 8-K items that can carry a meeting, postponement, extension, redemption or
 # liquidation; an 8-K with none of them (only 1.01, 2.02, 5.02, 9.01, ...) is not read.
@@ -83,16 +87,85 @@ def scope(which: str | None = None) -> pd.DataFrame:
     md = da.guard("spac_proxy")
     W = windows()
     F = pd.read_csv(CACHE / "filings.csv", dtype=str)
-    f = F[F["form"].isin(PROXY_FORMS + SUPPLEMENT_FORMS + EIGHTK_FORMS)].merge(W, on="cik")
+    f = F[F["form"].isin(PROXY_FORMS + SUPPLEMENT_FORMS + EIGHTK_FORMS + TENDER_FORMS)].merge(W, on="cik")
     lim = (pd.to_datetime(f["end"]) + pd.Timedelta(days=AFTER_END_DAYS)).dt.strftime("%Y-%m-%d")
     f = f[(f["filed"] > f["ipo"]) & (f["filed"] <= lim) & (f["filed"] <= md)]
     k = f["form"].isin(EIGHTK_FORMS)
     f = f[~k | f["items"].fillna("").map(lambda s: bool(EIGHTK_ITEMS & set(s.split(","))))]
+    co = CACHE / "coreg_filings.csv"
+    if co.exists():                                       # proxies filed under another registrant's CIK
+        c = pd.read_csv(co, dtype=str)
+        c["permno"] = c["permno"].astype(int)
+        c = c[c["filed"] <= md].merge(W.drop(columns="cik"), on="permno") if len(c) else c
+        f = pd.concat([f, c], ignore_index=True)
     if which == "design":
         f = f[f["ipo"] <= "2020-12-31"]
     elif which == "confirm":
         f = f[f["ipo"] > "2020-12-31"]
     return f.drop_duplicates("acc").reset_index(drop=True)
+
+
+def coregistrants(which: str = "design") -> int:
+    """data/spac/coreg_filings.csv: merger proxies another registrant filed for
+    a SPAC (the combined company's F-4/S-4 prospectus, e.g. Modern Media
+    Acquisition Corp. S.A. for Modern Media Acquisition Corp., 2019-08-15).
+
+    Looked up, by EDGAR full-text search on the SPAC's name in the 180 days
+    before its phase end, for every SPAC whose phase ended in a merger. Kept
+    by _parse_one only if the document opens as a meeting notice naming the
+    SPAC; a filing that lists the SPAC's own CIK is already in filings.csv."""
+    import json
+    import urllib.parse
+    md = da.guard("spac_proxy")
+    W = windows()
+    W["permno"] = W["permno"].astype(str)
+    L = pd.read_csv(CACHE / "links.csv", dtype=str).drop_duplicates("cik").set_index("cik")
+    lo_, hi_ = ("2010-01-01", "2020-12-31") if which == "design" else ("2021-01-01", "2025-12-31")
+    W = W[W["merged"] & (W["end"] >= lo_) & (W["end"] <= hi_) & (W["ipo"] <= hi_)]
+    rows = []
+    for w in W.itertuples():
+        stem = name_stem(L.loc[w.cik, "name_at_filing"]) if w.cik in L.index else None
+        if not stem:
+            continue
+        q = urllib.parse.urlencode({"q": f'"{stem}"', "dateRange": "custom", "forms": ",".join(COREG_FORMS),
+                                    "startdt": (pd.Timestamp(w.end) - pd.Timedelta(days=180)).strftime("%Y-%m-%d"),
+                                    "enddt": min(md, (pd.Timestamp(w.end) + pd.Timedelta(days=5)).strftime("%Y-%m-%d"))})
+        try:
+            hits = json.loads(_fetch("https://efts.sec.gov/LATEST/search-index?" + q))["hits"]["hits"]
+        except Exception as e:                            # recorded, never silently dropped
+            print(f"  search failed for {stem!r} (permno {w.permno}): {e}")
+            continue
+        for h in hits:
+            s = h["_source"]
+            if w.cik.zfill(10) in s["ciks"] or s["form"] not in COREG_FORMS:
+                continue
+            acc, doc = h["_id"].split(":")
+            rows.append({"cik": str(int(s["ciks"][0])), "form": s["form"], "filed": s["file_date"], "report": None,
+                         "items": None, "accepted": None, "acc": acc, "doc": doc, "permno": w.permno,
+                         "spac_cik": w.cik, "spac_stem": stem, "spac_name": L.loc[w.cik, "name_at_filing"]})
+    out = pd.DataFrame(rows).drop_duplicates("acc") if rows else pd.DataFrame(
+        columns=["cik", "form", "filed", "acc", "doc", "permno", "spac_cik", "spac_stem", "spac_name"])
+    out.to_csv(CACHE / "coreg_filings.csv", index=False)
+    print(f"{len(W)} merged SPACs; {out['permno'].nunique()} with co-registrant proxy candidates; {len(out)} filings")
+    return 0
+
+
+_SUFFIX = {"corp", "corporation", "inc", "ltd", "limited", "co", "company", "holdings", "holding", "de", "ny", "nv"}
+
+
+def name_stem(name: str) -> str:
+    """"Modern Media Acquisition Corp." -> "Modern Media Acquisition" (the search term)."""
+    toks = re.findall(r"[A-Za-z0-9&]+", str(name))
+    return " ".join(t for t in toks if t.lower() not in _SUFFIX)
+
+
+def names_spac(t: str, name: str) -> bool:
+    """Whether a co-registrant's proxy opens by naming the SPAC in full
+    ("Pace Holdings Corp.", not a stray "pace"): every token of its name in
+    order, as whole words."""
+    toks = [x for x in re.findall(r"[A-Za-z0-9&]+", str(name)) if x.lower() not in ("de", "ny", "nv")]
+    pat = r"\b" + r"[\s.,]*".join(map(re.escape, toks)) + r"\b"
+    return bool(re.search(pat, _flat(t)[:30000], re.I))
 
 
 def _path(r) -> tuple[str, Path]:
@@ -395,12 +468,37 @@ def parse_8k(t: str, filed: str) -> dict:
 
 # ------------------------------------------------------------------ parse every cached filing
 
+_TENDER_PRICE = re.compile(r"(?:purchase|tender\s+offer|final)\s+price\s+(?:of\s+)?(?:approximately\s+)?\$\s?(\d{1,2}\.\d{2,4})",
+                           re.I)
+_TENDER_EXPIRY = re.compile(rf"(?:will\s+(?:now\s+)?expire|expires|expired|expiration\s+date[^.]{{0,40}}?(?:\bto|until|\bis))"
+                            rf"[^.]{{0,150}}?({DATE_RE})", re.I)
+
+
+def parse_tender(t: str) -> dict:
+    """An issuer tender offer for the public shares: the offer price and its
+    expiry, which is the redemption deadline. An amendment that extends the
+    offer gives the new expiry; the latest date stated wins."""
+    flat = _flat(t)[:200000]
+    acc = re.search(r"accepted\s+for\s+purchase.{0,300}?\$\s?(\d{1,2}\.\d{2,4})", flat, re.I)
+    pr = [float(m.group(1)) for m in _TENDER_PRICE.finditer(flat) if 5 <= float(m.group(1)) <= 12.5]
+    price = float(acc.group(1)) if acc and 5 <= float(acc.group(1)) <= 12.5 else (pr[0] if pr else None)
+    ds = [d for d in (_iso(m.group(1)) for m in _TENDER_EXPIRY.finditer(flat)) if d]
+    exp = max(ds) if ds else None
+    return {"meeting": exp, "kind": "tender", "redemption_right": exp is not None, "redemption_deadline": exp,
+            "stated_amount": price}
+
+
 def _parse_one(r: dict) -> dict:
     out = {k: r[k] for k in ("cik", "permno", "acc", "form", "filed", "items", "report")}
     try:
         if not _path(r)[1].exists():
             return {**out, "status": "not_downloaded"}
         t = text(r)
+        if r["form"] in TENDER_FORMS:
+            return {**out, "status": "ok", "kind_of_filing": "proxy", **parse_tender(t)}
+        if isinstance(r.get("spac_name"), str):          # a co-registrant's proxy: it must name the SPAC
+            if not names_spac(t, r["spac_name"]):
+                return {**out, "status": "ok", "kind_of_filing": "proxy", "meeting": None, "kind": "not_a_proxy"}
         if r["form"] in PROXY_FORMS:
             return {**out, "status": "ok", "kind_of_filing": "proxy", **parse_proxy(t, r["form"])}
         return {**out, "status": "ok", "kind_of_filing": "update", **parse_8k(t, r["filed"])}
@@ -429,4 +527,4 @@ def parse(which: str | None = None) -> int:
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "parse"
     arg = sys.argv[2] if len(sys.argv) > 2 else None
-    sys.exit({"download": download, "parse": parse}[cmd](*([arg] if arg else [])))
+    sys.exit({"download": download, "parse": parse, "coregistrants": coregistrants}[cmd](*([arg] if arg else [])))
