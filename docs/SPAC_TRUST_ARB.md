@@ -253,6 +253,96 @@ Nothing from 2021-2025 was parsed, simulated or printed in this study.
 - **The bid** is CRSP's closing bid. A real exit may get less, and a real
   entry may pay more than the closing ask.
 
+# Symmetric data audit and run 4 (pre-committed 2026-10-29)
+
+Runs 1-3 each followed a data fix found by looking at the largest NAV
+*drops*, and each raised the Sharpe. Nobody looked at the gains. A
+read-only review of run 3's trades raised four concerns: short holds
+bought 13-16% under trust days before a meeting, the 17 `unparsed_meeting`
+exits settled at E_t, the suspect filter running on the decision day but
+not the fill day, and the share of profit from entries above a 5%
+discount. This section fixes the audit's sample, classes and decision
+rules **before any trade is inspected**. It was committed before the
+audit began.
+
+## Sample (fixed before inspection)
+
+Drawn from `data/spac/trades_design_gate.csv` (run 3, 180 trades):
+
+1. **Top 20:** the 20 largest `pnl`.
+2. **Bottom 20:** the 20 smallest `pnl`.
+3. **Random 20:** from the remaining 140, sorted by (`entry_day`,
+   `permno`), drawn without replacement by
+   `numpy.random.default_rng(61).choice(140, 20, replace=False)`.
+4. **Unparsed:** every trade with `exit == "unparsed_meeting"`.
+5. **Short holds:** every trade with `exit_day − entry_day` of 14
+   calendar days or less.
+
+A trade in several groups is classified once and reported in each group
+it belongs to. Totals count it once.
+
+## Classes
+
+Each trade is checked against its EDGAR filings and CRSP rows, and gets
+every class that applies, with the evidence (filing accession or CRSP
+permno and date) recorded:
+
+- **VALID:** none of the below.
+- **PHANTOM-DEADLINE:** the redemption deadline actually in force (from
+  the filings, including ones the parser missed) was on or before the fill
+  date plus 2 business days of settlement. No redemption right was bought.
+- **PHANTOM-PHASE:** the SPAC phase had ended at entry or before the
+  modeled exit: merged, renamed, or a different security on the permno.
+- **PRICE-ERROR:** a stub or misprinted bid or ask at entry, exit or a
+  mark.
+- **AMOUNT-ERROR:** the settlement amount is more than $0.10 from what
+  the filings say was paid.
+- **TIMING-ERROR:** the payment or meeting date is more than 5 business
+  days from the filings.
+
+## Decision rules (fixed before inspection)
+
+Every fix is a rule applied to all trades, never a per-trade override or
+exclusion.
+
+a. **Suspect check on the fill day.** The >10% check also runs on the
+   fill day's ask, against the amount known that day. A fill that fails
+   it is not entered.
+b. **Deadline buffer.** No fill unless the redemption deadline in force
+   is at least 3 business days after the fill date (2 for settlement, 1
+   for the broker's cutoff), using only information filed by the decision
+   day.
+c. **No E_t settlement for a missed meeting.** A position whose meeting
+   the parser didn't find exits at the bid on the first trading day after
+   the charter deadline in force or the SPAC phase end, whichever comes
+   first. The bid comes from CRSP on that permno, whatever the security
+   has become. If CRSP has no valid quote then, the position exits at its
+   last valid bid, on that day.
+d. **Other errors.** Any other error class that appears in 3 or more
+   sampled trades gets a rule fix with a test. Fewer than 3 is reported,
+   not fixed.
+e. **Both directions.** A bug that pushes returns up and one that pushes
+   them down are fixed alike. If a qualifying fix would raise returns, it
+   goes in too.
+
+## Run 4 is the last gate run on the design period
+
+Run 4 applies rules a-c and any fix qualifying under d, each with a test,
+and reruns `python/spac_trial.py gate` with the gate rules unchanged:
+
+- a $250/yr bar;
+- a prior of half the design Sharpe;
+- P(pass) ≥ 0.25 over 5 years.
+
+Whatever run 4 shows is recorded as the gate decision. A later bug fix
+goes in as a documented correction, not a new gate decision. If run 4
+fails, nothing is registered. If it passes, the owner decides on a
+declaration. Nothing from 2021-2025 is parsed, simulated or printed.
+
+**Disclosed before the audit:** to check the trade file's columns, I
+printed its header and first two rows (permnos 12350 and 12792, both
+long-hold redemptions earning $24 and $8). Nothing else was inspected.
+
 # First gate (2026-10-29 morning)
 
 On a $25,000 account, the declared portfolio would have earned about **$186 a
