@@ -57,8 +57,11 @@ def simulate(O, H, L, C, V, R, prev_high):
     run_high = np.maximum.accumulate(H, axis=1)
     gross = np.full((S, BARS, len(EXITS)), np.nan)
     kind = np.full((S, BARS, len(EXITS)), 2, dtype=np.int8)
-    for i in range(BARS):
-        e = C[:, i]
+    # A signal on bar i fills at bar i+1's open (fixed 2026-10-26; entry was bar
+    # i's own close). Levels computed "through the signal bar" still use bar i,
+    # which was known when the order was placed. A last-bar signal stays NaN.
+    for i in range(BARS - 1):
+        e = O[:, i + 1]
         for x, name in enumerate(EXITS):
             stop = e * (1 - R)
             if name == "resistance":

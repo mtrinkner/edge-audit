@@ -46,7 +46,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
-import db
+import data_access as da
 
 HOLD = 5
 TOM_BEFORE = 1       # last N trading days of the month
@@ -58,15 +58,12 @@ def measured_cost() -> float:
     p = ROOT / "data" / "edge_spreads.parquet"
     if not p.exists():
         return 0.0010
-    return float(pd.read_parquet(p)["edge_full"].median())
+    return float(da.parquet("calendar_edges", "edge_spreads",
+                            columns=["edge_full"])["edge_full"].median())
 
 
 def main() -> int:
-    with db.connect() as con:
-        d = pd.read_sql(
-            "SELECT b.symbol, b.dt, b.adj_close FROM bars b "
-            "JOIN symbols s ON s.symbol=b.symbol WHERE s.kind='stock' "
-            "ORDER BY b.symbol, b.dt", con)
+    d = da.bars("calendar_edges", columns=("symbol", "dt", "adj_close"))
     d = d.sort_values(["symbol", "dt"]).reset_index(drop=True)
     print(f"  {len(d):,} bars, {d['symbol'].nunique()} symbols")
 

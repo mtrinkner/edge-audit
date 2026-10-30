@@ -28,6 +28,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+import data_access as da
 from deflated_sharpe import expected_max_sharpe
 from evaluation import breakeven_report, clustered_mean, mde, sharpe
 
@@ -37,7 +38,8 @@ BAR_DECLARED = 1.331
 
 
 def build() -> pd.DataFrame:
-    d = pd.read_parquet(ROOT / "data" / "etf_1h_raw.parquet")
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.parquet("intraday_momentum", "etf_1h_raw")
     d = d[d["symbol"].isin(ETFS)].copy()
     d["ts"] = pd.to_datetime(d["ts"], utc=True).dt.tz_convert("America/New_York")
     d["session"] = d["ts"].dt.date.astype(str)

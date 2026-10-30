@@ -213,7 +213,10 @@ def decile_book(df, ret="ret", weight=None, cost=None):
     r = pd.DataFrame(res).set_index("date")
     r["gross"] = r[9] - r[0]
     if cost is not None:
-        r["net"] = r["gross"] - r["c9"] - r["c0"]
+        # Borrow on the short decile, a month at a time (added 2026-10-26).
+        import config
+        r["borrow"] = config.COSTS.borrow_bps_annual / 1e4 / 12
+        r["net"] = r["gross"] - r["c9"] - r["c0"] - r["borrow"]
     return r
 
 

@@ -44,6 +44,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import data_access as da
 import config
 import intraday_signals as isg
 from spread_estimator import liquidity_half_spread_bps
@@ -54,7 +55,8 @@ SESSION_BARS = 7
 
 
 def load() -> pd.DataFrame:
-    d = pd.read_parquet(DATA)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.parquet("intraday_study", "intraday_1h")
     n0, s0 = len(d), d["session"].nunique()
     d = d[d["bars_in_session"] == SESSION_BARS].copy()
     print(f"  {n0:,} bars -> {len(d):,} after keeping only complete "
@@ -65,11 +67,16 @@ def load() -> pd.DataFrame:
 
 
 def run(d: pd.DataFrame) -> pd.DataFrame:
-    # Half-spread per symbol-session from that session's dollar volume.
+    # Half-spread per symbol-session from the PRIOR session's dollar volume and
+    # close, which are known before the session opens (fixed 2026-10-26; it used
+    # the same session's, which are only known at its close). A symbol's first
+    # session has no prior and is skipped.
     sess = d.groupby(["symbol", "session"]).agg(
         dv=("volume", "sum"), px=("close", "last")).reset_index()
-    sess["adv"] = sess["dv"] * sess["px"]
-    sess["half"] = liquidity_half_spread_bps(sess["px"], sess["adv"]) / 10_000.0
+    sess = sess.sort_values(["symbol", "session"])
+    prev = sess.groupby("symbol")[["dv", "px"]].shift(1)
+    sess["adv"] = prev["dv"] * prev["px"]
+    sess["half"] = liquidity_half_spread_bps(prev["px"], sess["adv"]) / 10_000.0
     half = dict(zip(zip(sess["symbol"], sess["session"]), sess["half"]))
 
     rows, base = [], []
@@ -79,6 +86,7 @@ def run(d: pd.DataFrame) -> pd.DataFrame:
         for sname, s in sessions:
             s = s.reset_index(drop=True)
             closes = s["close"].to_numpy()
+            opens = s["open"].to_numpy()
             final = closes[-1]
             c = half.get((sym, sname), np.nan)
             if not np.isfinite(c):
@@ -89,17 +97,23 @@ def run(d: pd.DataFrame) -> pd.DataFrame:
             # the benchmark, which made net and benchmark identical and produced
             # an excess of exactly 0.000% for all twelve rules. The benchmark has
             # to be the mean across ALL sessions at the same bar, computed below.
-            to_close = final / closes - 1.0 - 2 * c
+            #
+            # A rule reads bar i's close, so the earliest fill is bar i+1's open
+            # (fixed 2026-10-26; this used to fill at bar i's own close). A signal
+            # on the last bar cannot be traded the same session.
+            to_close = np.full(len(s), np.nan)
+            to_close[:-1] = final / opens[1:] - 1.0 - 2 * c
             for name, fn in isg.RULES.items():
                 m = (fn(s, prev_close) if name in isg.NEEDS_PREV_CLOSE else fn(s))
                 idx = np.flatnonzero(m)
                 if len(idx) == 0:
                     continue
                 i = int(idx[0])
-                rows.append((name, sym, sname, i, float(to_close[i])))
+                if np.isfinite(to_close[i]):
+                    rows.append((name, sym, sname, i, float(to_close[i])))
             # Every bar of every session feeds the unconditional benchmark,
             # whether or not any rule fired on it.
-            for i in range(len(s)):
+            for i in range(len(s) - 1):
                 base.append((sym, i, float(to_close[i])))
             prev_close = final
     T = pd.DataFrame(rows, columns=["rule", "symbol", "session", "bar", "net"])

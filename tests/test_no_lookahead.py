@@ -156,7 +156,11 @@ def test_independent_recompute(symbol: str = "AAPL") -> None:
         (b["low"] - prev_close).abs(),
     ], axis=1).max(axis=1)
     exp["atr_14"] = tr.rolling(14).mean()
-    exp["dist_52w_high"] = b["adj_close"] / b["high"].rolling(252).max() - 1.0
+    # Adjusted highs, as in sql/02_features.sql since 2026-10-26. This line used
+    # to divide by the RAW 252-day high, the same mixed-basis error as the SQL,
+    # so the two agreed and the check passed a defect.
+    adj_high = b["high"] * b["adj_close"] / b["close"]
+    exp["dist_52w_high"] = b["adj_close"] / adj_high.rolling(252).max() - 1.0
 
     m = sqlf.merge(exp, on="dt", suffixes=("_sql", "_pd"))
     bad = []
@@ -179,7 +183,8 @@ def test_label_direction(symbol: str = "MSFT") -> None:
     print(f"\n[3] LABEL DIRECTION — {symbol}")
     con = sqlite3.connect(config.DB_PATH)
     df = pd.read_sql(
-        """SELECT f.dt, f.adj_close, l.fwd_ret_5d, l.fwd_ret_1d
+        """SELECT f.dt, f.adj_close, f.open, f.close, l.fwd_ret_5d, l.fwd_ret_1d,
+                  l.fwd_ret_5d_open
            FROM features f JOIN labels l ON l.symbol=f.symbol AND l.dt=f.dt
            WHERE f.symbol=? ORDER BY f.dt""", con, params=(symbol,))
     tail = pd.read_sql(
@@ -192,7 +197,11 @@ def test_label_direction(symbol: str = "MSFT") -> None:
 
     expect_5 = df["adj_close"].shift(-5) / df["adj_close"] - 1.0
     expect_1 = df["adj_close"].shift(-1) / df["adj_close"] - 1.0
-    for col, exp, h in (("fwd_ret_5d", expect_5, 5), ("fwd_ret_1d", expect_1, 1)):
+    # Next-open label (added 2026-10-26): enter at t+1's adjusted open.
+    adj_open = df["open"] * df["adj_close"] / df["close"]
+    expect_5o = df["adj_close"].shift(-5) / adj_open.shift(-1) - 1.0
+    for col, exp, h in (("fwd_ret_5d", expect_5, 5), ("fwd_ret_1d", expect_1, 1),
+                        ("fwd_ret_5d_open", expect_5o, 5)):
         a = df[col].to_numpy(dtype=float)
         e = exp.to_numpy(dtype=float)
         mask = ~(np.isnan(a) | np.isnan(e))

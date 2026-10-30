@@ -1,6 +1,6 @@
 # Can You Find a Trading Edge With Free Data?
 
-I tested **857 trading strategies** on US stock market data: classic technical
+I tested **856 trading strategies** on US stock market data: classic technical
 analysis, day-trading setups, published market anomalies, and two published AI
 models that read stock charts. Each test was written down before it ran, charged
 realistic trading costs, and checked against what pure luck would produce.
@@ -11,7 +11,7 @@ realistic trading costs, and checked against what pure luck would produce.
 
 - **[Edge Audit Live](https://claude.ai/artifact/3Jq6Ykv74Sf34pXKBSC1Qd)**: the
   whole project as an interactive dashboard: how it was tested, every result,
-  the bugs caught, and the full log of all 857 tests.
+  the bugs caught, and the full log of all 856 tests.
 - **[Signal Charts](https://claude.ai/artifact/NfTTDBQTivhiKaU6f5xJxW)**: price
   charts for the 100 most-traded US stocks with every tested signal marked
   where it fired, next to that signal's tested record.

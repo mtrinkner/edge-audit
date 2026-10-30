@@ -39,6 +39,7 @@ from scipy.stats import t as tdist
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+import data_access as da
 import intraday_signals as isg
 from tpsl_heatmap import BARS, load
 
@@ -151,7 +152,8 @@ def main() -> int:
           f"{len(mt):,} trades")
     mega = evaluate(md, mt, cost, "mega-cap")
 
-    e = sessionize(pd.read_parquet(ROOT / "data" / "etf_1h_raw.parquet"))
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    e = sessionize(da.parquet("cheap_venues", "etf_1h_raw"))
     print(f"  ETFs: {e['symbol'].nunique()} symbols, {e['session'].nunique()} sessions")
     et = signals(e)
     ec = edge_costs(e)

@@ -38,6 +38,14 @@ session's capital equally across ALL of that session's signals, which needs the
 end-of-day count at entry time. vwap_reversion_long fires more on days the market
 keeps falling, so that weighting quietly down-weights the losing days. It is not
 tradeable. The per-trade columns are the causal results.
+
+FIXED 2026-10-26 (audit). The original output is kept as
+reports/tpsl_heatmap_pre_2026-10-26.csv and figures/tpsl_*_pre_2026-10-26.png.
+  * Stops and targets filled at the level on a gap; they now fill at the open
+    when a bar opens through them, as in realistic_exits.py.
+  * Entry was at the signal bar's own close; it is now the next bar's open.
+  * Data now loads through data_access, so the sealed sessions from 2026-10-07
+    are no longer read.
 """
 
 from __future__ import annotations
@@ -52,6 +60,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
 import config
+import data_access as da
 
 BARS = 7
 STOPS = [0.5, 1.0, 1.5, 2.0, 3.0]
@@ -61,17 +70,18 @@ RANGE_LOOKBACK = 20
 
 
 def load():
-    d = pd.read_parquet(ROOT / "data" / "intraday_1h.parquet")
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.parquet("tpsl_heatmap", "intraday_1h")
     d = d[d["bars_in_session"] == BARS].sort_values(["symbol", "ts"])
-    e = pd.read_parquet(ROOT / "data" / "edge_spreads.parquet")
+    e = da.parquet("tpsl_heatmap", "edge_spreads")
     e = e.sort_values(["symbol", "month"])
     # Previous month's spread: known before any trade this month.
     e["cost"] = 2 * e.groupby("symbol")["edge_half_bps"].shift(1) / 10_000.0
     e["month"] = e["month"].astype(str)
     cost = {(s, m): c for s, m, c in zip(e["symbol"], e["month"], e["cost"])
             if np.isfinite(c)}
-    t = pd.read_parquet(ROOT / "data" / "intraday_trades.parquet",
-                        columns=["rule", "symbol", "session", "bar"])
+    t = da.parquet("tpsl_heatmap", "intraday_trades",
+                   columns=["rule", "symbol", "session", "bar"])
     return d, cost, t
 
 
@@ -80,18 +90,24 @@ def outcomes(O, H, L, C, R, cost):
     S = len(C)
     out = np.full((S, BARS, len(CELLS)), np.nan)
     gross = np.full_like(out, np.nan)
-    for i in range(BARS):
-        entry = C[:, i]
+    # A signal on bar i fills at bar i+1's open, and that bar's range can already
+    # hit the stop or target (fixed 2026-10-26; entry was bar i's own close). A
+    # signal on the last bar cannot be traded the same session and stays NaN.
+    for i in range(BARS - 1):
+        entry = O[:, i + 1]
         for k, (sm, tm) in enumerate(CELLS):
             stop = entry * (1 - sm * R)
             tgt = entry * (1 + tm * R)
             exitp = C[:, BARS - 1].copy()
             done = np.zeros(S, bool)
             for j in range(i + 1, BARS):
+                # On the entry bar the open IS the entry, so it cannot gap through.
                 hs = (~done) & (L[:, j] <= stop)
                 ht = (~done) & (~hs) & (H[:, j] >= tgt)
-                exitp[hs] = stop[hs]
-                exitp[ht] = tgt[ht]
+                # A bar that opens through a level fills at the open (fixed
+                # 2026-10-26; this used to fill at the level itself).
+                exitp[hs] = np.minimum(stop[hs], O[hs, j])
+                exitp[ht] = np.maximum(tgt[ht], O[ht, j])
                 done |= hs | ht
             g = exitp / entry - 1.0
             gross[:, i, k] = g

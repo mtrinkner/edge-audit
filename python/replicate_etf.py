@@ -35,6 +35,7 @@ from scipy.stats import t as tdist
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+import data_access as da
 from cheap_venues import edge_costs, sessionize, signals
 
 RULE = "vwap_reversion_long"
@@ -42,7 +43,8 @@ LUCK_BAR = 1.219
 
 
 def main() -> int:
-    d = sessionize(pd.read_parquet(ROOT / "data" / "etf2_1h_raw.parquet"))
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = sessionize(da.parquet("replicate_etf", "etf2_1h_raw"))
     print(f"{d['symbol'].nunique()} fresh ETFs, {d['session'].nunique()} complete sessions\n")
     sig = signals(d)
     sig = sig[sig["rule"] == RULE]

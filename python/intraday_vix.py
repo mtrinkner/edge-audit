@@ -38,6 +38,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import data_access as da
 import config
 from spread_estimator import liquidity_half_spread_bps
 
@@ -50,7 +51,7 @@ VOL_MULT = 2.0
 
 def get_vix() -> pd.DataFrame:
     if VIXP.exists():
-        return pd.read_parquet(VIXP)
+        return da.parquet("intraday_vix", "vix")
     import yfinance as yf
     v = yf.download("^VIX", period="1100d", interval="1d",
                     progress=False, auto_adjust=False)
@@ -80,7 +81,8 @@ def main() -> int:
     print(f"  VIX: {len(vix):,} sessions, {vix['session'].min()} to "
           f"{vix['session'].max()}, range {vix['vix'].min():.1f}-{vix['vix'].max():.1f}")
 
-    d = pd.read_parquet(DATA)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.parquet("intraday_vix", "intraday_1h")
     d = d[d["bars_in_session"] == SESSION_BARS].copy()
     d = d.sort_values(["symbol", "ts"]).reset_index(drop=True)
     g = d.groupby(["symbol", "session"])

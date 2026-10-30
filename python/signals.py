@@ -185,9 +185,14 @@ def support_bounce(df, n=20):
 
 
 def pullback_to_sma50(df):
+    # The low is put on the adjusted basis before it is compared with an average
+    # of adjusted closes. Until 2026-10-26 the RAW low and close were compared
+    # with it, so for dividend payers the signal fired mostly late in the sample
+    # (tests/test_price_basis.py).
     m = sma(df["adj_close"], 50)
-    touched = (df["low"] <= m) & (df["close"] > m)
-    return touched & (sma(df["adj_close"], 50) > sma(df["adj_close"], 200))
+    adj_low = df["low"] * df["adj_close"] / df["close"].replace(0, np.nan)
+    touched = (adj_low <= m) & (df["adj_close"] > m)
+    return touched & (m > sma(df["adj_close"], 200))
 
 
 # ------------------------------------------------------------ candlesticks

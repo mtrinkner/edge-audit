@@ -136,3 +136,47 @@ of these went wrong at least once:
   the only hard lower bound.
 - **Name the information family when declaring a test.** 76% of trials went to
   price patterns before anyone counted.
+
+## Pre-declaration gate (since 2026-10-28)
+
+Trials 10, 12, 14, 34, 58 and 59 were each declared without asking first
+whether a pass was likely or worth having. Trial 58's edge was real and worth
+$200 a year; trial 59 needed a Sharpe of 0.83 from an anomaly whose cited
+post-publication Sharpe was well under that. From trial 60 on, every
+declaration must pass three checks, and the numbers go into the declaration.
+
+**a. Economic size.** Trades a year × capacity per trade × expected net edge
+per trade, computed only from entry-time data (prices, spreads, volume and
+deal terms known on the entry day) and from literature priors for anything
+that depends on outcomes. Never from the outcomes themselves. The
+declaration states the kill threshold in dollars a year and the account size
+it assumes.
+
+- **Size the ceiling first.** Perfect-foresight entries, limited only by
+  capacity. If the ceiling fails, kill. If only the declared rule fails,
+  redesign the rule before declaring. (Trial 60's first gate sized only the
+  rule: $186 a year against a ceiling of $1,213.)
+- **Required excess return = dollar bar / account.** Screen out any class
+  whose typical excess yield over T-bills is below that before building
+  anything. A $1,500 bar on $25k needs 6% a year over T-bills.
+- **The dollar bar is set per study** and written in its declaration. A
+  research-grade study may set it low, and says so.
+
+**b. Pass probability.** With a cited prior Sharpe S, after realistic
+post-publication decay and costs, and T confirmation years:
+
+    P(pass) = 1 − Φ(3 − S·√T)
+
+`python3 python/deflated_sharpe.py --power --prior-sharpe S --years T`
+prints it. Don't spend a trial when P(pass) < 0.25. At 13 years that means
+S < 0.65.
+
+**c. Benchmark fit.** The benchmark has the same weighting and universe as
+the portfolio. Trial 59's V2 compared an equal-weighted long leg of mid-caps
+and up with the value-weighted market, so it measured a size spread as much
+as the anomaly. An equal-weighted portfolio is compared with the
+equal-weighted universe it is drawn from; a strategy that holds cash part of
+the time is compared with T-bills.
+
+If any check fails, the numbers are written into the study's doc, nothing is
+registered, and the trial is not spent.

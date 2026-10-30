@@ -19,6 +19,11 @@ return in each of months t-12..t-1 and a market cap at the end of t-1.
 msf_v2 returns already include delisting returns; the paper applied its own
 -30%/-100% rule to legacy files. The model and portfolio code are reused from
 python/cbm_replication.py so the PyTorch replica is the one already tested.
+
+FIXED 2026-10-26 (audit): net returns now also subtract a borrow fee on the
+short decile (config.COSTS.borrow_bps_annual = 50bp a year, about 4bp a month;
+small hard-to-borrow losers cost more, so this is a floor). The earlier outputs
+are kept as reports/cbm_crsp_*_pre_2026-10-26.csv.
 """
 
 from __future__ import annotations
@@ -34,6 +39,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
 import cbm_replication as cbm
+import config
+import data_access as da
 from cbm_replication import F, legs, line, nw_t
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -42,8 +49,16 @@ C = ROOT / "data" / "crsp"
 PANEL = C / "panel.parquet"
 
 
+def _before_seal(m: pd.DataFrame) -> pd.DataFrame:
+    """Keep only whole months that end before the lockbox seal (added 2026-10-26;
+    CRSP ends 2025-12, so this changes nothing today but guards any refresh)."""
+    md = da.guard("cbm_crsp")
+    month_end = (m["Month"] // 100).astype(str) + "-" + (m["Month"] % 100).map("{:02d}".format) + "-31"
+    return m[month_end <= md]
+
+
 def panel() -> int:
-    m = pd.read_parquet(C / "msf.parquet")
+    m = _before_seal(pd.read_parquet(C / "msf.parquet"))
     rf = pd.read_csv(C / "rf.csv", dtype={"date": str})
     rf["Month"] = (rf["date"].str[:4] + rf["date"].str[5:7]).astype(int)
     m = m.merge(rf[["Month", "rf"]], on="Month", how="left")
@@ -79,7 +94,7 @@ def panel() -> int:
 
 
 def load():
-    return pd.read_parquet(PANEL)
+    return _before_seal(pd.read_parquet(PANEL))
 
 
 def gate1() -> int:
@@ -159,7 +174,10 @@ def turnover_costs(s, cost_col="cost"):
         trade.iloc[0] = w.iloc[0]
         out["turn" + name] = trade.sum(axis=1)
         out["c" + name] = (trade * c).sum(axis=1) * 100
-    out["net"] = out["gross"] - out["c10"] - out["c1"]
+    # Borrow on the short decile, a month at a time, in percent (added 2026-10-26;
+    # the net figures before that date charge trading costs only).
+    out["borrow"] = config.COSTS.borrow_bps_annual / 100 / 12
+    out["net"] = out["gross"] - out["c10"] - out["c1"] - out["borrow"]
     return out
 
 

@@ -1,0 +1,11 @@
+path,outcome,final_price,final_expiration,terminated_on,currency,source
+edgar/data/1001258/0001193125-16-536846.txt,completed,10.25,2016-05-12,,USD,"SC TO-I/A 2016-05-13 ex (a)(5)(C): will purchase 274,185 shares at $10.25. Parser's termination came from the rival Mangrove/MPF offer."
+edgar/data/1032033/0001193125-21-025391.txt,completed,16.50,2021-03-10,,USD,"8-K 2021-03-15 ex 99.1: accepted all 28,502,460 tendered at $16.50; payment 2021-03-16."
+edgar/data/1075736/0001354488-10-003328.txt,completed,4.75,2010-12-10,,USD,"Filing 2011-05-27: expired 2010-12-10; all 724,596 tendered shares bought at $4.75; paid 2010-12-17."
+edgar/data/1302350/0001437749-20-003301.txt,terminated,,,2020-03-19,USD,"SC TO-I/A 2020-03-19: the Company announced on March 19, 2020 that it terminated the tender offer."
+edgar/data/49938/0000049938-23-000084.txt,completed,78.50,2023-12-08,,CAD,"SC TO-I/A 2023-12-11: preliminary results, take up 19,108,280 shares at C$78.50 (the purchase price; the final release only confirms proration)."
+edgar/data/49938/0001193125-22-277567.txt,completed,72.50,2022-12-09,,CAD,"SC TO-I/A 2022-12-12: preliminary results, take up 20,689,655 shares at C$72.50."
+edgar/data/49938/0001193125-22-143506.txt,,,,,CAD,"Imperial Oil 2022-05 offer is priced in C$ (C$77.00)."
+edgar/data/776867/0001047469-11-007509.txt,completed,415.00,2011-09-15,,USD,"SC TO-I/A 2011-09-21 (final box checked): 327,872 shares at $415.00. Parser's termination came from a 401(k) plan letter."
+edgar/data/776867/0001047469-11-008526.txt,completed,425.00,2011-11-14,,USD,"SC TO-I/A 2011-11-15: tendered at or below the final purchase price of $425.00. Parser's termination came from a 401(k) plan letter."
+edgar/data/789570/0001193125-20-034386.txt,terminated,,,2020-03-12,USD,"SC TO-I/A 2020-03-13: termination announced March 12, 2020."

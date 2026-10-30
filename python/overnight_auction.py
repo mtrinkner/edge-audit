@@ -17,6 +17,11 @@ SPEC, fixed in the registry first:
   cost      1bp round trip
   pass      net daily t >= 2.0, net Sharpe > 0.626, AND net Sharpe above simply
             holding the same names close to close
+
+FIXED 2026-10-26 (audit): this script never called lockbox.guard and loaded
+bars without a date filter, so the original reports/overnight_auction.csv
+(kept as overnight_auction_pre_2026-10-26.csv) scored 2026-10-07, a sealed
+date. It now loads through data_access, which stops at the seal.
 """
 
 from __future__ import annotations
@@ -30,7 +35,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
-import db
+import data_access as da
 from deflated_sharpe import expected_max_sharpe
 from evaluation import clustered_mean, sharpe
 
@@ -40,12 +45,13 @@ BAR = 0.626
 
 
 def load() -> pd.DataFrame:
-    with db.connect() as con:
-        d = pd.read_sql("SELECT b.symbol, b.dt, b.open, b.close, b.adj_close, b.volume "
-                        "FROM bars b JOIN symbols s USING(symbol) WHERE s.kind='stock' "
-                        "ORDER BY b.symbol, b.dt", con)
-        spy = pd.read_sql("SELECT dt, open, close, adj_close FROM bars WHERE symbol='SPY' "
-                          "ORDER BY dt", con)
+    # Through data_access, so nothing on or after the lockbox seal is read
+    # (fixed 2026-10-26; the original run scored 2026-10-07).
+    d = da.bars("overnight_auction",
+                columns=("symbol", "dt", "open", "close", "adj_close", "volume"))
+    spy = da.sql("overnight_auction",
+                 "SELECT dt, open, close, adj_close FROM bars WHERE symbol='SPY'",
+                 order_by="dt")
     return d, spy
 
 

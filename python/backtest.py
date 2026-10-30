@@ -34,22 +34,22 @@ import numpy as np
 import pandas as pd
 
 import config
-import db
+import data_access as da
 
 
 def load(model: str) -> pd.DataFrame:
-    with db.connect() as con:
-        df = pd.read_sql(
-            """SELECT p.model_name, p.fold_id, p.symbol, p.dt, p.y_prob,
-                      f.day_index, f.close, f.atr_14,
-                      l.next_open
-               FROM predictions p
-               JOIN feature_panel f ON f.symbol = p.symbol AND f.dt = p.dt
-               JOIN labels l        ON l.symbol = p.symbol AND l.dt = p.dt
-               WHERE p.model_name = ?
-               ORDER BY p.dt, p.y_prob DESC""", con, params=(model,))
-        bars = pd.read_sql(
-            "SELECT symbol, dt, day_index, open, high, low, close FROM features", con)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    df = da.sql("backtest",
+                """SELECT p.model_name, p.fold_id, p.symbol, p.dt, p.y_prob,
+                          f.day_index, f.close, f.atr_14,
+                          l.next_open
+                   FROM predictions p
+                   JOIN feature_panel f ON f.symbol = p.symbol AND f.dt = p.dt
+                   JOIN labels l        ON l.symbol = p.symbol AND l.dt = p.dt
+                   WHERE p.model_name = ?""", (model,),
+                order_by="dt, y_prob DESC")
+    bars = da.sql("backtest", "SELECT symbol, dt, day_index, open, high, low, close "
+                  "FROM features")
     return df, bars
 
 
@@ -93,11 +93,18 @@ def run(model: str, threshold: float, top_n: int, horizon: int,
 
             exit_px = exit_reason = None
             low = float(cur["low"].iloc[0]); high = float(cur["high"].iloc[0])
+            opn = float(cur["open"].iloc[0])
+            # A stop is a market order once touched: if the session OPENS through
+            # it, the fill is the open, not the stop. Filling at the stop price
+            # on a gap was a free option (fixed 2026-10-26).
             if p["direction"] == "long" and low <= p["stop"]:
-                exit_px, exit_reason = p["stop"], "stop"
+                exit_px, exit_reason = min(opn, p["stop"]), "stop"
             elif p["direction"] == "short" and high >= p["stop"]:
-                exit_px, exit_reason = p["stop"], "stop"
-            elif bars_held >= horizon:
+                exit_px, exit_reason = max(opn, p["stop"]), "stop"
+            # The fill is at the open of signal day + 1, so `horizon` sessions
+            # after it is the open of signal day + 1 + horizon (fixed 2026-10-26;
+            # this exited at signal day + horizon, one session early).
+            elif bars_held >= horizon + 1:
                 exit_px, exit_reason = float(cur["open"].iloc[0]), "horizon"
 
             if exit_px is None:
@@ -176,10 +183,14 @@ def run(model: str, threshold: float, top_n: int, horizon: int,
         realized = sum(t["net_pnl"] for t in trades)
         # Open positions carry their entry costs already; subtract the entry
         # frictions of still-open trades so equity is not briefly overstated.
-        open_entry_costs = sum(p["entry_comm"] + p["entry_slip"] for p in open_pos)
+        # A position entered today fills at TOMORROW's open. Marking it today
+        # at close - next_open put tomorrow's price into today's equity
+        # (fixed 2026-10-26); it is pending until then.
+        filled = [p for p in open_pos if p["entry_dt"] != dt]
+        open_entry_costs = sum(p["entry_comm"] + p["entry_slip"] for p in filled)
         open_notional = sum(p["entry_px"] * p["shares"] for p in open_pos)
         unreal = 0.0
-        for p in open_pos:
+        for p in filled:
             cur = by_symbol[p["symbol"]]
             cur = cur[cur["dt"] == dt]
             if not cur.empty:

@@ -41,25 +41,23 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
 import config
-import db
+import data_access as da
 
 HOLD = 21
 MIN_NAMES = 50
 
 
 def load() -> pd.DataFrame:
-    with db.connect() as con:
-        d = pd.read_sql(
-            "SELECT b.symbol, b.dt, b.adj_close, b.close, b.volume, s.sector "
-            "FROM bars b JOIN symbols s ON s.symbol=b.symbol "
-            "WHERE s.kind='stock' ORDER BY b.symbol, b.dt", con)
-        spy = pd.read_sql(
-            "SELECT dt, adj_close AS spy FROM bars WHERE symbol='SPY' ORDER BY dt", con)
-        ev = pd.read_sql(
-            "SELECT symbol, tradeable_from AS dt, surprise_pct FROM earnings "
-            "WHERE surprise_pct IS NOT NULL", con)
-        fu = pd.read_sql(
-            "SELECT DISTINCT symbol, filed FROM fundamentals ORDER BY symbol, filed", con)
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    d = da.sql("pilot", "SELECT b.symbol, b.dt, b.adj_close, b.close, b.volume, s.sector "
+               "FROM bars b JOIN symbols s ON s.symbol=b.symbol WHERE s.kind='stock'",
+               order_by="symbol, dt")
+    spy = da.sql("pilot", "SELECT dt, adj_close AS spy FROM bars WHERE symbol='SPY'",
+                 order_by="dt")
+    ev = da.sql("pilot", "SELECT symbol, tradeable_from AS dt, surprise_pct FROM earnings "
+                "WHERE surprise_pct IS NOT NULL")
+    fu = da.sql("pilot", "SELECT DISTINCT symbol, filed FROM fundamentals",
+                date_col="filed", order_by="symbol, filed")
     d = d.merge(spy, on="dt", how="left").sort_values(["symbol", "dt"]).reset_index(drop=True)
     g = d.groupby("symbol")
     d["ret"] = g["adj_close"].pct_change()

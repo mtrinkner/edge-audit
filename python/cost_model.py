@@ -69,6 +69,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+import data_access as da
 import config
 
 SPREADS = ROOT / "data" / "edge_spreads.parquet"
@@ -113,8 +114,9 @@ def spread_table() -> pd.Series:
     by dollar volume. Liquidity means volume, so this does the same and the two
     modules now agree.
     """
-    s = pd.read_parquet(SPREADS).dropna(subset=["edge_full"])
-    b = pd.read_parquet(ROOT / "data" / "intraday_1h.parquet")
+    # Through data_access, which stops at the lockbox seal (added 2026-10-26).
+    s = da.parquet("cost_model", "edge_spreads").dropna(subset=["edge_full"])
+    b = da.parquet("cost_model", "intraday_1h")
     b = b[b["bars_in_session"] == 7].copy()
     b["month"] = b["session"].str[:7]
     g = b.groupby(["symbol", "session"])
@@ -139,7 +141,9 @@ def decompose(t: Trade, scen: str, spreads: pd.Series) -> dict:
     eff_bps = eff * 1e4                                    # round trip
     adv = adv_for(t.liquidity)
     participation = t.size_usd / max(adv, 1.0)
-    impact_bps = (IMPACT_Y * t.daily_vol * np.sqrt(participation)
+    # Square-root impact is paid on the way in AND on the way out (fixed
+    # 2026-10-26; it was charged once per round trip).
+    impact_bps = (2 * IMPACT_Y * t.daily_vol * np.sqrt(participation)
                   * 1e4 * s["impact_mult"])
     fees_bps = 2 * t.fee_bps_per_side
     borrow_bps = (config.COSTS.borrow_bps_annual * t.holding_days / 252.0

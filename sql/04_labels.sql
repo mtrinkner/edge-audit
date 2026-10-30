@@ -26,6 +26,10 @@ WITH fwd AS (
            LEAD(adj_close, 5)  OVER w AS fwd_close_5d,
            LEAD(adj_close, 21) OVER w AS fwd_close_21d,
            LEAD(open, 1)       OVER w AS next_open,
+           -- Next session's open on the adjusted basis, for labels that enter
+           -- where a signal can actually be traded (added 2026-10-26).
+           LEAD(CASE WHEN close > 0 THEN open * adj_close / close END, 1)
+                               OVER w AS next_open_adj,
            -- The worst drawdown experienced while holding, used to test whether
            -- a stop would have been hit before the target. MIN over the FOLLOWING
            -- rows, which is forward-looking and therefore belongs only in a label.
@@ -59,7 +63,19 @@ SELECT symbol,
             THEN fwd_min_low_5d / adj_close - 1.0 END AS fwd_mae_5d,
        CASE WHEN adj_close > 0 AND fwd_max_high_5d IS NOT NULL
             THEN fwd_max_high_5d / adj_close - 1.0 END AS fwd_mfe_5d,
-       next_open
+       next_open,
+       -- NEXT-OPEN LABELS (added 2026-10-26). The labels above enter at the
+       -- signal session's own close, a price nobody acting on that close can
+       -- get. These enter at the next open and exit at the same closes. The
+       -- old columns stay because model.py and the frozen gbm_v1 use them.
+       CASE WHEN next_open_adj > 0 AND fwd_close_1d IS NOT NULL
+            THEN fwd_close_1d / next_open_adj - 1.0 END AS fwd_ret_1d_open,
+       CASE WHEN next_open_adj > 0 AND fwd_close_5d IS NOT NULL
+            THEN fwd_close_5d / next_open_adj - 1.0 END AS fwd_ret_5d_open,
+       CASE WHEN next_open_adj > 0 AND fwd_close_5d IS NOT NULL
+            THEN fwd_close_5d / next_open_adj - 1.0 - 0.0014 END AS fwd_ret_5d_open_net,
+       CASE WHEN next_open_adj > 0 AND fwd_close_21d IS NOT NULL
+            THEN fwd_close_21d / next_open_adj - 1.0 END AS fwd_ret_21d_open
 FROM fwd;
 
 CREATE UNIQUE INDEX idx_labels_pk ON labels(symbol, dt);
@@ -78,7 +94,11 @@ SELECT p.*,
        l.label_win_5d,
        l.fwd_mae_5d,
        l.fwd_mfe_5d,
-       l.next_open
+       l.next_open,
+       l.fwd_ret_1d_open,
+       l.fwd_ret_5d_open,
+       l.fwd_ret_5d_open_net,
+       l.fwd_ret_21d_open
 FROM feature_panel p
 JOIN labels l ON l.symbol = p.symbol AND l.dt = p.dt
 WHERE p.bar_num > 200          -- needs a full 200-day average to exist

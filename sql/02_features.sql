@@ -65,9 +65,15 @@ WITH base AS (
                                 ROWS BETWEEN 199 PRECEDING AND CURRENT ROW) AS sma_200,
            AVG(volume)    OVER (PARTITION BY symbol ORDER BY day_index
                                 ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS vol_avg_20,
-           MAX(high)      OVER (PARTITION BY symbol ORDER BY day_index
+           -- 52-week high and low on the ADJUSTED basis, so they compare like
+           -- with like against adj_close. Until 2026-10-26 these were raw highs
+           -- and lows, which put future dividends into dist_52w_* (see
+           -- tests/test_price_basis.py).
+           MAX(CASE WHEN close > 0 THEN high * adj_close / close END)
+                          OVER (PARTITION BY symbol ORDER BY day_index
                                 ROWS BETWEEN 251 PRECEDING AND CURRENT ROW) AS high_252,
-           MIN(low)       OVER (PARTITION BY symbol ORDER BY day_index
+           MIN(CASE WHEN close > 0 THEN low * adj_close / close END)
+                          OVER (PARTITION BY symbol ORDER BY day_index
                                 ROWS BETWEEN 251 PRECEDING AND CURRENT ROW) AS low_252,
            MAX(high)      OVER (PARTITION BY symbol ORDER BY day_index
                                 ROWS BETWEEN 20 PRECEDING AND 1 PRECEDING) AS prior_high_20,
