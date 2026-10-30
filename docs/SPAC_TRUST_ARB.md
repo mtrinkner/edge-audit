@@ -17,6 +17,24 @@ Nothing registered; no trial spent.**
    been bought after the last chance to redeem. Fixed by rule, run 4 gives
     a year, t 2.73, Sharpe 0.93, P(pass) 0.025. Still killed.
 
+## Main conclusion: the floor is real but nearly worthless
+
+Run 4, the final design-period run (2010-2020), earned $4,308 over 11
+years on $25k:
+
+| Source | PnL | Share | Per year |
+|---|---|---|---|
+| Redemptions: the contract-backed floor | $454 | 11% | about $40 |
+| Sales above trust, mostly deal-announcement pops | $3,436 | 80% | about $310 |
+| No parsed meeting, liquidations | $418 | 10% | about $40 |
+
+2020 alone is 52% of profit; without it the rule earns $145 a year.
+
+The redemption floor is real: buying under trust and redeeming does pay.
+But it is worth about $40 a year on this account. What looked like an
+arbitrage was mostly a free option on deal pops, and that option paid out
+in the 2020 SPAC boom.
+
 # Second gate: a research-grade test (2026-10-29)
 
 The goal was a pre-registered statistical test of a contract-backed trade.
