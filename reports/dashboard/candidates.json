@@ -1,0 +1,35 @@
+[
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "gate-killed",
+  "check": "a",
+  "label": "Economic size",
+  "status": "kill",
+  "value": "$7/yr (ceiling $12/yr)",
+  "bar": "$500/yr",
+  "source": "reports/rsplit_gate.csv, rows primary and ceiling_p1_perfect"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "gate-killed",
+  "check": "b",
+  "label": "Pass probability",
+  "status": "kill",
+  "value": "P(pass) 0.042",
+  "bar": "0.25",
+  "source": "reports/rsplit_gate.csv, row primary, p_pass_7y"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "gate-killed",
+  "check": "c",
+  "label": "Benchmark",
+  "status": "pass",
+  "value": "zero; median return on capital +408% an event",
+  "bar": "reported, no kill line",
+  "source": "reports/rsplit_gate.csv, row primary, return_on_capital_median"
+ }
+]

@@ -789,7 +789,34 @@ def gate() -> int:
     b = g.iloc[1]["p_pass_7y"] >= 0.25
     print(f"\n(a) ceiling ${g.iloc[0]['usd_per_yr']:.0f}/yr, rule ${g.iloc[1]['usd_per_yr']:.0f}/yr: "
           f"{'PASS' if a else 'KILL'}   (b) P(pass) {g.iloc[1]['p_pass_7y']:.3f}: {'PASS' if b else 'KILL'}")
+    candidate(g, a, b)
     return 0
+
+
+def candidate(g: pd.DataFrame, a: bool, b: bool) -> None:
+    """Write the gate's checks to data/candidates.json, which the dashboard's
+    candidate tracker shows. Aggregates only."""
+    import json
+    from datetime import date
+    src = "reports/rsplit_gate.csv"
+    ceil, rule = g.iloc[0], g.iloc[1]
+    c = {"_doc": "The candidate at the pre-declaration gate (docs/METHODOLOGY.md). "
+                 "python/reverse_split.py gate rewrites the checks when it runs.",
+         "name": "Reverse-split round-up", "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+         "status": "gate-passed" if a and b else "gate-killed",
+         "checks": [
+             {"check": "a", "label": "Economic size", "status": "pass" if a else "kill",
+              "value": f"${rule['usd_per_yr']:.0f}/yr (ceiling ${ceil['usd_per_yr']:.0f}/yr)", "bar": "$500/yr",
+              "source": f"{src}, rows primary and ceiling_p1_perfect"},
+             {"check": "b", "label": "Pass probability", "status": "pass" if b else "kill",
+              "value": f"P(pass) {rule['p_pass_7y']:.3f}", "bar": "0.25",
+              "source": f"{src}, row primary, p_pass_7y"},
+             {"check": "c", "label": "Benchmark", "status": "pass",
+              "value": f"zero; median return on capital {rule['return_on_capital_median']:+.0%} an event",
+              "bar": "reported, no kill line", "source": f"{src}, row primary, return_on_capital_median"}],
+         "updated": date.today().isoformat(),
+         "source": "docs/REVERSE_SPLIT_ROUNDUP.md, Gate result (design period, final)"}
+    (ROOT / "data" / "candidates.json").write_text(json.dumps(c, indent=2) + "\n")
 
 
 def main(a) -> int:

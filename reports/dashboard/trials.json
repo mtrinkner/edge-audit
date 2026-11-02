@@ -100,7 +100,7 @@
   "luck_bar": 1.036,
   "state": "Recorded",
   "sharpe": 1.98,
-  "corrections": 1,
+  "corrections": 2,
   "result": "best raw sharpe was rsi_oversold_20 at 21d with only 6 independent observations; 0 of 122 cleared their own bar, 0 survived BH"
  },
  {
@@ -347,7 +347,7 @@
   "luck_bar": 1.13,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 2,
+  "corrections": 3,
   "result": "REFUTED. 13.5M simulated trades. Metric is excess over holding the SAME stock the SAME number of days, not Sharpe. Mean excess across 41 signals: -0.158%. Only 4 of 41 positive, none significant. 1 of 41 survived Benjamini-Hochberg (new_52w_high, p=0.000) and \u2026"
  },
  {
@@ -360,7 +360,7 @@
   "luck_bar": 1.134,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 2,
+  "corrections": 3,
   "result": "REFUTED, after a lookahead fix. 4.3M intraday trades across 12 declared day-trading rules, 1,489 symbols, 720 sessions, same-session exit. ALL 12 have negative net return after EDGE-measured costs; the only positive net is gap_down_fill at +0.036% with p=0.988\u2026"
  },
  {
@@ -373,7 +373,7 @@
   "luck_bar": 1.142,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 2,
   "result": "The matched control SURVIVED strongly (treatment -0.076% vs same-volume-up-close -0.209%, gross edge +0.128%, t=14.56), so the signal is real: a high-volume down bar reverts. Gross is POSITIVE at +4.94bps. But net is -7.6bps because round-trip cost is 12.5bps,\u2026"
  },
  {
@@ -386,7 +386,7 @@
   "luck_bar": 1.142,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 3,
   "result": "FAILED. Passive entry recovers the spread exactly as predicted (+0.1115% on the same bars, about 2x the 4.83bp half-spread) but adverse selection destroys far more than it saves. Fill rate 86.9%. The 13.1% of signals that do NOT fill return +0.4904% as a taker\u2026"
  },
  {
@@ -399,7 +399,7 @@
   "luck_bar": 1.143,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 2,
   "result": "PREDICTION CONFIRMED. Nagel's stress-dependence holds: edge rises monotonically +0.0852% (VIX 11.9-15.3) -> +0.1432% (15.3-17.8) -> +0.1594% (17.8-52.3), each tercile independently significant at t=8.04, 8.91, 8.28. The rise comes from the TREATMENT improving \u2026"
  },
  {
@@ -425,7 +425,7 @@
   "luck_bar": 1.145,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 2,
   "result": "SetupAlpha's stacking claim REFUTED. Mean reversion in the TOM window returns +0.5782% vs +0.6555% outside it, so stacking gain is NEGATIVE at -0.0626%. The strategy does WORSE at the turn of the month, not better. TOM on its own is +0.4794% vs +0.3348% for th\u2026"
  },
  {
@@ -477,7 +477,7 @@
   "luck_bar": 1.152,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 2,
   "result": "REFUTED, and informatively. The diversification WAS genuinely available: 11 signals, mean absolute pairwise correlation only 0.099, K_effective 7.85 of 11, so the law offered sqrt(7.85)=2.80x. Combining DELIVERED 0.71x, i.e. the combined signal is WORSE than t\u2026"
  },
  {
@@ -490,7 +490,7 @@
   "luck_bar": 1.209,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 2,
   "result": "SIGNAL YES, TRADE NO. Raw net (the video's metric) green in 0 of 300 cells: every rule loses money after the measured 13-15bp EDGE round trip at every stop/target. Gross green 38%. Excess over same-bar same-exit every-session benchmark green 43%; 103/300 cells\u2026"
  },
  {
@@ -503,7 +503,7 @@
   "luck_bar": 1.215,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 2,
   "result": "REFUTED, 0 of 48 pass; 0 of 48 have positive net per trade. Realistic exits (resistance target, VWAP target, breakeven stop, trailing stop, all with 1R protective stop) made the best rule WORSE than simply holding to the close. vwap_reversion_long net per day:\u2026"
  },
  {
@@ -529,7 +529,7 @@
   "luck_bar": 1.219,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 1,
+  "corrections": 2,
   "result": "FAILS the declared bar, 0 of 24; but the closest result in the project's intraday work. Costs as expected: mega-cap EDGE round trip ~7.5bp, ETF ~3.8bp (median 3.33bp). Net per TRADE is negative for 23 of 24 (only ETF gap_down_fill +7.4bp on 1,266 trades, but n\u2026"
  },
  {
@@ -555,7 +555,7 @@
   "luck_bar": 1.22,
   "state": "Recorded",
   "sharpe": -1.656,
-  "corrections": 0,
+  "corrections": 1,
   "result": "FAIL, cleanly and with power. Gross per trade -0.17bp, clustered t=-0.22, minimum detectable effect 2.18bp, so a 2bp edge would have been seen. Net of 2bp: -2.17bp, t=-2.80; net daily Sharpe -1.656 vs bar 1.331. Break-even round trip -0.17bp (lower 95% -1.69bp\u2026"
  },
  {
@@ -568,7 +568,7 @@
   "luck_bar": 1.22,
   "state": "Recorded",
   "sharpe": 0.914,
-  "corrections": 1,
+  "corrections": 2,
   "result": "FAIL on the third declared condition, by 0.024. (1) net +4.88bp/night, t=3.25 PASS; (2) net Sharpe 0.914 > luck bar 0.626 PASS (and above the raw-N bar 0.901); (3) net Sharpe 0.914 vs simply holding the same names 0.938 FAIL. So the overnight premium is real, \u2026"
  },
  {
@@ -594,7 +594,7 @@
   "luck_bar": 1.22,
   "state": "Recorded",
   "sharpe": null,
-  "corrections": 0,
+  "corrections": 1,
   "result": "FAIL. The full confluence setup (rising 200-day EMA uptrend + pullback to the EMA + RSI(14)<30 + within 3% of 60-day support) fired 729 times on 1,499 stocks 2014-2026. Through the ta_exits engine: net +0.61% per trade, but holding the same stock for the same \u2026"
  },
  {
@@ -672,7 +672,7 @@
   "luck_bar": 1.221,
   "state": "Recorded",
   "sharpe": -0.38,
-  "corrections": 2,
+  "corrections": 3,
   "result": "VERIFIED, then FAIL as declared. STEP 1: on the authors' own 2001-2019 images the 5-model ensemble gives equal-weight monthly H-L +1.82%/month, t=10.67, Sharpe 2.45 (paper 2.16; Dixon-Zeng replication 1.84); value-weight Sharpe 0.53, t=2.29. Implementation con\u2026"
  },
  {
@@ -737,7 +737,33 @@
   "luck_bar": 1.221,
   "state": "Recorded",
   "sharpe": -0.73,
-  "corrections": 0,
+  "corrections": 1,
   "result": "REPLICATION VERIFIED, OUT-OF-SAMPLE TEST FAILED. Gate 1 (CRSP data): Mom +1.17 vs paper +1.21, Rev -0.28 vs -0.34. Gate 2 (model): PyTorch replica trained on 1927-2004 and 1927-2014 CRSP reproduces the authors' real 10-1 returns: 2005-14 +0.13%/mo vs theirs -0\u2026"
+ },
+ {
+  "id": 58,
+  "name": "odd_lot_tender_arb",
+  "family": "Structural arbitrage",
+  "declared": "2026-10-26",
+  "variants": 2,
+  "trials_to_date": 854,
+  "luck_bar": 1.222,
+  "state": "Recorded",
+  "sharpe": null,
+  "corrections": 2,
+  "result": "FAIL. Confirmation 2019-2025, run once with the code frozen at 8ac13fc. 82 offers with odd-lot priority and CRSP prices (11.7 a year; 6 in 2024, 1 in 2025). At the $40 fee: E1 (close of the day after the filing) mean +$51.57 a deal, median +$9.50, t=0.50 clust\u2026"
+ },
+ {
+  "id": 59,
+  "name": "pead_sue",
+  "family": "Earnings information",
+  "declared": "2026-10-28",
+  "variants": 2,
+  "trials_to_date": 856,
+  "luck_bar": 1.222,
+  "state": "Recorded",
+  "sharpe": 0.206,
+  "corrections": 1,
+  "result": "FAIL. Confirmation 2013-2025, run once with the code frozen at 3faa345. 116,643 ranked announcements, about 215 positions per leg. V1 (long top SUE decile, short bottom): gross +0.26%/month, t=1.47; net +0.12%, t=0.70, Sharpe 0.21. V2 (top decile minus FF mark\u2026"
  }
 ]

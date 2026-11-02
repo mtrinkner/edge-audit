@@ -1,0 +1,148 @@
+[
+ {
+  "part": "stage",
+  "order": 0,
+  "stage": "Strategies counted (N)",
+  "count": 856,
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl"
+ },
+ {
+  "part": "stage",
+  "order": 1,
+  "stage": "Studies declared",
+  "count": 59,
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl"
+ },
+ {
+  "part": "stage",
+  "order": 2,
+  "stage": "Recorded",
+  "count": 54,
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl"
+ },
+ {
+  "part": "stage",
+  "order": 3,
+  "stage": "Abandoned",
+  "count": 5,
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl"
+ },
+ {
+  "part": "stage",
+  "order": 4,
+  "stage": "Passed",
+  "count": 0,
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; no record or annotation reports a pass"
+ },
+ {
+  "part": "stage",
+  "order": 5,
+  "stage": "Killed at the gate, no trial spent",
+  "count": 4,
+  "source": "data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "price_ta",
+  "label": "Price patterns",
+  "studies": 29,
+  "trials": 650,
+  "recorded": 26,
+  "abandoned": 3,
+  "passed": 0,
+  "gate_kills": 0,
+  "status": "open",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "xs_factors",
+  "label": "Cross-sectional factors",
+  "studies": 9,
+  "trials": 100,
+  "recorded": 8,
+  "abandoned": 1,
+  "passed": 0,
+  "gate_kills": 0,
+  "status": "open",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "earnings_info",
+  "label": "Earnings information",
+  "studies": 5,
+  "trials": 24,
+  "recorded": 5,
+  "abandoned": 0,
+  "passed": 0,
+  "gate_kills": 0,
+  "status": "closed",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "flows_altdata",
+  "label": "Flows and alt data",
+  "studies": 5,
+  "trials": 45,
+  "recorded": 5,
+  "abandoned": 0,
+  "passed": 0,
+  "gate_kills": 0,
+  "status": "open",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "microstructure",
+  "label": "Microstructure",
+  "studies": 4,
+  "trials": 6,
+  "recorded": 4,
+  "abandoned": 0,
+  "passed": 0,
+  "gate_kills": 0,
+  "status": "open",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "calendar",
+  "label": "Calendar effects",
+  "studies": 1,
+  "trials": 6,
+  "recorded": 1,
+  "abandoned": 0,
+  "passed": 0,
+  "gate_kills": 0,
+  "status": "open",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "crypto_carry",
+  "label": "Crypto carry",
+  "studies": 5,
+  "trials": 23,
+  "recorded": 4,
+  "abandoned": 1,
+  "passed": 0,
+  "gate_kills": 0,
+  "status": "open",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ },
+ {
+  "part": "family",
+  "family": "structural",
+  "label": "Structural arbitrage",
+  "studies": 1,
+  "trials": 2,
+  "recorded": 1,
+  "abandoned": 0,
+  "passed": 0,
+  "gate_kills": 4,
+  "status": "open",
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
+ }
+]

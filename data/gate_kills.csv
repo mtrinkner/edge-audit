@@ -1,0 +1,5 @@
+idea,date,family,check,value,bar,source
+Merger arb (cash tender offers),2026-10-28,structural,(b) pass probability,P(pass) 0.172 at the best cited prior Sharpe 0.57,P(pass) ≥ 0.25,"docs/MERGER_ARB_TENDERS.md, b. Pass probability: KILL; commit 90d97fb"
+SPAC trust arb: first gate,2026-10-29,structural,(a) economic size,$186/yr over T-bills on $25k,"$1,500/yr","docs/SPAC_TRUST_ARB.md, First gate (2026-10-29 morning); commit f31fd32"
+SPAC trust arb: research gate (runs 3-4),2026-10-30,structural,(b) pass probability,P(pass) 0.025 (run 4; design Sharpe 0.93),P(pass) ≥ 0.25,"docs/SPAC_TRUST_ARB.md, Run 4: the last gate run on the design period; commits 9996a4b, e28c58f"
+Reverse-split round-up,2026-11-02,structural,(a) economic size and (b) pass probability,"$7/yr (ceiling $12/yr); P(pass) 0.042","$500/yr; P(pass) ≥ 0.25","docs/REVERSE_SPLIT_ROUNDUP.md, Gate result (design period, final); reports/rsplit_gate.csv; commit 7c59013"
