@@ -1,9 +1,12 @@
 # Reverse-split round-up arbitrage (candidate trial 60)
 
-**Status: Phase 1 (data and validation) done. The gate has not been run. No
-payoff has been computed for any event, in either period.** This document
-declares the gate's rules and pre-commits its audit before the first payoff
-is seen.
+**Status: KILLED at the Phase 2 gate. Not registered as a trial.** The
+declared rule earns $7 a year per account in the design period (2010-2018)
+against a $500 bar, and even the perfect-foresight ceiling earns $12. The
+design-period P(pass) is 0.04 against a 0.25 bar. The pre-committed audit
+found no errors. The confirmation period (2019-2025) was never priced. The
+rules and audit plan below were committed (c419fff) before the first payoff
+was computed. The result is in [Gate result](#gate-result-design-period-final).
 
 ## The trade
 
@@ -263,6 +266,96 @@ audited. So this audit is fixed now.
 On a kill: written up here, nothing registered. On a pass: reported to the
 owner before any declaration.
 
+## Gate result (design period, final)
+
+Run on code frozen at c419fff. The first run and the post-audit rerun are
+identical; the rows are in `reports/rsplit_gate.csv`.
+
+| Row | Events | $/yr | Monthly Sharpe | P(pass), 7 yr | Median $/event |
+|---|---:|---:|---:|---:|---:|
+| Ceiling: p = 1, cheapest entry day, perfect foresight | 26 | 11.90 | 1.13 | 0.066 | 2.05 |
+| **Primary: declared rule, p = 0.8 / 0.4** | **14** | **7.12** | **0.96** | **0.042** | **3.70** |
+| p = 1 | 14 | 9.64 | 0.96 | 0.042 | 4.62 |
+| p = 0.5 | 14 | 4.87 | 0.95 | 0.041 | 2.33 |
+| p = 0.2 | 14 | 2.01 | 0.93 | 0.039 | 0.96 |
+| $5 a trade | 14 | −6.66 | −0.87 | 0.000 | −5.30 |
+| Exit at the open minus half the spread | 14 | 6.33 | 0.92 | 0.038 | 4.44 |
+| Exit 5 trading days later | 14 | 6.87 | 0.96 | 0.042 | 3.03 |
+
+- **(a) KILL:** ceiling $12/yr and rule $7/yr, against $500.
+- **(b) KILL:** halved Sharpe 0.48, P(pass) 0.042, against 0.25.
+- **(c) Return on capital:** median +408% an event at the primary p, on
+  about $0.10-$7 of capital. Every primary event made money (the worst made
+  $0.81). The trade works; there are just too few events and each is a
+  one-share position.
+- **Break-even p** is about 0 (−0.01 for per-holder, −0.02 for participant)
+  in every row. Even the cash-in-lieu leg didn't lose money on these events,
+  so any p > 0 pays. The round-up probability doesn't decide the result;
+  event count does.
+- **A $5 commission** ($10 a round trip) wipes out the trade, since the
+  median gain is $3.70.
+- The 5 best of the 14 events made 65% of the profit. No exits came from
+  changed terms or missed settlement.
+
+### Why so few trades
+
+136 design-period events have a round-up class known the day before the
+split. Of those, 14 were traded:
+
+| Outcome | Events |
+|---|---:|
+| No pre-split 8-K stating both the ratio and the effective date (the declared announcement rule) | 95 |
+| Announced too late: 3 or fewer trading days before the split, so no settling entry day | 9 |
+| Announcement flagged as cancelled by its own filing (see limitations) | 12 |
+| Other with no entry day (an effective date that moved the window) | 4 |
+| No valid quote on the entry day (stub) | 2 |
+| **Traded** | **14** |
+
+**Upper bound with no rule losses:** all 136 events at the primary median of
+$3.70 come to $56/yr, a ninth of the bar. Fixing the cancellation false
+positive (12 events, about $5/yr) or loosening the announcement rule can't
+change the verdict.
+
+### Symmetric audit result
+
+The pre-committed sample (20 best, 20 worst, 20 random, seed 62) covers all
+14 traded events, since there are fewer than 20. I checked each one against
+its filings and the CRSP daily rows.
+
+| Class | Events |
+|---|---:|
+| VALID | 14 |
+| WRONG-CLASS, WRONG-RATIO, WRONG-DATE, ENTRY-AFTER-CUTOFF, PRICE-ERROR, NOT-A-SPLIT | 0 |
+
+Notes from the audit, all still VALID:
+- **Effective date off by one trading day** in 3 events (BankAtlantic 2011,
+  OptimumBank 2016, InVivo 2018). The 8-K date was the legal effective time;
+  trading on the split basis started the next day. Entry settled before both
+  dates, so the threshold (more than 1 day) isn't reached.
+- **Exit moved past a stub quote** in 2 events (Good Times 2010, OptimumBank
+  2016), as the rule says.
+- **Halcon 2012:** the preliminary 14C said cash in lieu. The definitive 14C
+  and the 8-K said round up, and the class known at entry came from those.
+- **McDermott 2018:** labeled participant-level because the 8-K's round-up
+  sentence refers to holders of record. The CASH label on a post-split 8-K
+  came from CB&I merger consideration, not the split, and wasn't used.
+
+No class reaches 3, so no fix was allowed, and the rerun was final.
+
+### Is the opportunity shrinking in 2024-2025?
+
+Only counts are reported here; no confirmation-period payoff was computed.
+
+| Year | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Round-up events | 29 | 15 | 19 | 23 | 15 | 9 | 40 | 115 | 148 | 119 |
+| With an entry day under the rule | 3 | 2 | 2 | 2 | 2 | 0 | 5 | 8 | 12 | 10 |
+
+It's growing, not shrinking: 2023-2025 have 5 to 8 times as many round-up
+events as 2010-2022. But even 12 eligible events at the design median is
+about $44/yr. All 148 round-ups in 2024 at that median would be about $550,
+reached only if every one were tradeable, in the busiest year on record.
+
 ## Limitations (so far)
 
 - **OTC stocks** aren't in CRSP, and many reverse splits happen there.
@@ -275,3 +368,9 @@ owner before any declaration.
 - **CRSP factor mismatches:** 50, listed in the git-ignored data/rsplit/.
 - **The validation reviewers worked from excerpts.** The full filing was
   read only for the disagreements.
+- **The cancellation regex has false positives.** "abandon" matches the
+  standard reservation that the board may abandon the split, so 12 design
+  announcements were marked as cancelled by their own filing and not traded.
+  Found after the gate ran. The error only drops events, never adds them, and
+  the bound above shows the verdict holds without it. Not fixed: a
+  post-outcome change, and the trial is killed.
