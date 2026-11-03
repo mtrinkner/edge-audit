@@ -32,6 +32,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
@@ -44,10 +45,9 @@ MIN_FIRES = 20       # below this the rule is INCONCLUSIVE, not PASS
 SEED = 20260101
 
 
-def main() -> int:
-    if not DATA.exists():
-        print(f"missing {DATA}; run python/ingest_intraday.py first")
-        return 1
+def audit(rules: dict | None = None) -> tuple[int, int, int]:
+    """(causal, reading the future, inconclusive) over `rules`, default all of them."""
+    rules = isg.RULES if rules is None else rules
     d = pd.read_parquet(DATA)
     d = d[d["bars_in_session"] == 7].sort_values(["symbol", "ts"])
     cols = ["open", "high", "low", "close", "volume"]
@@ -66,9 +66,9 @@ def main() -> int:
         return frames[i]
 
     print(f"future-swap audit: {N_TRIALS} session pairs, "
-          f"{len(isg.RULES)} rules\n")
+          f"{len(rules)} rules\n")
     results = {}
-    for rule, fn in isg.RULES.items():
+    for rule, fn in rules.items():
         needs_pc = rule in isg.NEEDS_PREV_CLOSE
         fires = 0
         changed = 0
@@ -119,7 +119,36 @@ def main() -> int:
     if nfail:
         print("\nA rule whose decision changes when the future is swapped was")
         print("using the future to decide. Every result from it is void.")
-    return 1 if nfail else 0
+    return npass, nfail, ninc
+
+
+def main() -> int:
+    if not DATA.exists():
+        print(f"missing {DATA}; run python/ingest_intraday.py first")
+        return 1
+    return 1 if audit()[1] else 0
+
+
+# Under pytest an inconclusive rule fails too: a rule that never fired has proved nothing.
+needs_data = pytest.mark.skipif(not DATA.exists(), reason="no local intraday bars")
+
+
+@needs_data
+def test_every_rule_is_causal():
+    npass, nfail, ninc = audit()
+    assert nfail == 0 and ninc == 0 and npass == len(isg.RULES)
+
+
+@needs_data
+def test_the_audit_catches_the_session_mean_volume_leak():
+    """The bug that started this file: a bar compared with its whole session's volume."""
+    leak = {"session_mean_volume": lambda s: (s["volume"] > s["volume"].mean()).to_numpy()}
+    assert audit(leak)[1] == 1
+
+
+@needs_data
+def test_a_rule_that_never_fires_is_inconclusive():
+    assert audit({"never": lambda s: np.zeros(len(s), dtype=bool)})[2] == 1
 
 
 if __name__ == "__main__":

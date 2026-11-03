@@ -33,6 +33,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
 import config  # noqa: E402
@@ -65,7 +66,7 @@ def apply_pipeline(db_path: Path) -> None:
 
 
 # ---------------------------------------------------------------- test 1
-def test_truncation(cutoff: str = "2023-06-30") -> None:
+def check_truncation(cutoff: str = "2023-06-30") -> None:
     print(f"\n[1] TRUNCATION TEST — rebuild with no data after {cutoff}")
     with tempfile.TemporaryDirectory() as td:
         trunc = Path(td) / "truncated.db"
@@ -129,7 +130,7 @@ def test_truncation(cutoff: str = "2023-06-30") -> None:
 
 
 # ---------------------------------------------------------------- test 2
-def test_independent_recompute(symbol: str = "AAPL") -> None:
+def check_independent_recompute(symbol: str = "AAPL") -> None:
     print(f"\n[2] INDEPENDENT RECOMPUTE — pandas vs SQL for {symbol}")
     con = sqlite3.connect(config.DB_PATH)
     bars = pd.read_sql(
@@ -179,7 +180,7 @@ def test_independent_recompute(symbol: str = "AAPL") -> None:
 
 
 # ---------------------------------------------------------------- test 3
-def test_label_direction(symbol: str = "MSFT") -> None:
+def check_label_direction(symbol: str = "MSFT") -> None:
     print(f"\n[3] LABEL DIRECTION — {symbol}")
     con = sqlite3.connect(config.DB_PATH)
     df = pd.read_sql(
@@ -214,7 +215,7 @@ def test_label_direction(symbol: str = "MSFT") -> None:
 
 
 # ---------------------------------------------------------------- test 4
-def test_no_forward_columns() -> None:
+def check_no_forward_columns() -> None:
     print("\n[4] LABEL/FEATURE SEPARATION")
     con = sqlite3.connect(config.DB_PATH)
     offenders = {}
@@ -228,13 +229,14 @@ def test_no_forward_columns() -> None:
 
 
 def main() -> int:
+    results.clear()
     print("=" * 72)
     print("LOOKAHEAD AUDIT")
     print("=" * 72)
-    test_truncation()
-    test_independent_recompute()
-    test_label_direction()
-    test_no_forward_columns()
+    check_truncation()
+    check_independent_recompute()
+    check_label_direction()
+    check_no_forward_columns()
 
     failed = [r for r in results if not r[1]]
     print("\n" + "=" * 72)
@@ -247,6 +249,22 @@ def main() -> int:
         return 1
     print("No lookahead detected. Downstream metrics are computed on honest inputs.")
     return 0
+
+
+# ---------------------------------------------------------------- under pytest
+# check_* record their result so the script can report every failure at once.
+# They were named test_* once, which let pytest run them and pass whatever they
+# recorded. These two make a recorded failure fail the suite.
+@pytest.mark.skipif(not config.DB_PATH.exists(), reason="no local database")
+def test_lookahead_audit() -> None:
+    assert main() == 0, [r for r in results if not r[1]]
+
+
+def test_a_recorded_failure_fails_the_audit(monkeypatch) -> None:
+    for name in ("check_truncation", "check_independent_recompute", "check_label_direction"):
+        monkeypatch.setitem(globals(), name, lambda: None)
+    monkeypatch.setitem(globals(), "check_no_forward_columns", lambda: record("planted", False, "leak"))
+    assert main() == 1
 
 
 if __name__ == "__main__":
