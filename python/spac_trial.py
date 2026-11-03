@@ -226,6 +226,7 @@ def panel(lo: str, hi: str, which: str | None = None) -> tuple[pd.DataFrame, dic
     md = da.guard("spac_trial")
     hi = min(hi, md, st.CRSP_LAST)
     growth = st.tbill()
+    daily = growth / growth.shift(1) - 1               # the T-bill accrual per calendar day
     L = pd.read_csv(CACHE / "links.csv", dtype=str)
     T = pd.read_csv(CACHE / "trust_facts.csv", dtype={"cik": str})
     est = st.trust_estimates(L, T, growth)
@@ -269,7 +270,9 @@ def panel(lo: str, hi: str, which: str | None = None) -> tuple[pd.DataFrame, dic
             if k["deadline"] < t:
                 continue                               # past the charter deadline with no extension known
             pay = k["pay"]
-            amount = k["stated"] if k["stated"] else E_t * growth[pay] / growth[t]
+            # accrued at day t's rate: growth[pay] would use T-bill rates not yet known on t
+            days = (pd.Timestamp(str(pay)) - pd.Timestamp(str(t))).days
+            amount = k["stated"] if k["stated"] else E_t * (1 + daily[t]) ** days
             rows.append((p, t, r.close, r.bid, r.ask, r.hs, r.adv20, r.dlyvol, E_t, amount, bool(k["stated"]),
                          k["kind"], k["id"], k["deadline"], pay, k["charter"], k["blocked"]))
     d = pd.DataFrame(rows, columns=["permno", "d", "close", "bid", "ask", "hs", "adv20", "vol", "E_t", "amount",

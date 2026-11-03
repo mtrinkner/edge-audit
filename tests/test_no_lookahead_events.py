@@ -275,22 +275,13 @@ def spac_differences(full: pd.DataFrame, blind: pd.DataFrame) -> dict:
     return out
 
 
-# Known leak, kept visible rather than hidden: spac_trial.panel accrues an estimated
-# amount to the payment date with growth[pay] / growth[t], the T-bill path that
-# actually happened after t. Like KNOWN_UNGUARDED in test_lockbox_coverage.py, a new
-# leak fails here, and so does this one once it is fixed.
-SPAC_KNOWN_LEAKS = {"amount"}
-
-
 @needs_spac
 @pytest.mark.parametrize("cutoff", SPAC_CUTOFFS)
 def test_spac_panel_rebuilt_from_truncated_data(tmp_path, cutoff, monkeypatch):
     full, blind = spac_panels(tmp_path / "cache", cutoff, monkeypatch)
     assert len(full) > 1000
     diff = spac_differences(full, blind)
-    new = {k: v for k, v in diff.items() if v and k not in SPAC_KNOWN_LEAKS}
-    assert not new, diff
-    assert {k for k, v in diff.items() if v} == SPAC_KNOWN_LEAKS, f"fixed, remove from SPAC_KNOWN_LEAKS: {diff}"
+    assert not any(diff.values()), diff
 
 
 def test_spac_known_at_ignores_a_filing_until_the_next_day():
