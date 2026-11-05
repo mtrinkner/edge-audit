@@ -1,0 +1,66 @@
+[
+ {
+  "study": "PEAD gross (trial 59)",
+  "era": "1995-2002",
+  "value": 1.11,
+  "unit": "%/month",
+  "kind": "this repo",
+  "source": "registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d"
+ },
+ {
+  "study": "PEAD gross (trial 59)",
+  "era": "2003-2012",
+  "value": 0.58,
+  "unit": "%/month",
+  "kind": "this repo",
+  "source": "registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d"
+ },
+ {
+  "study": "PEAD gross (trial 59)",
+  "era": "2013-2025",
+  "value": 0.26,
+  "unit": "%/month",
+  "kind": "this repo",
+  "source": "registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d"
+ },
+ {
+  "study": "Customer momentum",
+  "era": "original sample",
+  "value": 1.55,
+  "unit": "%/month",
+  "kind": "literature",
+  "source": "Cohen, L. and Frazzini, A. (2008), Economic links and predictable returns, Journal of Finance 63(4), 1977-2011, introduction"
+ },
+ {
+  "study": "Customer momentum",
+  "era": "2005-2018",
+  "value": null,
+  "unit": "%/month",
+  "kind": "preprint (sign only, no point estimate)",
+  "source": "Pinchuk, M. (2023), Customer momentum, arXiv:2301.11394 (preprint, not peer reviewed): the factor's return is negative over 2005-2018"
+ },
+ {
+  "study": "Anomaly returns (97 predictors)",
+  "era": "in sample",
+  "value": 100.0,
+  "unit": "% of in-sample return",
+  "kind": "literature",
+  "source": "McLean, R. D. and Pontiff, J. (2016), Does academic research destroy stock return predictability?, Journal of Finance 71(1), 5-32, abstract"
+ },
+ {
+  "study": "Anomaly returns (97 predictors)",
+  "era": "out of sample",
+  "value": 74.0,
+  "unit": "% of in-sample return",
+  "kind": "literature",
+  "source": "McLean, R. D. and Pontiff, J. (2016), Journal of Finance 71(1), 5-32, abstract: 26% lower out of sample"
+ },
+ {
+  "study": "Anomaly returns (97 predictors)",
+  "era": "after publication",
+  "value": 42.0,
+  "unit": "% of in-sample return",
+  "kind": "literature",
+  "source": "McLean, R. D. and Pontiff, J. (2016), Journal of Finance 71(1), 5-32, abstract: 58% lower after publication"
+ }
+]

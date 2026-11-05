@@ -1,0 +1,72 @@
+[
+ {
+  "trial": 24,
+  "family": "Crypto carry",
+  "metric": "Sharpe",
+  "design": 1.42,
+  "confirm": 1.24,
+  "design_period": "designed on seen coins",
+  "confirm_period": "94-coin holdout",
+  "source": "registry e4de17c062cc5083962e41d753ab80e92db96af7bfc36876cb551e75a10904dc"
+ },
+ {
+  "trial": 47,
+  "family": "Price patterns",
+  "metric": "Sharpe",
+  "design": 0.79,
+  "confirm": 0.58,
+  "design_period": "1993-2013 (the publication era)",
+  "confirm_period": "2014-01 to 2026-09 holdout",
+  "source": "registry 3a77645e92b5f9687c4d370b0822804962c39f83c2d9f3fc500c46f2b897cc13"
+ },
+ {
+  "trial": 52,
+  "family": "Price patterns",
+  "metric": "Sharpe",
+  "design": 2.45,
+  "confirm": -0.38,
+  "design_period": "2001-2019, authors' own images (equal weight)",
+  "confirm_period": "2020-01 to 2026-08, as declared; corrected gross Sharpe 0.70, net about 0",
+  "source": "registry f63e58581bbda330d46067471d7f1d1bf5d7d41c0d2778224cf2731f5a034439"
+ },
+ {
+  "trial": 57,
+  "family": "Price patterns",
+  "metric": "Sharpe",
+  "design": 0.71,
+  "confirm": -0.73,
+  "design_period": "2015-2022 net, inside the paper's sample",
+  "confirm_period": "2023-01 to 2025-12 net, frozen model",
+  "source": "registry 391c50507004da11cff6ae811f9446382a95694e9966926db878227a5c3a43d1"
+ },
+ {
+  "trial": 58,
+  "family": "Structural arbitrage",
+  "metric": "t",
+  "design": 3.06,
+  "confirm": 0.17,
+  "design_period": "2010-2018, E1 at $40",
+  "confirm_period": "2019-2025, E1 at $40, Oppenheimer link corrected",
+  "source": "registry 5656d0b28a954075852002895401d454b3253bb35f0c94d5c0f1abd1c25ebc36 and 8da8b0f0bc576fc66a2d105d08ee10e2cccf0b089b515073684c79dc3fa6b7d0"
+ },
+ {
+  "trial": 59,
+  "family": "Earnings information",
+  "metric": "t",
+  "design": 4.41,
+  "confirm": 1.47,
+  "design_period": "1995-2012, V1 gross",
+  "confirm_period": "2013-2025, V1 gross",
+  "source": "registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d"
+ },
+ {
+  "trial": null,
+  "family": "",
+  "metric": "luck bar",
+  "design": 1.222,
+  "confirm": 1.222,
+  "design_period": "",
+  "confirm_period": "",
+  "source": "python/registry.py status: expected_max_sharpe(N used by corrections, 348)"
+ }
+]

@@ -1,248 +1,248 @@
 [
  {
   "signal": "rsi_oversold_20",
-  "trades": 5612,
-  "excess_pct": 0.196,
-  "t": 1.55
+  "trades": 5590,
+  "excess_pct": 0.117,
+  "t": 0.65
  },
  {
   "signal": "death_cross_50_200",
-  "trades": 12402,
-  "excess_pct": 0.021,
-  "t": 0.74
+  "trades": 12391,
+  "excess_pct": 0.006,
+  "t": 0.14
  },
  {
   "signal": "rsi_oversold_30",
-  "trades": 47597,
-  "excess_pct": 0.02,
-  "t": 0.5
- },
- {
-  "signal": "golden_cross_20_100",
-  "trades": 28694,
-  "excess_pct": 0.003,
-  "t": 0.16
- },
- {
-  "signal": "support_bounce",
-  "trades": 266402,
-  "excess_pct": -0.024,
-  "t": -3.06
- },
- {
-  "signal": "bollinger_upper_break",
-  "trades": 131616,
-  "excess_pct": -0.017,
-  "t": -1.33
- },
- {
-  "signal": "ema_cross_12_26",
-  "trades": 75281,
+  "trades": 47529,
   "excess_pct": -0.02,
-  "t": -1.85
- },
- {
-  "signal": "cross_above_sma_20",
-  "trades": 259102,
-  "excess_pct": -0.018,
-  "t": -2.23
- },
- {
-  "signal": "rsi_overbought_70",
-  "trades": 79371,
-  "excess_pct": -0.03,
-  "t": -1.88
- },
- {
-  "signal": "three_white_soldiers",
-  "trades": 393159,
-  "excess_pct": -0.024,
-  "t": -2.95
- },
- {
-  "signal": "donchian_break_55",
-  "trades": 189257,
-  "excess_pct": -0.027,
-  "t": -1.71
- },
- {
-  "signal": "rsi_cross_50",
-  "trades": 246100,
-  "excess_pct": -0.023,
-  "t": -2.8
- },
- {
-  "signal": "donchian_break_20",
-  "trades": 307037,
-  "excess_pct": -0.029,
-  "t": -2.34
- },
- {
-  "signal": "hammer",
-  "trades": 201039,
-  "excess_pct": -0.036,
-  "t": -3.91
- },
- {
-  "signal": "above_sma_50",
-  "trades": 2411833,
-  "excess_pct": -0.032,
-  "t": -6.5
- },
- {
-  "signal": "outside_bar_up",
-  "trades": 194337,
-  "excess_pct": -0.036,
-  "t": -3.64
- },
- {
-  "signal": "cross_above_sma_50",
-  "trades": 155420,
-  "excess_pct": -0.037,
-  "t": -3.98
- },
- {
-  "signal": "above_sma_200",
-  "trades": 2453366,
-  "excess_pct": -0.038,
-  "t": -8.01
- },
- {
-  "signal": "new_52w_high",
-  "trades": 98356,
-  "excess_pct": -0.035,
-  "t": -3.55
- },
- {
-  "signal": "bearish_engulfing",
-  "trades": 195280,
-  "excess_pct": -0.042,
-  "t": -4.69
- },
- {
-  "signal": "shooting_star",
-  "trades": 182451,
-  "excess_pct": -0.037,
-  "t": -3.94
- },
- {
-  "signal": "oversold_in_uptrend",
-  "trades": 52602,
-  "excess_pct": -0.048,
-  "t": -2.8
- },
- {
-  "signal": "ma_ribbon_aligned",
-  "trades": 1616595,
-  "excess_pct": -0.045,
-  "t": -8.54
- },
- {
-  "signal": "resistance_break_volume",
-  "trades": 69594,
-  "excess_pct": -0.063,
-  "t": -4.42
- },
- {
-  "signal": "volume_spike_up",
-  "trades": 85183,
-  "excess_pct": -0.063,
-  "t": -4.36
- },
- {
-  "signal": "golden_cross_50_200",
-  "trades": 12480,
-  "excess_pct": -0.063,
-  "t": -2.9
- },
- {
-  "signal": "three_down_days",
-  "trades": 445517,
-  "excess_pct": -0.049,
-  "t": -3.81
- },
- {
-  "signal": "pullback_to_sma50",
-  "trades": 85550,
-  "excess_pct": -0.081,
-  "t": -6.15
- },
- {
-  "signal": "morning_star",
-  "trades": 280584,
-  "excess_pct": -0.018,
-  "t": -2.49
- },
- {
-  "signal": "stochastic_oversold",
-  "trades": 271791,
-  "excess_pct": -0.063,
-  "t": -5.29
+  "t": -0.32
  },
  {
   "signal": "macd_hist_positive",
-  "trades": 168482,
-  "excess_pct": -0.009,
-  "t": -1.04
+  "trades": 168365,
+  "excess_pct": -0.02,
+  "t": -1.13
  },
  {
   "signal": "macd_cross_up",
-  "trades": 168482,
-  "excess_pct": -0.009,
-  "t": -1.04
+  "trades": 168365,
+  "excess_pct": -0.02,
+  "t": -1.13
+ },
+ {
+  "signal": "golden_cross_20_100",
+  "trades": 28673,
+  "excess_pct": -0.029,
+  "t": -1.13
+ },
+ {
+  "signal": "cross_above_sma_20",
+  "trades": 258939,
+  "excess_pct": -0.025,
+  "t": -1.47
+ },
+ {
+  "signal": "support_bounce",
+  "trades": 266057,
+  "excess_pct": -0.037,
+  "t": -1.83
+ },
+ {
+  "signal": "bollinger_upper_break",
+  "trades": 131541,
+  "excess_pct": -0.032,
+  "t": -1.63
+ },
+ {
+  "signal": "morning_star",
+  "trades": 280473,
+  "excess_pct": -0.032,
+  "t": -2.11
+ },
+ {
+  "signal": "ema_cross_12_26",
+  "trades": 75225,
+  "excess_pct": -0.03,
+  "t": -1.73
+ },
+ {
+  "signal": "rsi_cross_50",
+  "trades": 245959,
+  "excess_pct": -0.033,
+  "t": -1.99
  },
  {
   "signal": "bullish_engulfing",
-  "trades": 173226,
-  "excess_pct": -0.032,
-  "t": -3.22
- },
- {
-  "signal": "extreme_below_sma20",
-  "trades": 206533,
-  "excess_pct": -0.046,
-  "t": -1.96
- },
- {
-  "signal": "bollinger_lower_touch",
-  "trades": 206533,
-  "excess_pct": -0.046,
-  "t": -1.96
+  "trades": 173166,
+  "excess_pct": -0.038,
+  "t": -2.2
  },
  {
   "signal": "inside_bar",
-  "trades": 515137,
-  "excess_pct": -0.031,
-  "t": -4.5
+  "trades": 514938,
+  "excess_pct": -0.039,
+  "t": -2.46
+ },
+ {
+  "signal": "three_white_soldiers",
+  "trades": 393024,
+  "excess_pct": -0.04,
+  "t": -2.48
  },
  {
   "signal": "doji",
-  "trades": 462401,
-  "excess_pct": -0.032,
-  "t": -4.95
+  "trades": 462181,
+  "excess_pct": -0.043,
+  "t": -2.58
+ },
+ {
+  "signal": "above_sma_50",
+  "trades": 2410173,
+  "excess_pct": -0.045,
+  "t": -3.33
+ },
+ {
+  "signal": "donchian_break_20",
+  "trades": 306921,
+  "excess_pct": -0.049,
+  "t": -2.43
+ },
+ {
+  "signal": "bearish_engulfing",
+  "trades": 195195,
+  "excess_pct": -0.047,
+  "t": -2.84
+ },
+ {
+  "signal": "shooting_star",
+  "trades": 182382,
+  "excess_pct": -0.041,
+  "t": -2.1
+ },
+ {
+  "signal": "outside_bar_up",
+  "trades": 194278,
+  "excess_pct": -0.046,
+  "t": -3.31
+ },
+ {
+  "signal": "cross_above_sma_50",
+  "trades": 155322,
+  "excess_pct": -0.048,
+  "t": -3.08
+ },
+ {
+  "signal": "new_52w_high",
+  "trades": 98303,
+  "excess_pct": -0.048,
+  "t": -2.69
+ },
+ {
+  "signal": "hammer",
+  "trades": 200960,
+  "excess_pct": -0.05,
+  "t": -2.76
+ },
+ {
+  "signal": "oversold_in_uptrend",
+  "trades": 52573,
+  "excess_pct": -0.058,
+  "t": -1.61
+ },
+ {
+  "signal": "donchian_break_55",
+  "trades": 189185,
+  "excess_pct": -0.055,
+  "t": -2.61
+ },
+ {
+  "signal": "three_down_days",
+  "trades": 445316,
+  "excess_pct": -0.057,
+  "t": -2.35
+ },
+ {
+  "signal": "above_sma_200",
+  "trades": 2451967,
+  "excess_pct": -0.056,
+  "t": -3.29
+ },
+ {
+  "signal": "pullback_to_sma50",
+  "trades": 166862,
+  "excess_pct": -0.056,
+  "t": -2.64
  },
  {
   "signal": "gap_down_2pct",
-  "trades": 135362,
-  "excess_pct": -0.072,
-  "t": -1.38
+  "trades": 135039,
+  "excess_pct": -0.059,
+  "t": -0.79
+ },
+ {
+  "signal": "ma_ribbon_aligned",
+  "trades": 1615696,
+  "excess_pct": -0.059,
+  "t": -3.27
+ },
+ {
+  "signal": "rsi_overbought_70",
+  "trades": 79335,
+  "excess_pct": -0.06,
+  "t": -2.62
+ },
+ {
+  "signal": "extreme_below_sma20",
+  "trades": 206338,
+  "excess_pct": -0.064,
+  "t": -1.72
+ },
+ {
+  "signal": "bollinger_lower_touch",
+  "trades": 206338,
+  "excess_pct": -0.064,
+  "t": -1.72
+ },
+ {
+  "signal": "stochastic_oversold",
+  "trades": 271599,
+  "excess_pct": -0.069,
+  "t": -3.02
+ },
+ {
+  "signal": "golden_cross_50_200",
+  "trades": 12468,
+  "excess_pct": -0.074,
+  "t": -3.3
  },
  {
   "signal": "gap_up_2pct",
-  "trades": 140865,
-  "excess_pct": -0.118,
-  "t": -3.85
+  "trades": 140547,
+  "excess_pct": -0.077,
+  "t": -1.75
  },
  {
-  "signal": "big_down_day",
-  "trades": 273572,
-  "excess_pct": -0.12,
-  "t": -5.21
+  "signal": "resistance_break_volume",
+  "trades": 69537,
+  "excess_pct": -0.081,
+  "t": -3.78
+ },
+ {
+  "signal": "volume_spike_up",
+  "trades": 85127,
+  "excess_pct": -0.078,
+  "t": -3.74
  },
  {
   "signal": "volume_dryup",
-  "trades": 253274,
-  "excess_pct": -0.082,
-  "t": -10.4
+  "trades": 251773,
+  "excess_pct": -0.085,
+  "t": -5.15
+ },
+ {
+  "signal": "big_down_day",
+  "trades": 273086,
+  "excess_pct": -0.103,
+  "t": -2.52
  }
 ]

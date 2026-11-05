@@ -1,0 +1,7 @@
+trial,family,metric,design,confirm,design_period,confirm_period,source
+24,crypto_carry,Sharpe,1.42,1.24,designed on seen coins,94-coin holdout,registry e4de17c062cc5083962e41d753ab80e92db96af7bfc36876cb551e75a10904dc
+47,price_ta,Sharpe,0.79,0.58,1993-2013 (the publication era),2014-01 to 2026-09 holdout,registry 3a77645e92b5f9687c4d370b0822804962c39f83c2d9f3fc500c46f2b897cc13
+52,price_ta,Sharpe,2.45,-0.38,"2001-2019, authors' own images (equal weight)","2020-01 to 2026-08, as declared; corrected gross Sharpe 0.70, net about 0",registry f63e58581bbda330d46067471d7f1d1bf5d7d41c0d2778224cf2731f5a034439
+57,price_ta,Sharpe,0.71,-0.73,"2015-2022 net, inside the paper's sample","2023-01 to 2025-12 net, frozen model",registry 391c50507004da11cff6ae811f9446382a95694e9966926db878227a5c3a43d1
+58,structural,t,3.06,0.17,"2010-2018, E1 at $40","2019-2025, E1 at $40, Oppenheimer link corrected",registry 5656d0b28a954075852002895401d454b3253bb35f0c94d5c0f1abd1c25ebc36 and 8da8b0f0bc576fc66a2d105d08ee10e2cccf0b089b515073684c79dc3fa6b7d0
+59,earnings_info,t,4.41,1.47,"1995-2012, V1 gross","2013-2025, V1 gross",registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d

@@ -1,0 +1,58 @@
+[
+ {
+  "family": "price_ta",
+  "label": "Price patterns",
+  "status": "open",
+  "closed_note": "",
+  "source": "data/trial_families.json"
+ },
+ {
+  "family": "xs_factors",
+  "label": "Cross-sectional factors",
+  "status": "open",
+  "closed_note": "",
+  "source": "data/trial_families.json"
+ },
+ {
+  "family": "earnings_info",
+  "label": "Earnings information",
+  "status": "closed",
+  "closed_note": "2026-10-28: real before costs, decayed below retail costs (trials 10, 12, 14, 34, 59). No further trials in this family without new data or a new mechanism.",
+  "source": "data/trial_families.json"
+ },
+ {
+  "family": "flows_altdata",
+  "label": "Flows and alt data",
+  "status": "open",
+  "closed_note": "",
+  "source": "data/trial_families.json"
+ },
+ {
+  "family": "microstructure",
+  "label": "Microstructure",
+  "status": "open",
+  "closed_note": "",
+  "source": "data/trial_families.json"
+ },
+ {
+  "family": "calendar",
+  "label": "Calendar effects",
+  "status": "open",
+  "closed_note": "",
+  "source": "data/trial_families.json"
+ },
+ {
+  "family": "crypto_carry",
+  "label": "Crypto carry",
+  "status": "open",
+  "closed_note": "",
+  "source": "data/trial_families.json"
+ },
+ {
+  "family": "structural",
+  "label": "Structural arbitrage",
+  "status": "open",
+  "closed_note": "",
+  "source": "data/trial_families.json"
+ }
+]

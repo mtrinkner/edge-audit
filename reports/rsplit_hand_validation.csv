@@ -1,0 +1,4 @@
+round,events,use,class_raw_pre_split_scope_parser_at_the_time,class_adjudicated_final_parser,ratio,effective_date,announcement_within_1bd,hand_ratio_eq_crsp,hand_effective_eq_crsp
+round1_60,60,used to fix the parser,0.583,0.917,0.883,0.617,0.767,1.0,0.981
+round2_30,30,used to fix the parser,0.533,1.0,0.867,0.8,0.8,1.0,0.958
+round3_30_untouched,30,"frozen parser, not used for fixes",0.767,0.967,0.867,0.767,0.867,0.963,0.958
