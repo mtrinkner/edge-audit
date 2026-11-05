@@ -31,7 +31,8 @@ THE COMPONENTS, kept separate because they are not interchangeable
   adverse_selection for passive orders only. MEASURED in trial 30: a resting bid
                     fills 86.9% of the time and the fills underperform the
                     non-fills by 0.65%, because a bid fills when price keeps
-                    falling.
+                    falling. Corrected 2026-10-30 (see the registry): fill rate
+                    86.6%, passive -0.116%, unfilled bars +0.498%.
 
 THE FOUR SCENARIOS, grounded in measurement where measurement was possible
 

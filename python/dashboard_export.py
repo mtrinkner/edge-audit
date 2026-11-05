@@ -360,9 +360,9 @@ def cbm57():
 
 BUGS = [
     {"n": 1, "found": "Day-trading volume signal", "what": "Average volume included hours later the same day",
-     "before": "+12.6bp edge", "after": "-0.7bp", "direction": "Made results look better"},
+     "before": "+6.5bp edge", "after": "+0.2bp", "direction": "Made results look better"},
     {"n": 2, "found": "Daily budget weighting", "what": "Split each day's money across signals that hadn't fired yet",
-     "before": "Sharpe 1.52", "after": "Sharpe -1.27", "direction": "Made results look better"},
+     "before": "Sharpe 1.19", "after": "Sharpe -1.27", "direction": "Made results look better"},
     {"n": 3, "found": "Mismatched t-statistic", "what": "Printed one average next to the t-stat of another",
      "before": "t = 5.11", "after": "t = 0.26", "direction": "Made results look better"},
     {"n": 4, "found": "Spread estimator", "what": "Returned a noise floor, not a spread, on hourly bars",

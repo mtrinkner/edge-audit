@@ -26,7 +26,7 @@
   "design": 2.45,
   "confirm": -0.38,
   "design_period": "2001-2019, authors' own images (equal weight)",
-  "confirm_period": "2020-01 to 2026-08, as declared",
+  "confirm_period": "2020-01 to 2026-08, as declared; corrected gross Sharpe 0.70, net about 0",
   "source": "registry f63e58581bbda330d46067471d7f1d1bf5d7d41c0d2778224cf2731f5a034439"
  },
  {
