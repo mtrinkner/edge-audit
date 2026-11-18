@@ -700,7 +700,7 @@ def scope_v2(period: str) -> pd.DataFrame:
             f = s[(s["filingDate"] >= lo) & (s["filingDate"] <= hi)]
             out.append(f.assign(permno=r.permno, exdt=r.exdt, cik=cik))
     f = pd.concat(out, ignore_index=True).rename(columns={"accessionNumber": "acc", "filingDate": "filed"})
-    f.to_csv(CACHE / f"filings_v2_{period}.csv", index=False)
+    write_output(f, CACHE / f"filings_v2_{period}.csv", period)
     return f
 
 
@@ -745,11 +745,11 @@ def _parse_one_v2(r: dict) -> dict:
 def parse_v2(period: str) -> int:
     """data/rsplit/parsed_v2_<period>.csv: one row per (event, filing)."""
     from concurrent.futures import ProcessPoolExecutor
-    f = pd.read_csv(CACHE / f"filings_v2_{period}.csv", dtype={"cik": str, "items": str})
+    f = read_output(CACHE / f"filings_v2_{period}.csv", period, dtype={"cik": str, "items": str})
     with ProcessPoolExecutor(8) as ex:
         rows = list(ex.map(_parse_one_v2, [r.to_dict() for _, r in f.iterrows()], chunksize=16))
     p = pd.DataFrame(rows)
-    p.to_csv(CACHE / f"parsed_v2_{period}.csv", index=False)
+    write_output(p, CACHE / f"parsed_v2_{period}.csv", period)
     print(p["status"].str[:20].value_counts().to_string())
     return 0
 
@@ -967,7 +967,7 @@ def event_table(rule: str = "v1", period: str | None = None) -> pd.DataFrame:
     ev = events()
     if period:
         ev = ev[(ev["exdt"] >= SPLIT[period][0]) & (ev["exdt"] <= SPLIT[period][1])]
-    P = pd.read_csv(parsed_path(rule, period), dtype={"cik": str, "items": str})
+    P = read_output(parsed_path(rule, period), period, dtype={"cik": str, "items": str})
     by = {k: g for k, g in P.groupby(["permno", "exdt"])}
     rows = []
     for r in ev.itertuples():
@@ -1017,10 +1017,10 @@ def simulate(period: str, perfect: bool = False, rule: str = "v1") -> pd.DataFra
     """The payoff of every round-up event in a period (one share each)."""
     lo, hi = SPLIT[period]
     md = da.guard("reverse_split")
-    e = pd.read_csv(CACHE / ("event_table.csv" if rule == "v1" else f"event_table_v2_{period}.csv"))
+    e = read_output(CACHE / ("event_table.csv" if rule == "v1" else f"event_table_v2_{period}.csv"), period)
     e = e[(e["exdt"] >= lo) & (e["exdt"] <= min(hi, md))]
     ev = events().set_index(["permno", "exdt"])
-    P = pd.read_csv(parsed_path(rule, period), dtype={"cik": str, "items": str})
+    P = read_output(parsed_path(rule, period), period, dtype={"cik": str, "items": str})
     by = {k: g for k, g in P.groupby(["permno", "exdt"])}
     px = pd.read_parquet(CACHE / "crsp_daily.parquet")
     pg = {p: g for p, g in px.groupby("permno")}
@@ -1127,7 +1127,7 @@ def candidate(g: pd.DataFrame, a: bool, b: bool) -> None:
 def validate_v2(period: str) -> int:
     """v2's event table for one period, and counts only (no prices)."""
     e = event_table("v2", period)
-    e.to_csv(CACHE / f"event_table_v2_{period}.csv", index=False)
+    write_output(e, CACHE / f"event_table_v2_{period}.csv", period)
     r = e[e["cls"].isin(ROUNDUP)]
     print(f"{period}: {len(e)} events; {len(r)} round-up class known the day before the split; "
           f"{int(r['announced'].notna().sum())} announced under v2; {int(r['cancel_seen'].sum())} flagged cancelled")
@@ -1135,18 +1135,74 @@ def validate_v2(period: str) -> int:
 
 
 FROZEN_TAG = "trial60-frozen"
+MANIFEST = ".manifest.json"
+REFUSED = "confirmation inputs not produced by trial60-frozen"
+
+
+def python_tree_md5() -> str:
+    """md5 over python/*.py, by file name and content, in name order."""
+    import hashlib
+    h = hashlib.md5()
+    for f in sorted((ROOT / "python").glob("*.py")):
+        h.update(f.name.encode() + b"\0" + f.read_bytes() + b"\0")
+    return h.hexdigest()
+
+
+def frozen_commit() -> str | None:
+    import subprocess
+    r = subprocess.run(["git", "rev-parse", "-q", "--verify", f"refs/tags/{FROZEN_TAG}^{{commit}}"], cwd=ROOT,
+                       capture_output=True, text=True)
+    return r.stdout.strip() or None
+
+
+def write_output(df: pd.DataFrame, path: Path, period: str | None, rule: str = "v2") -> None:
+    """Write a cached output. A confirmation-period output gets a sidecar
+    <file>.manifest.json naming the frozen tag's commit and the python/ md5
+    that produced it."""
+    import json
+    from datetime import datetime, timezone
+    df.to_csv(path, index=False)
+    if period == "confirm":
+        m = {"tag": FROZEN_TAG, "commit": frozen_commit(), "python_md5": python_tree_md5(), "rule": rule,
+             "period": period, "written_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+        Path(str(path) + MANIFEST).write_text(json.dumps(m, indent=1) + "\n")
+
+
+def check_manifest(path: Path) -> None:
+    """Refuse a confirmation-period input unless its manifest names the frozen
+    tag's commit and today's python/ tree is the one that wrote it."""
+    import json
+    mp = Path(str(path) + MANIFEST)
+    if not mp.exists():
+        raise SystemExit(f"{REFUSED}: {Path(path).name} has no manifest")
+    m = json.loads(mp.read_text())
+    tag = frozen_commit()
+    if not tag or m.get("commit") != tag:
+        raise SystemExit(f"{REFUSED}: {Path(path).name} was written at commit {m.get('commit')}, not {FROZEN_TAG}")
+    if m.get("python_md5") != python_tree_md5():
+        raise SystemExit(f"{REFUSED}: python/ has changed since {Path(path).name} was written")
+
+
+def read_output(path: Path, period: str | None, **kw) -> pd.DataFrame:
+    """Read a cached output; a confirmation-period read checks its manifest."""
+    if period == "confirm":
+        check_manifest(path)
+    return pd.read_csv(path, **kw)
 
 
 def require_frozen(period: str) -> None:
-    """The confirmation period's v2 filings are read only by code at the
-    frozen tag (trial 60's declaration): refuse otherwise."""
+    """The confirmation period's v2 filings are read, and its payoffs computed,
+    only by the code frozen at the tag (trial 60's declaration): python/ must
+    match the tag exactly, committed and uncommitted. Later commits may touch
+    only docs, data and reports."""
     import subprocess
     if period != "confirm":
         return
-    git = lambda *a: subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    tag = git("rev-parse", "-q", "--verify", f"refs/tags/{FROZEN_TAG}^{{commit}}")
-    if not tag or git("rev-parse", "HEAD") != tag or git("status", "--porcelain", "--", "python"):
-        raise SystemExit(f"the confirmation period needs a clean checkout of the {FROZEN_TAG} tag")
+    run = lambda *a: subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True)
+    tag = run("rev-parse", "-q", "--verify", f"refs/tags/{FROZEN_TAG}^{{commit}}").stdout.strip()
+    if (not tag or run("diff", "--quiet", tag, "--", "python").returncode != 0
+            or run("status", "--porcelain", "--", "python").stdout.strip()):
+        raise SystemExit(f"the confirmation period needs python/ exactly as at the {FROZEN_TAG} tag")
 
 
 def main(a) -> int:

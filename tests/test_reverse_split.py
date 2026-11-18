@@ -243,3 +243,55 @@ def test_v2_reads_n_to_one_ratios():
     assert rs.parse_filing_v2("The Company will effect a reverse stock split at a ratio of 16:1 which will take "
                               "effect at the start of trading on May 13, 2010.", "2010-05-12")["ratio"] == 16
     assert rs.parse_filing_v2("The reverse stock split, on a six-to-one basis, was approved.", "2015-04-23")["ratio"] == 6
+
+
+# --- freeze guard: confirmation-period outputs carry a manifest --------------------------------
+
+import json as _json
+import pytest
+
+
+def _frozen(monkeypatch, commit="a" * 40, md5="b" * 32):
+    monkeypatch.setattr(rs, "frozen_commit", lambda: commit)
+    monkeypatch.setattr(rs, "python_tree_md5", lambda: md5)
+
+
+def test_a_confirmation_read_without_a_manifest_refuses(tmp_path):
+    f = tmp_path / "parsed_v2_confirm.csv"
+    pd.DataFrame({"x": [1]}).to_csv(f, index=False)
+    with pytest.raises(SystemExit, match="confirmation inputs not produced by trial60-frozen"):
+        rs.read_output(f, "confirm")
+
+
+def test_a_manifest_from_another_commit_refuses(tmp_path, monkeypatch):
+    f = tmp_path / "event_table_v2_confirm.csv"
+    _frozen(monkeypatch, commit="c" * 40)
+    rs.write_output(pd.DataFrame({"x": [1]}), f, "confirm")
+    _frozen(monkeypatch, commit="a" * 40)                                   # the tag names another commit
+    with pytest.raises(SystemExit, match="confirmation inputs not produced by trial60-frozen"):
+        rs.read_output(f, "confirm")
+
+
+def test_a_python_tree_mismatch_refuses(tmp_path, monkeypatch):
+    f = tmp_path / "trades_v2_confirm.csv"
+    _frozen(monkeypatch)
+    rs.write_output(pd.DataFrame({"x": [1]}), f, "confirm")
+    _frozen(monkeypatch, md5="d" * 32)                                      # python/ edited after the write
+    with pytest.raises(SystemExit, match="confirmation inputs not produced by trial60-frozen"):
+        rs.read_output(f, "confirm")
+
+
+def test_a_matching_manifest_passes(tmp_path, monkeypatch):
+    f = tmp_path / "parsed_v2_confirm.csv"
+    _frozen(monkeypatch)
+    rs.write_output(pd.DataFrame({"x": [1, 2]}), f, "confirm")
+    m = _json.loads((tmp_path / "parsed_v2_confirm.csv.manifest.json").read_text())
+    assert m["commit"] == "a" * 40 and m["python_md5"] == "b" * 32 and m["rule"] == "v2" and m["period"] == "confirm"
+    assert list(rs.read_output(f, "confirm")["x"]) == [1, 2]
+
+
+def test_design_outputs_need_no_manifest(tmp_path):
+    f = tmp_path / "parsed_v2_design.csv"
+    rs.write_output(pd.DataFrame({"x": [1]}), f, "design")
+    assert not (tmp_path / "parsed_v2_design.csv.manifest.json").exists()
+    assert len(rs.read_output(f, "design")) == 1

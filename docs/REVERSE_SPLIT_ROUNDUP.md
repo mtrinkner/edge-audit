@@ -462,12 +462,29 @@ class context, "N:1" ratios, and the cancellation rule.
 | seed 64, 30 events | failed the 90% bar; its findings fixed the rule | 77% | 77% | 73% |
 | **seed 66, 30 fresh events** | **untouched: parser md5 ca19f840 recorded before the draw** | **87% raw, 90% adjudicated** | **93%** | **93%** |
 
-How to read the seed-66 round:
-- **Class** is the class stated in filings accepted before the split day, as
-  the reviewers were instructed. My scoring script first compared it with
-  the class known the day before the split, which gives 77%. Five of the
-  differences are 8-Ks accepted on the last day before the split, which the
-  trade can't use anyway.
+**Known weakness: two of the three agreement figures depend on a scoring
+choice made after the reviews came back.** Neither changes a number in the
+table, and both are stated so the table isn't read as cleaner than it is.
+- **Announcement met the 90% bar only after adjudication.** Raw agreement
+  was 26 of 30 (87%), below the bar. One of the four misses (W19), which the
+  reviewer marked borderline, was adjudicated in the parser's favour, giving
+  27 of 30 (90%), exactly at the bar.
+- **Class depends on the comparison.**
+  - My first scoring script compared the parser's class known the day
+    before the split with the reviewers' class, which gives 77%.
+  - Re-scored against what the reviewers were told to record (the class
+    stated in filings accepted before the split day), it gives 93%.
+  - The difference is the 8-Ks accepted on the last day before the split.
+- **The comparison that matters for the trade** is the class known on the
+  entry day: the last day whose trade settles before the split, the only day
+  the class decides anything. On that basis agreement is 28 of 30 (93%).
+  - The four cash notices (W11, W22, W28, W29) were accepted after the entry
+    day, so neither the parser nor a reader could have known them then.
+  - Sterling Financial's round-up wording came the day before the split.
+    At entry, both the parser and the record show the proxy's
+    participant-level wording.
+  - The two misses, Tonix 2017 and One Horizon 2017, are round-up events
+    the parser leaves UNKNOWN. They are not traded.
 - **Announcement misses (4):**
   - two parser misses: "the NYSE has set the effective date … for
     February 27", and a ratio stated away from the word "reverse";
@@ -475,8 +492,9 @@ How to read the seed-66 round:
     (W10);
   - one the reviewer marked borderline. The filing has no split-adjusted
     date, so the parser's "none" holds on adjudication.
-- **Every miss is safe:** an event left unannounced or UNKNOWN. None is a
-  false round-up.
+- **Every miss is safe**, whatever the comparison: an event left unannounced
+  or UNKNOWN, a trade not taken. None is a false round-up or a false
+  announcement, so the misses can cost events but can't add a bad trade.
 - **Not fixed:** the seed-66 round is the measurement.
 - **Overlap:** the earlier rounds' event lists weren't saved, so "fresh"
   means not drawn in this session's two samples.
@@ -512,3 +530,83 @@ How to read the seed-66 round:
 4. **Then the design run is repeated once** and recorded as final. A later
    bug is a documented correction next to the frozen result, never instead
    of it.
+
+### Symmetric audit result (v2 design run)
+
+The pre-committed sample covers all 36 traded events, since the 20 best and
+20 worst overlap. Each was checked against its filings and CRSP daily rows.
+
+| Class | Events |
+|---|---:|
+| VALID | 35 |
+| WRONG-DATE (more than 1 trading day off) | 1 |
+| WRONG-CLASS, WRONG-RATIO, ENTRY-AFTER-CUTOFF, PRICE-ERROR, NOT-A-SPLIT | 0 |
+
+- **Hongli Clean Energy 2016 (WRONG-DATE):** the DEF 14C said the split
+  would be effective "about October 24". Trading on the split basis began
+  October 27. Entry settled before both, so the payoff isn't affected.
+- **EMCORE 2012 (VALID by the threshold, with an error noted):**
+  - the parser took the record date (February 15) for the effective date,
+    one trading day early;
+  - a later prospectus stating February 16 triggered a changed-terms exit at
+    the bid, so the trade shows −$0.11 instead of the round-up;
+  - this understates the result, and it occurs once.
+- **Class sentences:** for PostRock, OptimumBank 2016 and Rennova the cited
+  sentence alludes to the round-up rather than stating it. Each filing states
+  the round-up elsewhere.
+- **Latest filing wins:** for Graymark, Satcon and Alliance One an earlier
+  proxy said cash in lieu or holders of record only, and the later 8-K said
+  each holder is rounded up.
+- **Stubs:** Good Times, Tengion and OptimumBank 2013 exits moved past stub
+  quotes, as the rule says.
+
+No class reaches 3, so no fix was allowed. The design run was repeated
+once, and `reports/rsplit_trial60_design.csv` was byte-identical. That run
+is final.
+
+### Before the freeze
+
+- **Freeze guard, changed once:** it was changed from "HEAD is the tag" to
+  "python/ matches the tag, committed and uncommitted", so the declaration
+  commit can follow the tag. The parser and the rules are unchanged since
+  the seed-66 validation.
+- **Freeze guard on cached outputs.** The code guard alone wouldn't stop a
+  confirmation run from reading a parse cached by earlier code.
+  - Every confirmation-period output that `reverse_split.py` or
+    `rsplit_trial60.py` writes (the filing list, the parsed filings, the
+    event table, the trades) now gets a sidecar `<file>.manifest.json`. It
+    records the trial60-frozen commit, the md5 of `python/*.py`, the rule
+    ("v2"), the period, and when the file was written.
+  - Every confirmation-period read checks the manifest. A missing manifest,
+    another commit, or a `python/` tree that has changed since the write is
+    refused with "confirmation inputs not produced by trial60-frozen".
+  - Four tests cover this: no manifest, another commit, an md5 mismatch, and
+    a matching manifest, which passes.
+  - Before the tag, the 2019-2025 rows of the v1 caches were moved to
+    `data/rsplit/pre_freeze/`, kept, not deleted. That is 7,565 of the
+    10,724 rows in `parsed.csv`, 1,829 of the 2,693 in `event_table.csv`,
+    and 39 of the 50 in `factor_mismatches.csv`. The design rows stay in
+    place, so v1 reproduces. Raw downloaded filings stay where they are.
+- **A known conservative bias: a restated date exits the trade.** A later
+  prospectus that restates the effective date one day differently counts as
+  changed terms, and the position is sold at the bid. EMCORE 2012 shows −$0.11
+  instead of the round-up for this reason.
+  - It occurred once in the design run, below the 3-occurrence bar, so no
+    fix was allowed.
+  - Expect it in the confirmation run too. The confirmation summary reports
+    the number of changed-terms exits (`changed_terms_exits` in
+    `reports/rsplit_trial60_confirm_summary.csv`).
+- **The confirmation period was not untouched:**
+  - on 2026-11-02 the v1 parse read the 2019-2025 filings;
+  - this document published per-year class counts, and v1 entry-day counts
+    totalling 39 for 2019-2025, in "Is the opportunity shrinking";
+  - no 2019-2025 price or payoff has ever been computed.
+- **MDE inputs, from EDGAR filing metadata only.** 2019-2025 has 2.31× the
+  design events with a CIK, 2.36× the pre-split 8-Ks, and 3.59× the
+  pre-split 8-Ks with item 5.03. On the smallest scale the expected number
+  traded is about 83.
+- **MDE:**
+  - with the design SD of $3.50 an event, iid, the mean that gives t = 3 is
+    $1.15, or $1.48 with 80% power;
+  - clustering by ex-date month widens both;
+  - the design mean was $3.66.

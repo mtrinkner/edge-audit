@@ -1,2 +1,2 @@
-period,verdict,a_mean_pos_t_ge_3,b_mean_pos_without_top5,c_mean_pos_at_p_0.2,d_2024_2025_mean_pos,e_at_least_30_events,monthly_sharpe,months,n_trials_registry,deflated_sharpe
-design,design (no verdict),True,True,True,,True,1.333424689975053,108,856,0.7758879808326147
+period,verdict,a_mean_pos_t_ge_3,b_mean_pos_without_top5,c_mean_pos_at_p_0.2,d_2024_2025_mean_pos,e_at_least_30_events,changed_terms_exits,monthly_sharpe,months,n_trials_registry,deflated_sharpe
+design,design (no verdict),True,True,True,,True,1,1.333424689975053,108,856,0.7758879808326147

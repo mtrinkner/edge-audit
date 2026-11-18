@@ -36,7 +36,7 @@ ACCOUNT_N_TRIALS = None         # the deflated Sharpe uses the registry's N at r
 def trades(period: str) -> pd.DataFrame:
     """Every round-up event the v2 rule trades in a period, one share each."""
     t = rs.simulate(period, rule="v2")
-    t.to_csv(rs.CACHE / f"trades_v2_{period}.csv", index=False)          # prices: git-ignored
+    rs.write_output(t, rs.CACHE / f"trades_v2_{period}.csv", period)    # prices: git-ignored
     return t[t["skipped"].isna()].copy() if "skipped" in t else t
 
 
@@ -122,6 +122,7 @@ def score(period: str, t: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         verdict = "design (no verdict)"
     summary = {"period": period, "verdict": verdict, "a_mean_pos_t_ge_3": a, "b_mean_pos_without_top5": b,
                "c_mean_pos_at_p_0.2": c, "d_2024_2025_mean_pos": d, "e_at_least_30_events": e,
+               "changed_terms_exits": int((t["exit"] == "changed").sum()),
                "monthly_sharpe": sh, "months": len(mp), "n_trials_registry": n_trials, "deflated_sharpe": dsr}
     return out, summary
 
