@@ -656,6 +656,33 @@ Those counts ran above the metadata-based expectation. The MDE assumed about
 83 traded events and 121 traded. The code was frozen, so nothing was changed
 for it.
 
+### Correction, 2026-11-18: dollars a year by row (report format only)
+
+`rsplit_trial60.score()` divided every row's dollar total by the whole
+period's length (7 years for the confirmation, 9 for the design), so the year
+rows and the 2024-2025 row understated their own dollars a year.
+`python/rsplit_report.py` now adds `years_covered` (1 for a year row, 2 for
+2024-2025, the period's length otherwise) to both report CSVs. It recomputes
+`usd_per_yr = events × mean / years_covered` from each row's own aggregates.
+
+- **Unchanged:** no payoff, price or frozen function was touched; every
+  other cell of the two CSVs is byte-identical; the pass checks don't use
+  `usd_per_yr`. The verdict and every number in the table above stand.
+- **Period rows** move by about a cent, since 7 years replaces 2,556
+  days ÷ 365.25. The primary row goes from $54.74 to $54.72.
+- **Rows that change meaningfully:**
+
+| Row | As run ($/yr) | Corrected ($/yr) |
+|---|---:|---:|
+| 2024-2025 (88 events) | 35.6 | **124.6** |
+| 2025 (43 events) | 20.1 | 140.8 |
+| 2024 (45 events) | 15.5 | 108.3 |
+| 2023 (16 events) | 9.0 | 62.6 |
+
+The whole-period figure, about $55 a year, averages over 2019-2022, which
+had 1 to 6 events a year. At the 2024-2025 event rate the same one-share
+rule made about $125 a year per account.
+
 ### What the pass does and does not establish
 
 - **Established:** on 2019-2025, after the rule was frozen and declared, a
