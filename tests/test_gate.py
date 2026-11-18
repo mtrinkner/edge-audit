@@ -76,3 +76,41 @@ def test_the_replication_shrink_is_chosen_by_regime():
     assert g.prior_t_from_design(10.0, 1, "own_design") == pytest.approx(7.4)
     with pytest.raises(ValueError):
         g.shrink_for("whatever_fits")
+
+
+def test_projected_dollars_arithmetic():
+    # reverse split v2: $3.66 an event x (36/136 eligible x 127.3 recent round-ups a year)
+    rate = 36 / 136 * (115 + 148 + 119) / 3
+    assert g.project(3.66, rate) == pytest.approx(123.3, abs=0.1)
+    assert g.project(18.0, 50, cap_usd=540) == 540                # capacity caps the projection
+    w = g.g_worth(14.6, projected=g.project(3.66, rate), role="component", overlap=0.0)
+    assert w["g_worth"] and w["decided_by"] == "projection" and "no ceiling" in w["reason"]
+    k = g.g_worth(7.12, projected=60.0, ceiling=1000.0)            # standalone: the ceiling decides first
+    assert not k["g_worth"] and k["decided_by"] == "ceiling"
+    assert not g.g_worth(7.12, projected=60.0, ceiling=100.3, role="component")["g_worth"]   # projection decides
+
+
+def test_cluster_scaling_picks_the_smaller_t():
+    assert g.expected_clusters(1, 84) == pytest.approx(1.0)
+    assert g.expected_clusters(83, 84) == pytest.approx(84 * (1 - (83 / 84) ** 83))
+    r = g.g_real("event", design_t=5.82, k=2, n_design=36, n_confirm=83, design_clusters=30, confirm_months=84)
+    assert r["scaled_t_clusters"] < r["scaled_t_events"] and r["scaled_t"] == r["scaled_t_clusters"]
+    # few events spread over many months: the cluster count grows with n, so events can be the smaller one
+    q = g.g_real("event", design_t=4.0, k=1, n_design=40, n_confirm=40, design_clusters=10, confirm_months=200)
+    assert q["scaled_t"] == min(q["scaled_t_events"], q["scaled_t_clusters"])
+    assert g.g_real("portfolio", design_t=4.0, n_design=100, n_confirm=100)["scaled_t_clusters"] is None
+
+
+def test_trial_52_is_a_false_pass_under_the_stated_rule():
+    """Design t 10.67 on 2001-2019, inside Jiang-Kelly-Xiu's 1993-2019 sample:
+    replication regime, 58%. P(pass) 0.37 clears 0.25, and the 2020-2026
+    confirmation failed (gross t 1.80): a false pass. At the own-design 26% it
+    would have been about 0.95."""
+    rep = g.g_real("portfolio", design_t=10.67, n_design=228, n_confirm=80, regime="replication")
+    own = g.g_real("portfolio", design_t=10.67, n_design=228, n_confirm=80, regime="own_design")
+    assert rep["p_pass"] == pytest.approx(0.365, abs=0.01) and rep["g_real"]
+    assert own["p_pass"] == pytest.approx(0.954, abs=0.01)
+    cal, summary = g.calibrate()
+    row = cal.set_index("trial").loc[52]
+    assert row["outcome"] == "false pass" and row["shrink_regime"] == "replication"
+    assert summary["false_kills"] == 0 and summary["cases"] >= 7

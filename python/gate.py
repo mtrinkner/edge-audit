@@ -105,13 +105,20 @@ def scale(prior_t: float, n_confirm: float, n_design: float) -> float:
     return prior_t * math.sqrt(n_confirm / n_design)
 
 
+def expected_clusters(n: float, months: int) -> float:
+    """Expected number of distinct months holding at least one of n events
+    spread evenly over the confirmation's months: M(1 - (1 - 1/M)^n)."""
+    return months * (1 - (1 - 1 / months) ** n)
+
+
 def p_pass(scaled_t: float, bar: float = T_BAR) -> float:
     return float(1 - stats.norm.cdf(bar - scaled_t))
 
 
 def g_real(kind: str, *, design_t: float | None = None, k: int = 1, n_design: float | None = None,
            n_confirm: float | None = None, cited_sharpe: float | None = None,
-           years: float | None = None, regime: str = "own_design") -> dict:
+           years: float | None = None, regime: str = "own_design",
+           design_clusters: float | None = None, confirm_months: int | None = None) -> dict:
     """G-REAL from a design estimate (design_t, k, n_design, n_confirm, regime) or a
     cited portfolio Sharpe (cited_sharpe, years)."""
     stat = statistic(kind)
@@ -122,28 +129,51 @@ def g_real(kind: str, *, design_t: float | None = None, k: int = 1, n_design: fl
         src = "cited"
     else:
         prior = prior_t_from_design(design_t, k, regime)
-        scaled, src = scale(prior, n_confirm, n_design), "design"
+        src = "design"
+    by_events = by_clusters = None
+    if src == "design":
+        by_events = scale(prior, n_confirm, n_design)
+        scaled = by_events
+        # an event trade's t is clustered by month: scale by expected clusters too, and keep the smaller
+        if kind == "event" and design_clusters and confirm_months:
+            by_clusters = scale(prior, expected_clusters(n_confirm, confirm_months), design_clusters)
+            scaled = min(by_events, by_clusters)
     p = p_pass(scaled)
-    return {"statistic": stat, "prior_source": src, "e_max_k": expected_max_normal(k) if src == "design" else 0.0,
-            "prior_t": prior, "scaled_t": scaled, "p_pass": p, "g_real": p >= P_MIN}
+    return {"statistic": stat, "prior_source": src, "regime": regime if src == "design" else "cited",
+            "e_max_k": expected_max_normal(k) if src == "design" else 0.0, "prior_t": prior,
+            "scaled_t_events": by_events, "scaled_t_clusters": by_clusters, "scaled_t": scaled,
+            "p_pass": p, "g_real": p >= P_MIN}
 
 
-def g_worth(usd: float, *, ceiling: float | None = None, role: str = "standalone",
-            overlap: float | None = None) -> dict:
-    """Standalone: ceiling first (a ceiling under the bar kills), then the
-    rule. Component: the rule's dollars, with capital overlap reported."""
-    if role == "standalone":
-        if ceiling is not None and ceiling < TIER2_USD:
-            return {"role": role, "g_worth": False, "reason": f"ceiling ${ceiling:,.0f}/yr < ${TIER2_USD:,.0f}"}
-        ok = usd >= TIER2_USD
-        return {"role": role, "g_worth": ok,
-                "reason": f"rule ${usd:,.0f}/yr {'>=' if ok else '<'} ${TIER2_USD:,.0f}"}
+def project(usd_per_unit: float, units_per_yr: float, cap_usd: float | None = None) -> float:
+    """Projected $/yr: design dollars per event (or per month) times the
+    expected current rate, from information known before pricing; capped by
+    capacity (the account's capital) when a cap is given."""
+    v = usd_per_unit * units_per_yr
+    return min(v, cap_usd) if cap_usd is not None else v
+
+
+def g_worth(usd: float, *, projected: float | None = None, ceiling: float | None = None,
+            role: str = "standalone", overlap: float | None = None) -> dict:
+    """The bar is applied to the projection (the design dollars if none is
+    given) AND to the ceiling (projected the same way); says which decided.
+    A ceiling under the bar kills whatever the rule shows."""
+    bar = {"standalone": TIER2_USD, "component": COMPONENT_USD}.get(role)
+    if bar is None:
+        raise ValueError("role is standalone or component")
+    rule = usd if projected is None else projected
+    label = "design" if projected is None else "projection"
+    out = {"role": role, "design_usd": usd, "projected_usd": projected, "ceiling_usd": ceiling, "overlap": overlap}
+    if ceiling is not None and ceiling < bar:
+        return {**out, "g_worth": False, "decided_by": "ceiling",
+                "reason": f"ceiling ${ceiling:,.0f}/yr < ${bar:,.0f}"}
+    ok = rule >= bar
+    reason = f"{label} ${rule:,.0f}/yr {'>=' if ok else '<'} ${bar:,.0f}"
+    if ceiling is None:
+        reason += "; no ceiling computed"
     if role == "component":
-        ok = usd >= COMPONENT_USD
-        ov = "not stated" if overlap is None else f"{overlap:.0%} of its capital competes with the book"
-        return {"role": role, "g_worth": ok, "overlap": overlap,
-                "reason": f"rule ${usd:,.0f}/yr {'>=' if ok else '<'} ${COMPONENT_USD:,.0f}; overlap {ov}"}
-    raise ValueError("role is standalone or component")
+        reason += "; overlap " + ("not stated" if overlap is None else f"{overlap:.0%} of its capital competes with the book")
+    return {**out, "g_worth": ok, "decided_by": label, "reason": reason}
 
 
 def may_declare(real: dict, worth: dict, research_grade_in_writing: bool = False) -> bool:
@@ -161,14 +191,24 @@ def rescreen(path: Path = ROOT / "data" / "gate_rescreen.csv") -> pd.DataFrame:
         if pd.notna(r["cited_sharpe"]):
             g = g_real(r["kind"], cited_sharpe=float(r["cited_sharpe"]), years=float(r["years"]))
         else:
-            g = g_real(r["kind"], design_t=float(r["design_t"]), k=int(r["k"]),
-                       n_design=float(r["n_design"]), n_confirm=float(r["n_confirm"]))
-        ws = g_worth(float(r["usd_per_yr"]), ceiling=num(r["ceiling_usd"]), role="standalone")
-        wc = g_worth(float(r["usd_per_yr"]), role="component", overlap=num(r["overlap"]))
+            g = g_real(r["kind"], design_t=float(r["design_t"]), k=int(r["k"]), regime=r["regime"],
+                       n_design=float(r["n_design"]), n_confirm=float(r["n_confirm"]),
+                       design_clusters=num(r["design_clusters"]),
+                       confirm_months=None if pd.isna(r["confirm_months"]) else int(r["confirm_months"]))
+        proj = project(float(r["usd_per_unit"]), float(r["units_per_yr_current"]), num(r["capacity_cap_usd"]))
+        ceil = (None if pd.isna(r["ceiling_usd_per_unit"]) else
+                project(float(r["ceiling_usd_per_unit"]), float(r["ceiling_units_per_yr_current"])))
+        ws = g_worth(float(r["usd_per_yr"]), projected=proj, ceiling=ceil, role="standalone")
+        wc = g_worth(float(r["usd_per_yr"]), projected=proj, ceiling=ceil, role="component", overlap=num(r["overlap"]))
         rows.append({"idea": r["idea"], "old_verdict": r["old_verdict"], **{k: g[k] for k in
-                     ("statistic", "prior_source", "e_max_k", "prior_t", "scaled_t", "p_pass", "g_real")},
-                     "g_worth_standalone": ws["g_worth"], "standalone_reason": ws["reason"],
-                     "g_worth_component": wc["g_worth"], "component_reason": wc["reason"],
+                     ("statistic", "regime", "e_max_k", "prior_t", "scaled_t_events", "scaled_t_clusters",
+                      "scaled_t", "p_pass", "g_real")},
+                     "design_usd": float(r["usd_per_yr"]), "projected_usd": proj, "projected_ceiling_usd": ceil,
+                     "projection_arithmetic": r["projection_arithmetic"],
+                     "g_worth_standalone": ws["g_worth"], "standalone_decided_by": ws["decided_by"],
+                     "standalone_reason": ws["reason"],
+                     "g_worth_component": wc["g_worth"], "component_decided_by": wc["decided_by"],
+                     "component_reason": wc["reason"],
                      "new_verdict": ("declarable" if may_declare(g, ws) else
                                      "declarable as a book component" if may_declare(g, wc) else
                                      "research-grade only (G-REAL passes; owner must declare in writing)"
@@ -177,6 +217,36 @@ def rescreen(path: Path = ROOT / "data" / "gate_rescreen.csv") -> pd.DataFrame:
     out = pd.DataFrame(rows)
     out.to_csv(ROOT / "reports" / "gate_rescreen.csv", index=False)
     return out
+
+
+# ------------------------------------------------------------------ calibration on known outcomes
+
+def calibrate(path: Path = ROOT / "data" / "gate_calibration.csv") -> tuple[pd.DataFrame, dict]:
+    """Predicted P(pass) under the gate for every declared trial with both a
+    design and a confirmation result, against what happened. No parameter is
+    fitted to this table."""
+    d = pd.read_csv(path)
+    num = lambda v: None if pd.isna(v) else float(v)
+    rows = []
+    for r in d.to_dict("records"):
+        g = g_real(r["kind"], design_t=float(r["design_t"]), k=int(r["k"]), regime=r["shrink_regime"],
+                   n_design=float(r["n_design"]), n_confirm=float(r["n_confirm"]),
+                   design_clusters=num(r.get("design_clusters")),
+                   confirm_months=None if pd.isna(r.get("confirm_months")) else int(r["confirm_months"]))
+        actual = float(r["actual_t"]) >= T_BAR
+        pred = g["p_pass"] >= P_MIN
+        rows.append({**r, "prior_t": g["prior_t"], "scaled_t_events": g["scaled_t_events"],
+                     "scaled_t_clusters": g["scaled_t_clusters"], "scaled_t": g["scaled_t"],
+                     "predicted_p_pass": g["p_pass"], "predicted_pass": pred, "actual_pass": actual,
+                     "outcome": ("true pass" if pred and actual else "false pass" if pred else
+                                 "false kill" if actual else "true kill")})
+    out = pd.DataFrame(rows)
+    out.to_csv(ROOT / "reports" / "gate_calibration.csv", index=False)
+    s = {"cases": len(out), "predicted_passes": int(out["predicted_pass"].sum()),
+         "false_passes": int((out["outcome"] == "false pass").sum()),
+         "false_kills": int((out["outcome"] == "false kill").sum()),
+         "brier": float(((out["predicted_p_pass"] - out["actual_pass"].astype(float)) ** 2).mean())}
+    return out, s
 
 
 def main() -> int:
@@ -190,23 +260,37 @@ def main() -> int:
     r.add_argument("--n-confirm", type=float, help="expected, from information known before pricing")
     r.add_argument("--cited-sharpe", type=float, help="portfolio only: after decay and costs")
     r.add_argument("--years", type=float, help="with --cited-sharpe: confirmation years")
+    r.add_argument("--regime", default="own_design", choices=sorted(SHRINK))
+    r.add_argument("--design-clusters", type=float, help="event trades: month clusters in the design")
+    r.add_argument("--confirm-months", type=int, help="event trades: months in the confirmation")
     w = sub.add_parser("worth")
-    w.add_argument("--usd", type=float, required=True, help="the rule's $/yr on $25k")
-    w.add_argument("--ceiling", type=float)
+    w.add_argument("--usd", type=float, required=True, help="the rule's design $/yr on $25k")
+    w.add_argument("--projected", type=float, help="projection: design $/unit x current rate (see project)")
+    w.add_argument("--ceiling", type=float, help="the ceiling, projected the same way")
     w.add_argument("--role", default="standalone", choices=["standalone", "component"])
     w.add_argument("--overlap", type=float, help="component: share of its capital competing with the book")
     sub.add_parser("rescreen")
+    sub.add_parser("calibrate")
     a = ap.parse_args()
     if a.cmd == "real":
         out = g_real(a.kind, design_t=a.design_t, k=a.k, n_design=a.n_design, n_confirm=a.n_confirm,
-                     cited_sharpe=a.cited_sharpe, years=a.years)
+                     cited_sharpe=a.cited_sharpe, years=a.years, regime=a.regime,
+                     design_clusters=a.design_clusters, confirm_months=a.confirm_months)
     elif a.cmd == "worth":
-        out = g_worth(a.usd, ceiling=a.ceiling, role=a.role, overlap=a.overlap)
+        out = g_worth(a.usd, projected=a.projected, ceiling=a.ceiling, role=a.role, overlap=a.overlap)
+    elif a.cmd == "calibrate":
+        pd.set_option("display.width", 250)
+        out, summ = calibrate()
+        print(out[["trial", "kind", "shrink_regime", "design_t", "k", "prior_t", "scaled_t", "predicted_p_pass",
+                   "actual_t", "outcome"]].round(3).to_string(index=False))
+        print(summ)
+        return 0
     else:
         pd.set_option("display.width", 250)
         out = rescreen()
-        print(out[["idea", "old_verdict", "prior_t", "scaled_t", "p_pass", "g_real", "g_worth_standalone",
-                   "g_worth_component", "new_verdict"]].round(3).to_string())
+        print(out[["idea", "prior_t", "scaled_t_events", "scaled_t_clusters", "p_pass", "g_real", "design_usd",
+                   "projected_usd", "projected_ceiling_usd", "g_worth_standalone", "g_worth_component",
+                   "new_verdict"]].round(3).to_string())
         return 0
     for k, v in out.items():
         print(f"{k}: {round(v, 4) if isinstance(v, float) else v}")

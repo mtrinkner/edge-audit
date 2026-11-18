@@ -19,8 +19,11 @@ all costs. It can come from one edge or from a declared book of edges, and
 must be confirmed out of sample.
 - A book is declared as a book: its components, how capital is split between
   them, and the combined test, all fixed before its confirmation run.
-- A book can't be assembled after the fact from components that passed
-  separately.
+- A book may include components already confirmed on their own (for
+  example trial 60). The book's own test (its declared components, capital
+  split, conflict rules, and combined result) is run only on data after the
+  book's declaration. Past component results never count as the book's
+  confirmation.
 - Not yet achieved. Trial 60 makes about $55 a year over 2019-2025 at one
   share per event, or about $125 a year at the 2024-2025 event rate.
 
@@ -248,6 +251,10 @@ tests: `tests/test_gate.py`.
      prior t = (design t − E[max of K standard normals]) × (1 − 0.26).
      K is the number of rule variants actually evaluated on the design
      period. K = 1 subtracts nothing, and K = 20 subtracts 1.87.
+   - E[max of K] assumes the K variants are independent. Real variants are
+     correlated (trial 60's v1 and v2 trade mostly the same events), and
+     the expected maximum of correlated draws is smaller. The subtraction is
+     therefore conservative: it never understates the search.
    - The shrink comes from McLean and Pontiff (2016), "Does Academic
      Research Destroy Stock Return Predictability?", *Journal of Finance*
      71(1), 5-32. Returns are 26% lower out of sample and 58% lower after
@@ -268,6 +275,13 @@ tests: `tests/test_gate.py`.
 3. **Scale to the confirmation:**
    scaled t = prior t × √(expected confirmation n ÷ design n).
    - n is events for an event trade and months for a portfolio.
+   - **An event trade is scaled both ways, and the smaller t is used.** Its
+     t is clustered by month, so it grows with clusters as well as events.
+     - Expected confirmation clusters = M(1 − (1 − 1/M)^n), the months
+       expected to hold at least one of n events spread over the
+       confirmation's M months.
+     - The cluster ratio is that over the design's actual clusters. Both
+       scaled values are reported.
    - The expected confirmation n comes only from information known before
      pricing: filing counts and years.
 4. **P(pass) = 1 − Φ(3 − scaled t).** Declare only if P(pass) ≥ 0.25.
@@ -277,9 +291,16 @@ or `--kind portfolio --cited-sharpe S --years Y`.
 
 ### G-WORTH: is it worth having?
 
-- **Tier 2 standalone:** at least $1,500 a year on $25k. Size the ceiling
-  first (perfect foresight, limited only by capacity). A ceiling under the
-  bar kills; otherwise the rule itself must clear it.
+G-WORTH projects dollars the way G-REAL projects n.
+- **Projection:** design dollars per event (or per month) × the expected
+  current rate, from information known before pricing (filing counts, IPO
+  counts, years). It is capped by capacity, i.e. the account's capital at
+  the design's average use. The projection is reported beside the design
+  dollars and labeled "projection".
+- **The bar applies to the projection and to the ceiling** (projected the
+  same way). A ceiling under the bar kills. Otherwise the projection
+  decides. The result says which one decided.
+- **Tier 2 standalone:** at least $1,500 a year on $25k.
 - **Book component:** at least $100 a year, and the declaration reports how
   much of its capital would compete with the book's existing pieces.
 
@@ -296,51 +317,113 @@ or `--kind portfolio --cited-sharpe S --years Y`.
 Before either, `docs/SPEC_CHECKLIST.md` is filled in with evidence and
 committed. Benchmark fit, check (c) of the old gate, still applies.
 
-### Re-screen of past kills under the new gate (2026-11-18)
+### Re-screen of past kills under the new gate (2026-11-18, revised)
 
 Every past kill, recorded symmetrically. Nothing is declared from this
-table. Inputs: `data/gate_rescreen.csv`, each with its source; output:
-`reports/gate_rescreen.csv` (`python3 python/gate.py rescreen`).
+table. Inputs: `data/gate_rescreen.csv`, each with its source and the
+projection arithmetic. Output: `reports/gate_rescreen.csv`
+(`python3 python/gate.py rescreen`).
 
-| Idea | Old verdict | Statistic | K | Prior t | Scaled t | P(pass) | G-REAL | G-WORTH standalone | G-WORTH component | New verdict |
-|---|---|---|---:|---:|---:|---:|---|---|---|---|
-| Reverse split v1, 2026-11-02 design numbers | kill: $7/yr; P(pass) 0.042 | event, clustered | 1 | 3.78 | 5.74 | 0.997 | **pass** | fail (ceiling $12) | fail ($7 < $100) | research-grade only |
-| Reverse split v2, trial 60 as declared (reference) | declared by owner override | event, clustered | 2 | 3.89 | 5.91 | 0.998 | **pass** | fail ($15) | fail ($15 < $100) | research-grade only |
-| SPAC trust arb, run 4 | kill: P(pass) 0.025 | calendar monthly | 1 | 2.02 | 1.41 | 0.056 | fail | fail ($278) | pass ($278; 30% overlap) | kill |
-| Merger arb, cash tenders | kill: P(pass) 0.172 | calendar monthly, cited | – | 0.87 | 0.87 | 0.016 | fail | fail ($540) | pass ($540; 100% overlap) | kill |
+| Idea | Old verdict | Prior t | Scaled t (events / clusters) | P(pass) | G-REAL | Design $/yr | Projection $/yr | Ceiling, projected | Standalone | Component | New verdict |
+|---|---|---:|---:|---:|---|---:|---:|---:|---|---|---|
+| Reverse split v1, 2026-11-02 numbers | kill: $7/yr; P 0.042 | 3.78 | 5.74 / 5.66 | 0.996 | **pass** | 7 | 60 | 100 | fail (ceiling) | fail (projection $60) | research-grade only |
+| Reverse split v2, trial 60 as declared | owner override | 3.89 | 5.91 / 5.17 | 0.985 | **pass** | 15 | **123** | not computed | fail (projection) | **pass** (projection; 0% overlap) | declarable as a book component |
+| SPAC trust arb, run 4 | kill: P 0.025 | 2.02 | 1.41 / – | 0.056 | fail | 278 | 915 | 13,113 | fail (projection) | pass (30% overlap) | kill (G-REAL) |
+| Merger arb, cash tenders | kill: P 0.172 | 0.87 (cited) | – | 0.016 | fail | 540 | 540 | not computed | fail (projection) | pass (100% overlap) | kill (G-REAL) |
+
+The projection arithmetic:
+- **Reverse split v2** (as specified): $3.66 an event × (36/136 eligible ×
+  127.3 round-ups a year) = $3.66 × 33.7 = **$123 a year**.
+  - 127.3 is the 2023-2025 average of 115, 148 and 119 round-up events.
+    Those are the v1 parse's counts, published 2026-11-02 before any
+    pricing.
+  - The 136 is v1's design round-up count. On v2's own count of 153, the
+    rate is 30.0 a year and the projection $110.
+  - The confirmation actually made $125 a year in 2024-2025. That was seen
+    after the fact and is not used here.
+- **Reverse split v1:** $7.12 × 9 years ÷ 14 events = $4.58 an event ×
+  (14/136 × 127.3 = 13.1 a year) = $60. The ceiling: $4.12 an event ×
+  24.3 a year = $100.
+- **SPAC run 4:** $278.0 × 11 ÷ 165 entries = $18.53 an entry.
+  - The rate is 15 entries a year × (903 SPAC IPOs in 2021-2025 ÷ 5) ÷
+    (463 in 2010-2020 ÷ 11) = 15 × 4.29 = 64.4 a year, giving $1,193.
+  - That is capped by capital at $278 ÷ 0.30 average invested = **$915**.
+- **Merger arb:** $540 at an assumed 30 deals a year = $18 a deal. 2019-2025
+  had about 50 offers a year, which would give $900, but five $5,000 slots
+  turning about 6 times a year cap it at 30 deals, so **$540**.
 
 Reasons:
-- **Reverse split v1 (the trial 60 regression).** The design's 14 events
-  had a clustered event t of 5.11 (12 clusters).
-  - K = 1, so prior t = 5.11 × 0.74 = 3.78.
-  - The expected confirmation n is 14 × 2.31 (EDGAR events with a CIK), so
-    the scaled t is 5.74 and P(pass) is 0.997.
-  - The old gate's P(pass) of 0.042 came from the wrong statistic, a monthly
-    Sharpe over 108 mostly empty months.
-  - G-WORTH fails both ways. Under the new rules, the owner's research-grade
-    override was the only route, and it was the route taken. Trial 60 then
-    passed.
-- **Reverse split v2.** K = 2, because v1 and v2 were both run on design
-  trades, so 0.56 is subtracted before the shrink. It still passes G-REAL.
-  No v2 ceiling was computed.
-- **SPAC run 4.** The prior t is (2.73 − 0) × 0.74 = 2.02. The confirmation
-  has 60 months against the design's 123, which scales it to 1.41 and
-  P(pass) to 0.056. The kill stands, on G-REAL.
-  - As a book component it would clear $100 a year. Its average capital use
-    is 30% of the account.
-  - Seen data: the 2021-2025 opportunity counts printed on 2026-10-29.
-- **Merger arb.** The new rule requires the cited prior after decay.
-  Mitchell and Pulvino's 0.57, with McLean and Pontiff's 58%
-  post-publication decay, is 0.24, which gives t 0.87 over 13 years and
-  P(pass) 0.016. Even the undecayed 0.57 gives 0.172. The kill stands.
-  - As a book component its base case ($540 a year) would clear $100, but
-    five $5,000 slots use the whole account, so it competes with everything.
+- **Reverse split v1 (the trial 60 regression)** passes G-REAL either way
+  it is scaled. G-WORTH fails both ways, so the owner's research-grade
+  override was the only route, and it was the one taken.
+- **Reverse split v2** passes G-REAL, and its projection clears the $100
+  component bar. No ceiling was computed, so the projection alone decided.
+  It goes into step 4's queue as a candidate book component.
+  - It carries the disclosure that 2019-2025 has now been fully priced.
+  - A component's confirmation comes only from data after the book's
+    declaration (the book rule above).
+- **SPAC run 4 and merger arb stay killed on G-REAL.** Each would clear the
+  component bar in dollars. SPAC's seen data: the 2021-2025 opportunity
+  counts printed 2026-10-29.
 
-**Queue for step 4.** No past kill becomes declarable outside the
-research-grade route. The only G-REAL pass is the reverse-split round-up,
-which is already trial 60. Its Tier 2 role would be as a book component,
-which needs at least $100 a year. It made about $55 a year over 2019-2025,
-and about $125 a year at the 2024-2025 event rate, on one share. Whether that
-qualifies is a step-4 question, and it carries a seen-data disclosure:
-2019-2025 has now been fully priced.
+### Calibration on known outcomes (2026-11-18; grows with every confirmation)
+
+Every declared trial with both a design (or in-sample) and a confirmation
+result. The shrink rule was committed (2aa2efd) before any row was
+computed, and no gate parameter was tuned to the table. Inputs:
+`data/gate_calibration.csv`, each row citing its paper and the paper's
+sample years. Output: `reports/gate_calibration.csv`
+(`python3 python/gate.py calibrate`).
+
+| Trial | Kind | Regime (paper sample) | Design t | K | Scaled t | Predicted P(pass) | Actual t | Outcome |
+|---|---|---|---:|---:|---:|---:|---:|---|
+| 24 | portfolio | own design | 2.66 | 8 | 0.91 | 0.018 | 2.32 | true kill |
+| 47 | portfolio | replication (Faber: US stocks since 1900) | 3.62 | 1 | 1.19 | 0.035 | 2.07 | true kill |
+| 52 | portfolio | replication (Jiang-Kelly-Xiu: 1993-2019) | 10.67 | 1 | 2.66 | **0.365** | 1.80 | **false pass** |
+| 56 | portfolio | replication (Murray-Xia-Xiao: 1963-2022) | 2.03 | 1 | 0.58 | 0.008 | 2.10 | true kill |
+| 57 | portfolio | replication (Murray-Xia-Xiao: 1963-2022) | 3.02 | 1 | 0.78 | 0.013 | −1.01 | true kill |
+| 58 | event | own design | 3.06 | 2 | 1.29 | 0.043 | 0.17 | true kill |
+| 59 | portfolio | replication (Livnat-Mendenhall: 1987-2002) | 1.92 | 2 | 0.48 | 0.006 | 0.70 | true kill |
+| 60 | event | own design | 5.82 | 2 | 5.17 | 0.985 | 14.06 | true pass |
+
+- **Predicted passes:** 2. One failed (trial 52).
+- **Predicted kills that passed:** 0.
+- **Brier score:** 0.017.
+- **Eight cases can't validate a gate.** With one true pass and one false
+  pass, the table can't tell a well-calibrated gate from a lucky one.
+  Every future confirmation adds a row.
+- **Trial 52, the false pass.** The design t of 10.67 is the published
+  effect on 2001-2019, inside the paper's own 1993-2019 sample, so the 58%
+  replication shrink applies. P(pass) is 0.37; under the own-design 26% it
+  would have been 0.95.
+  - It failed: gross t 1.80 in 2020-2026, and about zero net.
+  - The likely reason is a regime change after publication. The signal
+    still predicted gross returns, at about a third of the published
+    Sharpe, while the effect the design measured was the pre-publication
+    one. The trial 57 rebuild of Charting by Machines showed the same
+    pattern, and a 58% average decline doesn't cover a case this far below
+    average.
+- **What each row uses.** Design and actual t are on the trial's own
+  declared statistic: net for trial 59, and gross for 52, 56 and 57, as
+  both their published design estimates and their confirmations were
+  gross. Trial 47 uses excess over T-bills, where its declared test was
+  relative to holding SPY; it failed both ways.
+- **Skipped,** each with no design estimate on the confirmation's metric:
+  - trials 1-23, 26-46 and 48-50, which were single-period tests;
+  - trial 42, void (a look-ahead in its weighting);
+  - trial 53, a verification of published numbers with no confirmation;
+  - trials 51, 54 and 55, abandoned before any result;
+  - trial 25, transferred to the crypto repo.
+- **Sources for the paper samples:**
+  - Jiang-Kelly-Xiu, *Journal of Finance* 78(6), p. 3206 of the Yale-hosted
+    copy: "Our sample runs from 1993 to 2019".
+  - Livnat-Mendenhall, the April 2004 working paper of the 2006 *Journal of
+    Accounting Research* article: "64 quarters in our sample period
+    1987-2002". The published version wasn't retrievable; the overlap with
+    1995-2012 holds either way.
+  - Faber, the 2013 update of the 2007 paper: "examined on the U.S. stock
+    market since 1900".
+  - Murray-Xia-Xiao: the paper wasn't retrievable (paywalled). The period
+    comes from the authors' replication code (`data/cbm_raw/Code/Tables.R`,
+    "196307-202212").
 

@@ -17,7 +17,7 @@ Each item comes from a past mistake. The lesson is in brackets.
 | 5 | **The units and thresholds.** Raw or annualized, per share or per position, percent or basis points, which calendar. [Trial 27's clustering; zoo.py's weekly units; trial 60's dollars a year divided by the wrong years.] | | |
 | 6 | **Does the test statistic match the strategy type (G-REAL)?** Event trades: event-level t, clustered by ex-date month. Portfolios: calendar-time monthly t. State K, the rule variants evaluated on the design period. [The 2026-11-02 gate judged an event trade on a monthly Sharpe.] | | |
 | 7 | **What data from the confirmation period has already been seen?** Every parse, count, plot or published figure, with the date and where it appeared. [SPAC 2021-2025 opportunity counts; trial 60's v1 entry-day counts.] | | |
-| 8 | **Who reviewed the spec, independently of whoever wrote it?** Name them, give the date, and list what they changed. A reviewer handed the author's conclusion doesn't count. | | |
+| 8 | **Who reviewed the spec, independently of whoever wrote it?** The reviewer is the separate review session or a named person, never the author: the session or person that wrote the spec can't review it. Give the reviewer, the date, and what they changed. A reviewer handed the author's conclusion doesn't count. | | |
 
 G-REAL and G-WORTH (`python/gate.py`, docs/METHODOLOGY.md) are computed
 after this checklist and quoted in the declaration.
