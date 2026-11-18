@@ -31,8 +31,8 @@
   "part": "stage",
   "order": 4,
   "stage": "Passed",
-  "count": 0,
-  "source": "python/registry.py trials() on data/strategy_registry.jsonl; no record or annotation reports a pass"
+  "count": 1,
+  "source": "python/registry.py trials() on data/strategy_registry.jsonl; records whose note opens with PASS"
  },
  {
   "part": "stage",
@@ -140,7 +140,7 @@
   "trials": 3,
   "recorded": 2,
   "abandoned": 0,
-  "passed": 0,
+  "passed": 1,
   "gate_kills": 4,
   "status": "open",
   "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"

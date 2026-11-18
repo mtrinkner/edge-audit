@@ -154,24 +154,27 @@ def funnel():
     t = registry.trials()
     kills = pd.read_csv(ROOT / "data" / "gate_kills.csv")
     src = "python/registry.py trials() on data/strategy_registry.jsonl"
+    reg = registry.entries()
+    # a pass is a record whose note opens with PASS (the declared test's verdict)
+    passed = {r["strategy_id"] for r in reg if r["kind"] == "record" and str(r.get("note", "")).startswith("PASS")}
     stages = [("Strategies counted (N)", t["n_trials"], src),
               ("Studies declared", t["declared"], src),
               ("Recorded", t["recorded"], src),
               ("Abandoned", t["abandoned"], src),
-              ("Passed", 0, src + "; no record or annotation reports a pass"),
+              ("Passed", len(passed), src + "; records whose note opens with PASS"),
               ("Killed at the gate, no trial spent", len(kills), "data/gate_kills.csv")]
     rows = [{"part": "stage", "order": i, "stage": s, "count": int(c), "source": so}
             for i, (s, c, so) in enumerate(stages)]
     fam = json.load(open(FAMILIES))
     fam_of = {i: k for k, v in fam.items() if not k.startswith("_") for i in v["ids"]}
-    reg = registry.entries()
     term = {r["strategy_id"]: r["kind"] for r in reg if r["kind"] in ("record", "abandon")}
     by = {}
     for d in (r for r in reg if r["kind"] == "declare"):
         i = int(d["strategy_id"])
         k = d.get("family") or fam_of.get(i, "")
-        b = by.setdefault(k, {"studies": 0, "trials": 0, "recorded": 0, "abandoned": 0})
+        b = by.setdefault(k, {"studies": 0, "trials": 0, "recorded": 0, "abandoned": 0, "passed": 0})
         b["studies"] += 1
+        b["passed"] += d["strategy_id"] in passed
         b["trials"] += max(1, int(d.get("variants", 1)))
         if term.get(d["strategy_id"]) == "record":
             b["recorded"] += 1
@@ -181,8 +184,8 @@ def funnel():
     for k in fam:
         if k.startswith("_"):
             continue
-        b = by.get(k, {"studies": 0, "trials": 0, "recorded": 0, "abandoned": 0})
-        rows.append({"part": "family", "family": k, "label": FAMILY_LABEL[k], **b, "passed": 0,
+        b = by.get(k, {"studies": 0, "trials": 0, "recorded": 0, "abandoned": 0, "passed": 0})
+        rows.append({"part": "family", "family": k, "label": FAMILY_LABEL[k], **b,
                      "gate_kills": int(gk.get(k, 0)), "status": "closed" if fam[k].get("closed") else "open",
                      "source": src + "; data/trial_families.json; data/gate_kills.csv"})
     return rows

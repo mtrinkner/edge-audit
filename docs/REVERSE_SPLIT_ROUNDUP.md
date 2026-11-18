@@ -699,6 +699,25 @@ happens.
    - The trade remains positive in expectation if the rate's lower bound is
      above the p at which the confirmation mean reaches zero. That p is
      below 0.2, from check (c).
+   *Built 2026-11-18: `python/rsplit_ledger.py`, tests in
+   `tests/test_rsplit_ledger.py`.*
+   - It finds companies through EDGAR full-text search on "reverse stock
+     split", "reverse split" and "share consolidation", in the forms v2
+     reads.
+   - It keeps NYSE, Nasdaq and NYSE American listings, using EDGAR's exchange
+     field.
+   - It reads each company's last 120 days of v2 filings with the frozen
+     functions, imported and unchanged.
+   - It appends a row to `data/rsplit/forward/ledger.csv` (git-ignored) only
+     when a split is new or what is known about it changes.
+   - The calendar extends the frozen one with NYSE trading days through 2027.
+   - No prices are read. `summary` prints counts only.
+   - Run it every trading day: the entry day is only the last day that
+     settles before the split, and a short window can fall between weekly
+     runs.
+   - Adding this file changed the `python/` md5, so the confirmation's cached
+     inputs now refuse to be re-read. That is the guard working: the
+     confirmation ran once, at the tag, and the tag still reproduces it.
 4. **Stop rules:**
    - Stop if issuers' cash-in-lieu share among new splits rises enough that
      fewer than 1 qualifying event a month appears for 6 months.

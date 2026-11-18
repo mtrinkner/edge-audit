@@ -5,3 +5,4 @@ trial,family,metric,design,confirm,design_period,confirm_period,source
 57,price_ta,Sharpe,0.71,-0.73,"2015-2022 net, inside the paper's sample","2023-01 to 2025-12 net, frozen model",registry 391c50507004da11cff6ae811f9446382a95694e9966926db878227a5c3a43d1
 58,structural,t,3.06,0.17,"2010-2018, E1 at $40","2019-2025, E1 at $40, Oppenheimer link corrected",registry 5656d0b28a954075852002895401d454b3253bb35f0c94d5c0f1abd1c25ebc36 and 8da8b0f0bc576fc66a2d105d08ee10e2cccf0b089b515073684c79dc3fa6b7d0
 59,earnings_info,t,4.41,1.47,"1995-2012, V1 gross","2013-2025, V1 gross",registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d
+60,structural,t,5.82,14.06,"2010-2018, rule v2, clustered by month","2019-2025, frozen at trial60-frozen",registry c90d313aceb4080fd3ea3353085d9f4ac719a30953bb91c01852efabc0b35945

@@ -60,6 +60,16 @@
   "source": "registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d"
  },
  {
+  "trial": 60,
+  "family": "Structural arbitrage",
+  "metric": "t",
+  "design": 5.82,
+  "confirm": 14.06,
+  "design_period": "2010-2018, rule v2, clustered by month",
+  "confirm_period": "2019-2025, frozen at trial60-frozen",
+  "source": "registry c90d313aceb4080fd3ea3353085d9f4ac719a30953bb91c01852efabc0b35945"
+ },
+ {
   "trial": null,
   "family": "",
   "metric": "luck bar",
