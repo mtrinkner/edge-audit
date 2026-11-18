@@ -255,6 +255,7 @@ def main() -> int:
 # check_* record their result so the script can report every failure at once.
 # They were named test_* once, which let pytest run them and pass whatever they
 # recorded. These two make a recorded failure fail the suite.
+@pytest.mark.slow
 @pytest.mark.skipif(not config.DB_PATH.exists(), reason="no local database")
 def test_lookahead_audit() -> None:
     assert main() == 0, [r for r in results if not r[1]]

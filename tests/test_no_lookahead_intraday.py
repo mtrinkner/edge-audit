@@ -133,12 +133,14 @@ def main() -> int:
 needs_data = pytest.mark.skipif(not DATA.exists(), reason="no local intraday bars")
 
 
+@pytest.mark.slow
 @needs_data
 def test_every_rule_is_causal():
     npass, nfail, ninc = audit()
     assert nfail == 0 and ninc == 0 and npass == len(isg.RULES)
 
 
+@pytest.mark.slow
 @needs_data
 def test_the_audit_catches_the_session_mean_volume_leak():
     """The bug that started this file: a bar compared with its whole session's volume."""
@@ -146,6 +148,7 @@ def test_the_audit_catches_the_session_mean_volume_leak():
     assert audit(leak)[1] == 1
 
 
+@pytest.mark.slow
 @needs_data
 def test_a_rule_that_never_fires_is_inconclusive():
     assert audit({"never": lambda s: np.zeros(len(s), dtype=bool)})[2] == 1

@@ -121,6 +121,7 @@ def test_reverse_split_audit_catches_the_last_qualifying_day_bug(monkeypatch):
     assert rs_mismatches(rs_postponed_event())
 
 
+@pytest.mark.slow
 @needs_rs
 def test_reverse_split_decisions_on_the_real_events():
     lo, hi = rs.SPLIT["design"]
@@ -275,6 +276,7 @@ def spac_differences(full: pd.DataFrame, blind: pd.DataFrame) -> dict:
     return out
 
 
+@pytest.mark.slow
 @needs_spac
 @pytest.mark.parametrize("cutoff", SPAC_CUTOFFS)
 def test_spac_panel_rebuilt_from_truncated_data(tmp_path, cutoff, monkeypatch):
@@ -332,6 +334,7 @@ def pead_differences(full: pd.DataFrame, blind: pd.DataFrame, cutoff: str) -> di
     return out
 
 
+@pytest.mark.slow
 @needs_pead
 def test_pead_events_rebuilt_from_truncated_data(tmp_path, monkeypatch):
     full = pd.read_parquet(pead.CACHE / "events.parquet")

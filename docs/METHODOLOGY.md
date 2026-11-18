@@ -54,6 +54,13 @@ execution cost.
 logic; materialized tables are derived artifacts that can always be regenerated.
 Random seeds are fixed in `python/config.py`.
 
+**Two test tiers** (`pytest.ini`), in the pinned environment:
+- **Fast, on every change:** `pytest -m "not slow"`.
+- **Full, before every declaration and every confirmation run:** `pytest`.
+  The `slow` marker covers the look-ahead audits that rebuild or rescan
+  cached data: the SQL truncation rebuild, the intraday future-swap audit and
+  the event-study truncation audits.
+
 ---
 
 # Methods added during the work
