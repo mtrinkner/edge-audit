@@ -52,7 +52,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 T_BAR = 3.0
 P_MIN = 0.25
-OOS_SHRINK = 0.26               # McLean & Pontiff (2016): out-of-sample decline
+# McLean & Pontiff (2016): returns are 26% lower out of sample, 58% lower after
+# publication. The shrink regime is fixed by what the design period is, never
+# chosen to fit outcomes (docs/METHODOLOGY.md, "The shrink rule"):
+SHRINK = {"own_design": 0.26,      # no overlap: the default
+          "replication": 0.58}     # the design period overlaps the sample period of the
+                                   # specific paper whose signal definition the study uses
+OOS_SHRINK = SHRINK["own_design"]
 TIER2_USD = 1500.0
 COMPONENT_USD = 100.0
 ACCOUNT = 25_000
@@ -80,8 +86,14 @@ def expected_max_normal(k: int) -> float:
     return float(integrate.quad(f, -np.inf, np.inf)[0])
 
 
-def prior_t_from_design(design_t: float, k: int, shrink: float = OOS_SHRINK) -> float:
-    return (design_t - expected_max_normal(k)) * (1 - shrink)
+def shrink_for(regime: str) -> float:
+    if regime not in SHRINK:
+        raise ValueError(f"shrink regime must be one of {sorted(SHRINK)}, not {regime!r}")
+    return SHRINK[regime]
+
+
+def prior_t_from_design(design_t: float, k: int, regime: str = "own_design") -> float:
+    return (design_t - expected_max_normal(k)) * (1 - shrink_for(regime))
 
 
 def prior_t_from_sharpe(sharpe: float, years: float) -> float:
@@ -99,8 +111,8 @@ def p_pass(scaled_t: float, bar: float = T_BAR) -> float:
 
 def g_real(kind: str, *, design_t: float | None = None, k: int = 1, n_design: float | None = None,
            n_confirm: float | None = None, cited_sharpe: float | None = None,
-           years: float | None = None) -> dict:
-    """G-REAL from a design estimate (design_t, k, n_design, n_confirm) or a
+           years: float | None = None, regime: str = "own_design") -> dict:
+    """G-REAL from a design estimate (design_t, k, n_design, n_confirm, regime) or a
     cited portfolio Sharpe (cited_sharpe, years)."""
     stat = statistic(kind)
     if cited_sharpe is not None:
@@ -109,7 +121,7 @@ def g_real(kind: str, *, design_t: float | None = None, k: int = 1, n_design: fl
         prior = scaled = prior_t_from_sharpe(cited_sharpe, years)       # already the confirmation's t
         src = "cited"
     else:
-        prior = prior_t_from_design(design_t, k)
+        prior = prior_t_from_design(design_t, k, regime)
         scaled, src = scale(prior, n_confirm, n_design), "design"
     p = p_pass(scaled)
     return {"statistic": stat, "prior_source": src, "e_max_k": expected_max_normal(k) if src == "design" else 0.0,

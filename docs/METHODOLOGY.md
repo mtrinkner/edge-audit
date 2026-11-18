@@ -248,10 +248,23 @@ tests: `tests/test_gate.py`.
      prior t = (design t − E[max of K standard normals]) × (1 − 0.26).
      K is the number of rule variants actually evaluated on the design
      period. K = 1 subtracts nothing, and K = 20 subtracts 1.87.
-   - The 0.26 is the average out-of-sample decline in McLean and Pontiff
-     (2016), "Does Academic Research Destroy Stock Return Predictability?",
-     *Journal of Finance* 71(1), 5-32. Returns are 26% lower out of sample
-     and 58% lower after publication. It replaces "halve the design Sharpe".
+   - The shrink comes from McLean and Pontiff (2016), "Does Academic
+     Research Destroy Stock Return Predictability?", *Journal of Finance*
+     71(1), 5-32. Returns are 26% lower out of sample and 58% lower after
+     publication. It replaces "halve the design Sharpe". Which one applies is
+     set by the shrink rule below.
+
+   **The shrink rule** (fixed 2026-11-18, before the calibration table was
+   computed):
+   - **Regime = replication (58%)** when the design period overlaps the
+     sample period of the specific paper whose signal definition the study
+     uses. **Otherwise own_design (26%).**
+   - Each calibration row cites that paper and its sample years, taken from
+     the paper itself, not from memory.
+   - The regime follows from what the design period is and is recorded
+     before any P(pass) is computed. No other gate parameter (the t bar,
+     the 0.25 line, the K correction, the scaling) is tuned to the
+     calibration table. With about 7 cases, fitting would overfit the gate.
 3. **Scale to the confirmation:**
    scaled t = prior t × √(expected confirmation n ÷ design n).
    - n is events for an event trade and months for a portfolio.

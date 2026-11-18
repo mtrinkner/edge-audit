@@ -68,3 +68,11 @@ def test_the_rescreen_reproduces_the_recorded_table():
     assert v1["g_real"] and not v1["g_worth_standalone"]
     assert not out.loc[out.index.str.startswith("SPAC")].iloc[0]["g_real"]
     assert not out.loc[out.index.str.startswith("Merger arb")].iloc[0]["g_real"]
+
+
+def test_the_replication_shrink_is_chosen_by_regime():
+    assert g.shrink_for("own_design") == 0.26 and g.shrink_for("replication") == 0.58
+    assert g.prior_t_from_design(10.0, 1, "replication") == pytest.approx(4.2)
+    assert g.prior_t_from_design(10.0, 1, "own_design") == pytest.approx(7.4)
+    with pytest.raises(ValueError):
+        g.shrink_for("whatever_fits")
