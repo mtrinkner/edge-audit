@@ -765,5 +765,18 @@
   "sharpe": 0.206,
   "corrections": 1,
   "result": "FAIL. Confirmation 2013-2025, run once with the code frozen at 3faa345. 116,643 ranked announcements, about 215 positions per leg. V1 (long top SUE decile, short bottom): gross +0.26%/month, t=1.47; net +0.12%, t=0.70, Sharpe 0.21. V2 (top decile minus FF mark\u2026"
+ },
+ {
+  "id": 60,
+  "name": "rsplit_roundup",
+  "family": "Structural arbitrage",
+  "declared": "2026-11-18",
+  "variants": 1,
+  "trials_to_date": 857,
+  "luck_bar": 1.222,
+  "state": "Recorded",
+  "sharpe": 2.59,
+  "corrections": 0,
+  "result": "PASS at trial60-frozen (0b9adfc), run once 2026-11-18. 121 events, mean $3.17, clustered t 14.06 (46 clusters); without top 5 $2.87; p=0.2 both $0.86; 2024-2025 $2.83 (88 events); win 97.5%, worst -$0.08; changed-terms exits 7; $5 fee -$5.64; $54.7/yr; DSR 0.9\u2026"
  }
 ]

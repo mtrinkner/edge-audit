@@ -610,3 +610,97 @@ is final.
     $1.15, or $1.48 with 80% power;
   - clustering by ex-date month widens both;
   - the design mean was $3.66.
+
+## Phase 4: confirmation result (2019-2025, run once on 2026-11-18)
+
+Declared as registry trial 60 (`rsplit_roundup`, family structural, 1
+variant) before any 2019-2025 price was read. Run once at tag trial60-frozen
+(commit 0b9adfc, `python/` md5 5c0f7469…). Every confirmation input carried a
+manifest naming that commit. Recorded exactly as it came out.
+
+**Verdict: PASS.** All five declared criteria hold.
+
+| Check | Bar | Result |
+|---|---|---|
+| (a) mean, clustered t | mean > 0, t ≥ 3 | $3.17 an event, t 14.06 (46 month clusters) |
+| (b) without the 5 largest | mean > 0 | $2.87 |
+| (c) p = 0.2, both classes | mean > 0 | $0.86 |
+| (d) 2024-2025 | mean > 0 | $2.83 (88 events) |
+| (e) events traded | ≥ 30 | 121 |
+
+Reported, not criteria (`reports/rsplit_trial60_confirm.csv` and
+`_summary.csv`):
+
+| | |
+|---|---:|
+| Win rate / median / 10th percentile / worst | 97.5% / $2.83 / $0.70 / −$0.08 |
+| Median return on capital an event | 8.6× |
+| p = 1 | $4.24 an event |
+| $5 commission | **−$5.64 an event** |
+| Exit at the open / 5 days later | $3.27 / $3.05 |
+| Holder class (106) / participant class (15) | $3.35 / $1.84 |
+| $ a year per account | 54.7 |
+| Monthly Sharpe (84 months) / deflated Sharpe at N = 857 | 2.59 / 0.999 |
+| Changed-terms exits (the known conservative bias) | 7 |
+
+By year, events traded: 2019 5, 2020 5, 2021 1, 2022 6, 2023 16, 2024 45,
+2025 43. Every year's mean is positive.
+
+The pipeline counts before pricing were:
+- 1,829 events;
+- 514 with a round-up class known the day before the split;
+- 281 announced under v2;
+- 0 flagged cancelled.
+
+Those counts ran above the metadata-based expectation. The MDE assumed about
+83 traded events and 121 traded. The code was frozen, so nothing was changed
+for it.
+
+### What the pass does and does not establish
+
+- **Established:** on 2019-2025, after the rule was frozen and declared, a
+  share bought before a round-up split and held through it made money on
+  97.5% of events at the assumed p. It is still positive if brokers pass the
+  round-up through only 20% of the time.
+- **Not established: p itself.** Whether a retail broker actually delivers
+  the round-up is assumed (0.8 / 0.4), not observed. No public source
+  measures it. Check (c) bounds the damage but doesn't measure it.
+- **Cost-dependent.** At a $5 commission every event loses. The trade exists
+  only at a $0-commission broker.
+- **Small in dollars.** One share an account, about $55 a year at 2019-2025's
+  event rate. It is a real edge and not an income.
+- **Concentrated in time.** 88 of the 121 events are in 2024-2025, the years
+  this trade became widely discussed. The 2024-2025 mean is still positive.
+  Whether issuers respond by choosing cash in lieu is for the forward
+  ledger to show.
+
+## Phase 5: forward plan (nothing built)
+
+The one unknown the backtest can't answer is p. The forward test measures it
+and, separately, checks that the frozen rule's live signals match what
+happens.
+
+1. **Signal ledger (paper, automated):**
+   - Run the frozen v2 parser weekly on new EDGAR filings.
+   - Write each event it would trade to a ledger: the announcement
+     accession, ratio, effective date, class and the entry day it chose.
+   - Do this before the split, with no price data.
+   - After the split, add the CRSP or vendor outcome. No change to the rule
+     is allowed. A bug becomes a documented correction.
+2. **Broker outcome (manual, done by the owner, not by the code):**
+   - For a pre-registered set of upcoming events, the owner may choose to
+     hold 1 share at a $0-commission broker through the split.
+   - Log whether the broker delivered a whole share, cash, or nothing.
+   - This is the only way to observe p. The log records the broker name and
+     each outcome.
+3. **Pre-registered read-out:**
+   - After 20 broker outcomes, report the observed delivery rate with a
+     binomial interval.
+   - The trade remains positive in expectation if the rate's lower bound is
+     above the p at which the confirmation mean reaches zero. That p is
+     below 0.2, from check (c).
+4. **Stop rules:**
+   - Stop if issuers' cash-in-lieu share among new splits rises enough that
+     fewer than 1 qualifying event a month appears for 6 months.
+   - Stop if the observed delivery rate's upper bound falls under the
+     break-even p.

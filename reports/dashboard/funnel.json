@@ -3,21 +3,21 @@
   "part": "stage",
   "order": 0,
   "stage": "Strategies counted (N)",
-  "count": 856,
+  "count": 857,
   "source": "python/registry.py trials() on data/strategy_registry.jsonl"
  },
  {
   "part": "stage",
   "order": 1,
   "stage": "Studies declared",
-  "count": 59,
+  "count": 60,
   "source": "python/registry.py trials() on data/strategy_registry.jsonl"
  },
  {
   "part": "stage",
   "order": 2,
   "stage": "Recorded",
-  "count": 54,
+  "count": 55,
   "source": "python/registry.py trials() on data/strategy_registry.jsonl"
  },
  {
@@ -136,9 +136,9 @@
   "part": "family",
   "family": "structural",
   "label": "Structural arbitrage",
-  "studies": 1,
-  "trials": 2,
-  "recorded": 1,
+  "studies": 2,
+  "trials": 3,
+  "recorded": 2,
   "abandoned": 0,
   "passed": 0,
   "gate_kills": 4,

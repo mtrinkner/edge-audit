@@ -1,0 +1,2 @@
+period,verdict,a_mean_pos_t_ge_3,b_mean_pos_without_top5,c_mean_pos_at_p_0.2,d_2024_2025_mean_pos,e_at_least_30_events,changed_terms_exits,monthly_sharpe,months,n_trials_registry,deflated_sharpe
+confirm,PASS,True,True,True,True,True,7,2.5908945220709985,84,857,0.9993174269057434
