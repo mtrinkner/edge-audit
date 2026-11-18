@@ -178,7 +178,12 @@ of these went wrong at least once:
 - **Name the information family when declaring a test.** 76% of trials went to
   price patterns before anyone counted.
 
-## Pre-declaration gate (since 2026-10-28)
+## Pre-declaration gate, 2026-10-28 to 2026-11-18 (superseded)
+
+*Replaced by "Pre-declaration gate (since 2026-11-18)" below. It is kept
+because four kills were decided under it. Check (c), benchmark fit, carries
+over unchanged.*
+
 
 Trials 10, 12, 14, 34, 58 and 59 were each declared without asking first
 whether a pass was likely or worth having. Trial 58's edge was real and worth
@@ -221,3 +226,108 @@ the time is compared with T-bills.
 
 If any check fails, the numbers are written into the study's doc, nothing is
 registered, and the trial is not spent.
+
+## Pre-declaration gate (since 2026-11-18): G-REAL and G-WORTH
+
+The old gate asked one question with two numbers. It judged an event trade
+on a monthly calendar-time Sharpe, so months with no events added zeros and
+destroyed power. It also killed trial 60, which then passed its confirmation
+at t = 14. The new gate asks two separate questions. Code: `python/gate.py`;
+tests: `tests/test_gate.py`.
+
+### G-REAL: can a pre-registered test confirm it?
+
+1. **Use the statistic the trial will declare as primary.**
+   - An event trade uses the event-level t, standard errors clustered by
+     ex-date month.
+   - A portfolio uses the calendar-time t of monthly returns.
+2. **Prior t, from one of two sources.**
+   - **A cited published estimate, after decay and costs.** For a
+     portfolio, prior t = Sharpe × √(confirmation years).
+   - **The design estimate, corrected for search:**
+     prior t = (design t − E[max of K standard normals]) × (1 − 0.26).
+     K is the number of rule variants actually evaluated on the design
+     period. K = 1 subtracts nothing, and K = 20 subtracts 1.87.
+   - The 0.26 is the average out-of-sample decline in McLean and Pontiff
+     (2016), "Does Academic Research Destroy Stock Return Predictability?",
+     *Journal of Finance* 71(1), 5-32. Returns are 26% lower out of sample
+     and 58% lower after publication. It replaces "halve the design Sharpe".
+3. **Scale to the confirmation:**
+   scaled t = prior t × √(expected confirmation n ÷ design n).
+   - n is events for an event trade and months for a portfolio.
+   - The expected confirmation n comes only from information known before
+     pricing: filing counts and years.
+4. **P(pass) = 1 − Φ(3 − scaled t).** Declare only if P(pass) ≥ 0.25.
+
+`python3 python/gate.py real --kind event --design-t T --k K --n-design N --n-confirm M`
+or `--kind portfolio --cited-sharpe S --years Y`.
+
+### G-WORTH: is it worth having?
+
+- **Tier 2 standalone:** at least $1,500 a year on $25k. Size the ceiling
+  first (perfect foresight, limited only by capacity). A ceiling under the
+  bar kills; otherwise the rule itself must clear it.
+- **Book component:** at least $100 a year, and the declaration reports how
+  much of its capital would compete with the book's existing pieces.
+
+`python3 python/gate.py worth --usd U --ceiling C` or
+`--role component --overlap F`.
+
+### When a trial may be declared
+
+- G-REAL passes and G-WORTH passes, or
+- G-REAL passes and the owner declares it research-grade in writing. That
+  covers Tier 1 only: a research-grade pass is real but not, on its own,
+  meaningful.
+
+Before either, `docs/SPEC_CHECKLIST.md` is filled in with evidence and
+committed. Benchmark fit, check (c) of the old gate, still applies.
+
+### Re-screen of past kills under the new gate (2026-11-18)
+
+Every past kill, recorded symmetrically. Nothing is declared from this
+table. Inputs: `data/gate_rescreen.csv`, each with its source; output:
+`reports/gate_rescreen.csv` (`python3 python/gate.py rescreen`).
+
+| Idea | Old verdict | Statistic | K | Prior t | Scaled t | P(pass) | G-REAL | G-WORTH standalone | G-WORTH component | New verdict |
+|---|---|---|---:|---:|---:|---:|---|---|---|---|
+| Reverse split v1, 2026-11-02 design numbers | kill: $7/yr; P(pass) 0.042 | event, clustered | 1 | 3.78 | 5.74 | 0.997 | **pass** | fail (ceiling $12) | fail ($7 < $100) | research-grade only |
+| Reverse split v2, trial 60 as declared (reference) | declared by owner override | event, clustered | 2 | 3.89 | 5.91 | 0.998 | **pass** | fail ($15) | fail ($15 < $100) | research-grade only |
+| SPAC trust arb, run 4 | kill: P(pass) 0.025 | calendar monthly | 1 | 2.02 | 1.41 | 0.056 | fail | fail ($278) | pass ($278; 30% overlap) | kill |
+| Merger arb, cash tenders | kill: P(pass) 0.172 | calendar monthly, cited | – | 0.87 | 0.87 | 0.016 | fail | fail ($540) | pass ($540; 100% overlap) | kill |
+
+Reasons:
+- **Reverse split v1 (the trial 60 regression).** The design's 14 events
+  had a clustered event t of 5.11 (12 clusters).
+  - K = 1, so prior t = 5.11 × 0.74 = 3.78.
+  - The expected confirmation n is 14 × 2.31 (EDGAR events with a CIK), so
+    the scaled t is 5.74 and P(pass) is 0.997.
+  - The old gate's P(pass) of 0.042 came from the wrong statistic, a monthly
+    Sharpe over 108 mostly empty months.
+  - G-WORTH fails both ways. Under the new rules, the owner's research-grade
+    override was the only route, and it was the route taken. Trial 60 then
+    passed.
+- **Reverse split v2.** K = 2, because v1 and v2 were both run on design
+  trades, so 0.56 is subtracted before the shrink. It still passes G-REAL.
+  No v2 ceiling was computed.
+- **SPAC run 4.** The prior t is (2.73 − 0) × 0.74 = 2.02. The confirmation
+  has 60 months against the design's 123, which scales it to 1.41 and
+  P(pass) to 0.056. The kill stands, on G-REAL.
+  - As a book component it would clear $100 a year. Its average capital use
+    is 30% of the account.
+  - Seen data: the 2021-2025 opportunity counts printed on 2026-10-29.
+- **Merger arb.** The new rule requires the cited prior after decay.
+  Mitchell and Pulvino's 0.57, with McLean and Pontiff's 58%
+  post-publication decay, is 0.24, which gives t 0.87 over 13 years and
+  P(pass) 0.016. Even the undecayed 0.57 gives 0.172. The kill stands.
+  - As a book component its base case ($540 a year) would clear $100, but
+    five $5,000 slots use the whole account, so it competes with everything.
+
+**Queue for step 4.** No past kill becomes declarable outside the
+research-grade route. The only G-REAL pass is the reverse-split round-up,
+which is already trial 60. Its Tier 2 role would be as a book component,
+which needs at least $100 a year. It made about $55 a year over 2019-2025,
+and about $125 a year at the 2024-2025 event rate, on one share. Whether that
+qualifies is a step-4 question, and it carries a seen-data disclosure:
+2019-2025 has now been fully priced.
+
