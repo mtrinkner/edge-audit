@@ -2,8 +2,8 @@
  {
   "family": "price_ta",
   "label": "Price patterns",
-  "status": "open",
-  "closed_note": "",
+  "status": "closed",
+  "closed_note": "2026-11-17: no study in this family passed. Public price and volume patterns carried no detectable information after costs, and the replicated chart-reading models failed out of sample. No further trials in this family without new data or a new mechanism.",
   "source": "data/trial_families.json"
  },
  {

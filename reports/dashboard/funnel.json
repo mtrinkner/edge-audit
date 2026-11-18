@@ -51,7 +51,7 @@
   "abandoned": 3,
   "passed": 0,
   "gate_kills": 0,
-  "status": "open",
+  "status": "closed",
   "source": "python/registry.py trials() on data/strategy_registry.jsonl; data/trial_families.json; data/gate_kills.csv"
  },
  {
