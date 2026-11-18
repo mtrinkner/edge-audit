@@ -1,5 +1,39 @@
 # Methodology
 
+## The goal
+
+The search has two targets, in order. A study is judged against the first
+before anyone asks about the second.
+
+**Tier 1, REAL.** A pre-registered trial passes its declared test with
+t ≥ 3. The test is declared before any confirmation-period outcome is seen.
+The trial is counted in the registry, and its Sharpe is deflated by the
+number of trials, as described in "Multiple comparisons" and "Scoring rules"
+below.
+- Achieved once: trial 60, reverse-split round-ups, 2019-2025. Its clustered
+  event-level t was 14.06 (registry entries for trial 60;
+  docs/REVERSE_SPLIT_ROUNDUP.md).
+
+**Tier 2, MEANINGFUL.** At least $1,500 a year on a $25,000 account, after
+all costs. It can come from one edge or from a declared book of edges, and
+must be confirmed out of sample.
+- A book is declared as a book: its components, how capital is split between
+  them, and the combined test, all fixed before its confirmation run.
+- A book can't be assembled after the fact from components that passed
+  separately.
+- Not yet achieved. Trial 60 makes about $55 a year over 2019-2025 at one
+  share per event, or about $125 a year at the 2024-2025 event rate.
+
+**Constraints**
+- **t ≥ 3 stays.** It is the bar for every confirmation, standalone or
+  book.
+- **"Standalone" is relaxed: books are allowed.** A small edge that is real
+  (Tier 1) can count toward Tier 2 as a component of a declared book.
+- **"Public data" is relaxed over time.** Getting better data (licensed
+  databases, vendor feeds) is a parallel track. A trial on new data still
+  follows every rule here, and the data's terms decide what can be
+  committed.
+
 ## Point-in-time discipline
 
 A feature on date *t* may read data from dates ≤ *t*. A label may read data from
