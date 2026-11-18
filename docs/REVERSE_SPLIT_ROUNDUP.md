@@ -374,3 +374,141 @@ reached only if every one were tradeable, in the busiest year on record.
   Found after the gate ran. The error only drops events, never adds them, and
   the bound above shows the verdict holds without it. Not fixed: a
   post-outcome change, and the trial is killed.
+
+---
+
+# Trial 60 (from 2026-11-17): event-level confirmation, by owner decision
+
+The owner decided on 2026-11-17 to run this as trial 60 despite the
+2026-11-02 gate kill. The override and its reasons go in the declaration.
+This section records the design-period work done before it.
+
+## Phase 1: the announcement rule (design period 2010-2018 only)
+
+### Diagnosis: where the terms first became public
+
+40 of the 95 design round-up events v1 couldn't announce (seed 63) were
+checked by hand. Every filing the company made in the 180 days before the
+split was read in full (`data/rsplit/full/`, git-ignored), except ownership
+forms, Form D, S-8 and correspondence.
+
+| Where the ratio and date first appeared together | Events |
+|---|---:|
+| An 8-K or 8-K exhibit accepted the last trading day before the split or later | 17 |
+| An 8-K exhibit early enough to trade (EX-99.1, 5 trading days ahead) | 1 |
+| An 8-K with the ratio and only an assumed date (a blackout notice) | 1 |
+| A fixed ratio in a proxy, information statement or 8-K, with no date until the split-day filing | 6 |
+| No pre-split EDGAR filing with the final ratio | 15 |
+| A definitive 14C or DEF 14A with a fixed ratio and a date | 0 |
+| A prospectus with both | 0 |
+
+The 15 announced by a press release not filed on EDGAR, or only on or after
+the split day. Off-EDGAR sources weren't searched. The counts are in
+`reports/rsplit_trial60_diagnosis.csv`.
+
+**The binding constraint is timing, not the filing type.** Most companies
+file the terms the day before the split, when no trade can settle in time.
+A wider rule recovers a few events, not most.
+
+### Rule v2 (`python/reverse_split.py`, rule "v2")
+
+- **Sources:**
+  - every document of every 8-K and 8-K/A, whatever its items, including
+    exhibits such as a press release filed as "EX-9.01" and certificates of
+    amendment;
+  - DEF and PRE 14A and 14C;
+  - 424B prospectuses and S-1/S-3 registration statements, with
+    amendments;
+  - all filed from 120 days before the ex date to 10 days after.
+- **Announcement:** the first filing, usable from the trading day after its
+  acceptance, that states both:
+  - a single ratio: no range, list or "up to";
+  - an effective or split-adjusted trading date on or after its own
+    acceptance date.
+- **Which forms count:** a ratio counts from 8-Ks, definitive proxies and
+  information statements, and prospectuses, but not from preliminary
+  proxies. In a proxy, information statement or prospectus, the ratio must
+  sit within 800 characters of the future date, because prospectuses list
+  earlier splits.
+- **Date wording:** the date written after "split-adjusted basis" wins over
+  a legal effective time written before it. "N:1" and "N-to-one" ratios and
+  "the amendment will be effective on [date]" are read.
+- **Class:** a fractional-share sentence counts only near a mention of the
+  reverse split. It doesn't count when it's about conversions, exercises,
+  debentures, purchasers, investors, advances, service fees or dividends. A
+  prospectus states no class.
+- **Cancellation:**
+  - only a sentence stating that the split has been abandoned, withdrawn,
+    cancelled, postponed indefinitely, or will not be effected;
+  - any condition, reservation or covenant ("if", "may", "would", "any",
+    "deemed", "unless") disqualifies it;
+  - it counts only in a filing later than the announcement.
+  - Changed terms in a later filing remain a change of terms, as in v1.
+  - v1's regex flagged 92 of the 136 design round-up events. A first v2
+    regex still flagged 35 filings, all reservations or financing
+    covenants. The final rule flags none in the design period.
+- **Freeze guard:** the confirmation period's v2 filings are downloaded and
+  parsed only from a clean checkout of the `trial60-frozen` tag.
+- **v1 is unchanged** and still reproduces the gate.
+
+Tests: `tests/test_reverse_split.py` covers each new source on verbatim
+fixtures, range and "up to" ratios that must not count, past dates, the
+class context, "N:1" ratios, and the cancellation rule.
+
+### Hand validation of v2 (independent reviewers, blind to the parser)
+
+| Round | Use | Announcement ±1 business day | Ratio | Class |
+|---|---|---:|---:|---:|
+| seed 64, 30 events | failed the 90% bar; its findings fixed the rule | 77% | 77% | 73% |
+| **seed 66, 30 fresh events** | **untouched: parser md5 ca19f840 recorded before the draw** | **87% raw, 90% adjudicated** | **93%** | **93%** |
+
+How to read the seed-66 round:
+- **Class** is the class stated in filings accepted before the split day, as
+  the reviewers were instructed. My scoring script first compared it with
+  the class known the day before the split, which gives 77%. Five of the
+  differences are 8-Ks accepted on the last day before the split, which the
+  trade can't use anyway.
+- **Announcement misses (4):**
+  - two parser misses: "the NYSE has set the effective date … for
+    February 27", and a ratio stated away from the word "reverse";
+  - one event with an earlier, separate split in the same filing window
+    (W10);
+  - one the reviewer marked borderline. The filing has no split-adjusted
+    date, so the parser's "none" holds on adjudication.
+- **Every miss is safe:** an event left unannounced or UNKNOWN. None is a
+  false round-up.
+- **Not fixed:** the seed-66 round is the measurement.
+- **Overlap:** the earlier rounds' event lists weren't saved, so "fresh"
+  means not drawn in this session's two samples.
+
+### Design run, rule v2 (design work, not a gate decision)
+
+`python3 python/rsplit_trial60.py design` writes `reports/rsplit_trial60_design.csv`.
+
+| | v2 design |
+|---|---:|
+| Events traded | 36 (v1: 14) |
+| Mean / median $ per event, primary p | 3.66 / 2.38 |
+| Win rate | 97% |
+| Event-level t, clustered by ex-date month | 5.82 |
+| Top 5 events' share of profit | 39% |
+| $ a year per account | 14.6 |
+
+## Pre-committed symmetric audit of the v2 design run (fixed before any trade is inspected)
+
+1. **Sample**, from `data/rsplit/trades_v2_design.csv`:
+   - the 20 best by P&L at the primary p;
+   - the 20 worst;
+   - 20 more drawn at random from the rest, sorted by (ex date, permno),
+     with `numpy.random.default_rng(65)`.
+   - With 36 traded events, the best 20 and worst 20 cover all of them.
+2. **Classes:** the seven from "Pre-committed symmetric audit" above,
+   VALID through NOT-A-SPLIT, each with the filing accession or CRSP row as
+   evidence.
+3. **Fixes:**
+   - only as rules applied to every event, never per-event exclusions;
+   - only for a class appearing 3 or more times;
+   - in both directions alike.
+4. **Then the design run is repeated once** and recorded as final. A later
+   bug is a documented correction next to the frozen result, never instead
+   of it.

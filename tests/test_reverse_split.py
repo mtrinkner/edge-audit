@@ -137,3 +137,109 @@ def test_settling_on_the_split_day_gets_no_round_up():
     r = rs.payoff({"exdt": "2024-06-13", "n_crsp": 10.0}, tl, _quotes(days, eff="2024-06-13"))
     assert r["entry_day"] == "2024-06-12"
     assert r["settle_miss"] and abs(rs.value(r, 1.0) - (0.98 - 1.02)) < 1e-9
+
+
+# ---- rule v2 (trial 60): more sources, and cancellation only by a later filing
+
+def test_v2_reads_a_press_release_filed_as_an_unusual_exhibit():
+    """8-K 0000872248-16-000152, item 7.01: the press release is exhibit
+    "EX-9.01", which v1 never read. v2 also takes the date written after
+    "split-adjusted basis" over the 5:00 pm legal effective time before it."""
+    t = read("exhibit_9_01_press_release_2016.txt")
+    p = rs.parse_filing_v2(t, "2016-05-18")
+    assert p["ratio"] == 4 and not p["ratio_is_range"] and p["effective"] == "2016-05-19"
+    assert rs.effective_date(t) == "2016-05-18"                    # v1's reading, kept for v1
+
+
+def test_v2_reads_a_certificate_of_amendment_exhibit():
+    """8-K 0001213900-18-010718, EX-3.1: ratio, effective time (4:30 pm, so the
+    next trading day) and the round-up are all in the certificate."""
+    p = rs.parse_filing_v2(read("certificate_exhibit_3_1_2018.txt"), "2018-08-10")
+    assert p["ratio"] == 20 and p["effective"] == "2018-08-13" and p["frac_class"] == "ROUNDUP_HOLDER"
+
+
+def test_a_range_or_up_to_ratio_does_not_count():
+    """8-K 0001104659-18-005137 (not less than 1-for-20 and not greater than
+    1-for-40) and 8-K 0001144204-17-065489 (up to 1-for-10)."""
+    for f in ("range_only_8k_2018.txt", "up_to_ratio_8k_2017.txt"):
+        assert rs.ratio(read(f)) == (None, True)
+
+
+def test_v2_takes_a_fixed_ratio_from_a_definitive_proxy_or_prospectus_not_a_preliminary_one():
+    rows = pd.DataFrame([{"status": "ok", "accepted": "2016-05-02", "acc": "a", "form": f, "frac_class": "ROUNDUP_HOLDER",
+                          "ratio": 10, "ratio_is_range": False, "effective": "2016-06-01", "cancel": False}
+                         for f in ("PRE 14A", "DEF 14C", "424B3", "S-1/A", "10-Q")])
+    rows["acc"] = list("abcde")
+    got = {f["form"]: f["ratio"] for f in rs.timeline(rows, "v2")}
+    assert got == {"PRE 14A": None, "DEF 14C": 10, "424B3": 10, "S-1/A": 10, "10-Q": None}
+    assert all(f["ratio"] is None for f in rs.timeline(rows, "v1"))         # v1: 8-Ks only
+
+
+def test_a_split_already_done_announces_nothing():
+    """A prospectus recounting an earlier split states a past date."""
+    t = ("On September 7, 2016, we effected a 1-for-3 reverse stock split of our common stock, "
+         "and the reverse stock split became effective on September 7, 2016.")
+    assert rs.parse_filing_v2(t, "2017-12-04")["effective"] is None
+
+
+def test_v2_cancellation_needs_a_decision_not_a_reservation():
+    """Reservations from 8-K/proxy text (accessions 0000799698-17-000026,
+    0000872248-16-000134, 0000950123-10-081332, 0000950123-11-027493); v1
+    flagged them as cancellations."""
+    for s in read("reservations_not_cancellations.txt").splitlines():
+        assert not rs.cancelled_v2(s), s
+    assert rs.cancelled(read("reservations_not_cancellations.txt"))          # the v1 false positive
+    for s in ("On June 3, 2016, the Board of Directors determined not to proceed with the reverse stock split.",
+              "The Company announced that the reverse stock split has been postponed indefinitely.",
+              "The Company has abandoned the reverse stock split approved at the annual meeting."):
+        assert rs.cancelled_v2(s), s
+
+
+def test_v2_only_a_later_filing_can_cancel_the_announcement():
+    ann = _filing("2016-05-02", ratio=10, effective="2016-05-20", cls="ROUNDUP_HOLDER", cancel=True, rule="v2")
+    k = rs.known_at([ann], "2016-05-10")
+    assert k["announced"] == "2016-05-03" and not k["cancelled"]
+    later = _filing("2016-05-09", cancel=True, rule="v2", acc="y")
+    assert rs.known_at([ann, later], "2016-05-10")["cancelled"]
+    early = _filing("2016-04-01", cancel=True, rule="v2", acc="z")          # an older plan, called off
+    assert not rs.known_at([early, ann], "2016-05-10")["cancelled"]
+    days = [rs.bday("2016-05-03", i) for i in range(12)]
+    assert rs.entry_day([ann], days)[0] is not None                        # v1 would never enter
+    assert rs.entry_day([{**ann, "rule": "v1"}], days)[0] is None
+
+
+def test_v2_announcement_from_a_definitive_information_statement():
+    """DEF 14C 0001193125-10-274627 (accepted 2010-12-06): a fixed 1-for-100
+    ratio and an effective date three weeks later, in one filing."""
+    p = rs.parse_filing_v2(read("information_statement_def14c_2010.txt"), "2010-12-06", "DEF 14C")
+    assert p["ratio"] == 100 and p["effective"] == "2010-12-28"
+
+
+def test_v2_announcement_from_a_prospectus_and_a_prospectus_states_no_class():
+    """424B3 0001437749-16-026589 (accepted 2016-03-02) carries the 8-K text:
+    1-for-20, trading split-adjusted from March 7."""
+    p = rs.parse_filing_v2(read("prospectus_424b3_2016.txt"), "2016-03-02", "424B3")
+    assert p["ratio"] == 20 and p["effective"] == "2016-03-07" and p["frac_class"] == "UNKNOWN"
+
+
+def test_v2_a_prospectus_listing_earlier_splits_announces_nothing():
+    t = ("We effected a 1-for-25 reverse stock split on March 11, 2016 and a 1-for-4 reverse stock split on "
+         "August 15, 2016. " + "x " * 600 + "The offering is expected to close on June 30, 2017, on which date "
+         "the shares will become effective for trading.")
+    assert rs.parse_filing_v2(t, "2017-04-03", "424B5")["ratio"] is None
+
+
+def test_v2_class_ignores_fractional_wording_about_other_instruments():
+    """8-K 0001144204-10-025989: an equity line agreement's "Fractional shares
+    shall be rounded to the next higher whole number" is not the split's class."""
+    t = ("The number of shares of Common Stock that the Investor shall purchase pursuant to each Advance shall be "
+         "determined by dividing the amount of the Advance by the Purchase Price. No fractional shares shall be "
+         "issued. Fractional shares shall be rounded to the next higher whole number of shares.")
+    assert rs.fractional_class_v2(t)[0] == "UNKNOWN"
+    assert rs.fractional_class(t)[0] == "ROUNDUP_HOLDER"                      # v1 read it as the split's
+
+
+def test_v2_reads_n_to_one_ratios():
+    assert rs.parse_filing_v2("The Company will effect a reverse stock split at a ratio of 16:1 which will take "
+                              "effect at the start of trading on May 13, 2010.", "2010-05-12")["ratio"] == 16
+    assert rs.parse_filing_v2("The reverse stock split, on a six-to-one basis, was approved.", "2015-04-23")["ratio"] == 6

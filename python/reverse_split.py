@@ -464,6 +464,296 @@ def parse_filing(t: str) -> dict:
             "effective": effective_date(t), "cancel": cancelled(t)}
 
 
+# ------------------------------------------------------------------ rule v2 (trial 60)
+#
+# v1 read 8-Ks carrying item 5.03, 3.01 or 8.01 (primary document and EX-99
+# only) and took the ratio from 8-Ks alone. A hand diagnosis of 40 design
+# events it couldn't announce (seed 63, docs/REVERSE_SPLIT_ROUNDUP.md) found
+# the terms in other places: an 8-K under item 7.01 whose press release was
+# filed as "EX-9.01", certificates of amendment (EX-3.1) stating the ratio and
+# effective time, and ratios fixed in proxies. v2 reads every document of every
+# 8-K, definitive proxies and information statements, and prospectuses. The
+# announcement is still the first filing stating BOTH a single ratio and an
+# effective date, usable from the trading day after its acceptance.
+#
+# v1's cancellation regex matched the standard reservation that the board "may
+# abandon" the split, so 12 design announcements were cancelled by their own
+# filing. v2 counts only a statement that the split HAS been abandoned,
+# withdrawn, cancelled or postponed indefinitely, or WILL NOT be effected, and
+# only in a filing later than the announcement. New terms in a later filing are
+# handled as changed terms, as in v1.
+
+V2_FORMS = re.compile(r"^(?:8-K|8-K/A|DEF 14A|DEF 14C|PRE 14A|PRE 14C|424B\d|S-1|S-1/A|S-3|S-3/A)$")
+V2_RATIO_FORMS = re.compile(r"^(?:8-K|8-K/A|DEF 14A|DEF 14C|424B\d|S-1|S-1/A|S-3|S-3/A)$")   # not preliminary proxies
+FULL = CACHE / "full"
+_RS = r"reverse\s+(?:stock\s+)?split"
+_CANCEL2 = re.compile(
+    rf"(?:(?:has|have|had)\s+)?(?:determined|decided|elected|resolved)\s+not\s+to\s+(?:effect|implement|proceed)[^.]{{0,80}}?{_RS}|"
+    rf"(?:has|have|had)\s+(?:abandoned|withdrawn|cancell?ed|terminated)[^.]{{0,40}}?{_RS}|"
+    rf"{_RS}[^.]{{0,80}}?(?:has|have)\s+been\s+(?:abandoned|withdrawn|cancell?ed|terminated|postponed\s+indefinitely)|"
+    rf"(?:postponed|delayed|suspended)\s+indefinitely[^.]{{0,80}}?{_RS}|{_RS}[^.]{{0,80}}?(?:postponed|delayed)\s+indefinitely|"
+    rf"\bwill\s+not\s+(?:effect|implement|proceed\s+with|complete)\s+the\s+(?:proposed\s+)?{_RS}",
+    re.I)
+# a sentence that only reserves the right, states a condition or a covenant
+_CONDITIONAL = re.compile(r"\b(?:if|unless|until|should|may|might|could|would|whether|deemed|in\s+(?:such|that)\s+"
+                          r"(?:case|event)|in\s+the\s+event|discretion|without|except|any|prior\s+to)\b", re.I)
+
+
+def cancelled_v2(t: str) -> bool:
+    """A statement that the split has been called off, not a reservation that
+    it may be, a condition under which it would be, or a financing covenant
+    that the company won't do one: the whole sentence holding the match must
+    be free of "if", "unless", "would", "deemed", "any" and the like."""
+    for s in sentences(t):
+        if _CANCEL2.search(s) and not _CONDITIONAL.search(s):
+            return True
+    return False
+
+
+def full_documents(cik: str, acc: str) -> list[tuple[str, str]]:
+    """(type, cleaned text) of every text document in a submission, from the
+    full .txt (one request; cached gzipped in data/rsplit/full/)."""
+    import gzip
+    import edgar_tenders as et
+    import spac_proxy as sp
+    p = FULL / f"{acc}.txt.gz"
+    if not p.exists():
+        raw = sp._fetch(f"https://www.sec.gov/Archives/edgar/data/{int(float(cik))}/{acc}.txt")
+        p.parent.mkdir(parents=True, exist_ok=True)
+        tmp = p.with_suffix(".part")
+        tmp.write_bytes(gzip.compress(raw))
+        tmp.rename(p)
+    raw = gzip.decompress(p.read_bytes()).decode("latin-1")
+    out = []
+    for d in re.findall(r"<DOCUMENT>(.*?)</DOCUMENT>", raw, re.S):
+        ty = re.search(r"<TYPE>([^\n]+)", d)
+        ty = ty.group(1).strip().upper() if ty else "?"
+        body = re.search(r"<TEXT>(.*)</TEXT>", d, re.S)
+        body = body.group(1) if body else ""
+        if ty in ("GRAPHIC", "ZIP", "XML", "JSON", "PDF") or ty.startswith("EX-101") or "begin 6" in body[:300]:
+            continue
+        out.append((ty, et.clean(body)))
+    return out
+
+
+_SPLIT_ADJ_AFTER = re.compile(rf"(?:split[\s-]+adjusted|post[\s-]+(?:reverse[\s-]+)?split)\s+basis[^.]{{0,160}}?({_DATE})",
+                              re.I)
+
+
+def effective_date_v2(t: str) -> str | None:
+    """effective_date, except that a date written after "split-adjusted basis"
+    wins over one written before it. In "effective at 5:00 pm on May 18 ...
+    will commence trading on a split-adjusted basis as of the open of trading
+    on May 19", v1 read the earlier date."""
+    import spac_proxy as sp
+    for m in _SPLIT_ADJ_AFTER.finditer(sp._flat(t)):
+        d = sp._iso(m.group(1))
+        if d:
+            return bday(d, 0)
+    return effective_date(t)
+
+
+def text_v2(r) -> str:
+    """Every document of an 8-K; the primary document (and any EX-99) of a
+    proxy, information statement or prospectus."""
+    if str(r["form"]).startswith("8-K"):
+        return "\n".join(t for _, t in full_documents(r["cik"], r["acc"]))
+    return text(r)
+
+
+# Validation round seed 64 (30 design events, docs/REVERSE_SPLIT_ROUNDUP.md):
+# reading every 8-K exhibit let fractional-share sentences from financing
+# agreements, warrants, conversions and award plans decide the split's class.
+# These rules, applied to every filing, fix what that round found.
+_RS_CTX = re.compile(r"reverse\s+(?:stock\s+|share\s+)?split|share\s+consolidation|consolidation\s+of\s+(?:the\s+)?"
+                     r"(?:common\s+)?shares|combination\s+of\s+(?:the\s+)?(?:issued\s+)?(?:and\s+outstanding\s+)?"
+                     r"(?:common\s+)?(?:stock|shares)", re.I)
+_OTHER_V2 = re.compile(r"\bconver(?:t|sion|ted)\b|\bexercis|\bdebentures?\b|\bpurchaser|\binvestor\b|\badvance\b|"
+                       r"\bservice\s+fee|\bdividend\b", re.I)
+_UP_V2 = re.compile(r"next\s+(?:higher\s+|largest\s+)?whole\s+(?:[\w-]+\s+){0,2}?share", re.I)
+_NO_CASH_V2 = re.compile(r"\bno\s+(?:stock|share)?holders?\s+will\s+receive\s+cash", re.I)
+_RECORD_NEAR_V2 = re.compile(r"registered\s+(?:stock|share)holders?.{0,150}?fraction|fraction.{0,150}?registered\s+"
+                             r"(?:stock|share)holders?", re.I)
+_RATIO_V2 = re.compile(rf"\b{_N}\s*(?:-|\s)?\s*to\s*(?:-|\s)?\s*(?:1|one)\b(?!\s*(?:-|\s)?\s*(?:for|to))|\b(\d[\d,]*)\s*:\s*1\b",
+                       re.I)
+_EFFECTIVE_V2 = re.compile(rf"(?:amendments?|certificate\s+of\s+amendment|split)\s+(?:will|shall)\s+(?:be(?:come)?\s+)?"
+                           rf"effective\s+(?:on|as\s+of|at)?[^.]{{0,40}}?({_DATE})", re.I)
+PROSPECTUS = re.compile(r"^(?:424B\d|S-1|S-1/A|S-3|S-3/A)$")
+
+
+def fractional_class_v2(t: str) -> tuple[str, str | None]:
+    """fractional_class, counting a sentence only if it, or one of the three
+    before it, mentions the reverse split (or a share consolidation or
+    combination), and never a sentence about conversions, exercises,
+    debentures, purchasers, investors, advances, service fees or dividends."""
+    if _CASH_OUT.search(t):
+        m = _CASH_OUT.search(t)
+        return "CASH", t[max(0, m.start() - 200): m.end() + 200]
+    ss = sentences(t)
+    got = []
+    for i, s in enumerate(ss):
+        if not _FRAC.search(s) or _OTHER_V2.search(s) or not any(_RS_CTX.search(x) for x in ss[max(0, i - 3): i + 1]):
+            continue
+        prev = ss[i - 1] if i else ""
+        c = sentence_class(s, prev)
+        if _NO_CASH_V2.search(s) and c == "CASH":
+            c = None
+        if c is None and _UP_V2.search(s[:1500]) and not _OTHER.search(s[:1500]):
+            c = "ROUNDUP_PARTICIPANT" if _PARTICIPANT.search(s) else "ROUNDUP_HOLDER"
+        if c == "ROUNDUP_HOLDER" and _INSTEAD.search(s) and _RECORD_NEAR_V2.search(prev[-400:]):
+            c = "ROUNDUP_PARTICIPANT"
+        if c:
+            got.append((c, s))
+    if not got:
+        return "UNKNOWN", None
+    n = pd.Series([c for c, _ in got]).value_counts()
+    if "ROUNDUP_PARTICIPANT" in n and n.drop(["ROUNDUP_PARTICIPANT", "ROUNDUP_HOLDER"], errors="ignore").sum() == 0:
+        n = pd.Series({"ROUNDUP_PARTICIPANT": n.sum()})
+    top = n.index[0]
+    if top != "MIXED" and (len(n) == 1 or n.iloc[0] >= 2 * n.iloc[1:].sum()):
+        return top, next(s for k, s in got if k == top)[:600]
+    return "UNKNOWN", got[0][1][:600]
+
+
+def _ratio_matches_v2(flat: str) -> list[tuple[int, int, bool]]:
+    """(position, N, is_range) for every 1-for-N reverse-split ratio, in v1's
+    wording or written "N:1" / "N-to-one"."""
+    out = []
+    ms = list(_RATIO.finditer(flat)) + list(_RATIO_V2.finditer(flat))
+    for m in ms:
+        n = _n(next(g for g in m.groups() if g))
+        ctx = flat[max(0, m.start() - 250): m.end() + 250]
+        if not (n and 2 <= n <= 10000 and re.search(r"reverse|consolidat|combin", ctx, re.I)):
+            continue
+        near = [x for x in ms if x is not m and abs(x.start() - m.start()) < 120]
+        out.append((m.start(), n, bool(_RANGE.search(flat[max(0, m.start() - 150): m.end() + 40]) or near)))
+    return out
+
+
+def _date_matches_v2(flat: str) -> list[tuple[int, int, str]]:
+    """(priority, position, first split-adjusted trading day) for every stated
+    date: 0 written after "split-adjusted basis", 1 written before it, 2 an
+    effective date (v1's patterns, then "the amendment will be effective on
+    [date]"), with v1's after-the-close rule."""
+    import spac_proxy as sp
+    out = []
+    for m in _SPLIT_ADJ_AFTER.finditer(flat):
+        d = sp._iso(m.group(1))
+        if d:
+            out.append((0, m.start(), bday(d, 0)))
+    for m in _SPLIT_ADJ.finditer(flat):
+        if m.group(2):
+            d = sp._iso(m.group(2))
+            if d:
+                out.append((1, m.start(), bday(d, 0)))
+    for pat in (_EFFECTIVE, _EFFECTIVE_V2):
+        for m in pat.finditer(flat):
+            d = sp._iso(next(g for g in m.groups() if g))
+            if d:
+                late = _AFTER_CLOSE.search(flat[max(0, m.start()): m.end() + 60])
+                out.append((2, m.start(), bday(d, 1) if late and bday(d, 0) == d else bday(d, 0)))
+    return out
+
+
+def parse_filing_v2(t: str, accepted: str, form: str = "8-K") -> dict:
+    """What one filing says under v2.
+
+    - The effective date: a date written after "split-adjusted basis" wins,
+      then v1's patterns, then "the amendment will be effective on [date]";
+      only a date on or after the filing's acceptance date counts (a split
+      already done, such as one recounted in a prospectus, announces nothing).
+    - The ratio: a single ratio, in v1's wording or "N:1" / "N-to-one".
+    - In a proxy, information statement or prospectus, the ratio and the date
+      count only if some ratio is stated within 800 characters of some future
+      date: prospectuses list earlier splits' ratios.
+    - The class: fractional_class_v2; a prospectus states no class."""
+    import spac_proxy as sp
+    flat = sp._flat(t)
+    ratios = [(p, n) for p, n, rng in _ratio_matches_v2(flat) if not rng]
+    dated = sorted(x for x in _date_matches_v2(flat) if x[2] >= accepted)
+    dates = [(p, d) for _, p, d in dated]
+    is_rng = any(rng for _, _, rng in _ratio_matches_v2(flat))
+    n = pd.Series([x for _, x in ratios]).value_counts().index[0] if ratios else None
+    eff = dated[0][2] if dated else None
+    if not str(form).startswith("8-K"):
+        pairs = [(rn, d) for rp, rn in ratios for dp, d in dates if abs(rp - dp) <= 800]
+        n, eff = (pairs[0][0], pairs[0][1]) if pairs else (None, None)
+    c, sent = ("UNKNOWN", None) if PROSPECTUS.match(str(form)) else fractional_class_v2(t)
+    return {"frac_class": c, "frac_sentence": sent, "ratio": n, "ratio_is_range": n is None and is_rng,
+            "effective": eff, "cancel": cancelled_v2(t)}
+
+
+def scope_v2(period: str) -> pd.DataFrame:
+    """v2's filings for every event with a CIK in one period: every 8-K and
+    8-K/A, DEF/PRE 14A/14C, 424B prospectuses and S-1/S-3 registration
+    statements, filed from BEFORE days before the ex date to AFTER after."""
+    lo_p, hi_p = SPLIT[period]
+    ev = events()
+    ev = ev[(ev["exdt"] >= lo_p) & (ev["exdt"] <= hi_p)]
+    out = []
+    for cik, g in ev.dropna(subset=["cik"]).groupby("cik"):
+        s = submissions(cik)
+        s = s[s["form"].fillna("").str.match(V2_FORMS)]
+        for r in g.itertuples():
+            lo = (pd.Timestamp(r.exdt) - pd.Timedelta(days=BEFORE)).strftime("%Y-%m-%d")
+            hi = (pd.Timestamp(r.exdt) + pd.Timedelta(days=AFTER)).strftime("%Y-%m-%d")
+            f = s[(s["filingDate"] >= lo) & (s["filingDate"] <= hi)]
+            out.append(f.assign(permno=r.permno, exdt=r.exdt, cik=cik))
+    f = pd.concat(out, ignore_index=True).rename(columns={"accessionNumber": "acc", "filingDate": "filed"})
+    f.to_csv(CACHE / f"filings_v2_{period}.csv", index=False)
+    return f
+
+
+def filings_v2(period: str) -> int:
+    """Download v2's filings for one period. The confirmation period is
+    downloaded only after the rule is frozen (trial 60's declaration)."""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    f = scope_v2(period).drop_duplicates("acc")
+
+    def one(r) -> int:
+        for attempt in range(5):
+            try:
+                text_v2(r)
+                return 0
+            except Exception as e:
+                if "404" in str(e) or attempt == 4:
+                    print(f"  FAILED {r['acc']} {r['form']}: {e}", flush=True)
+                    return 1
+                time.sleep(15 * (attempt + 1))
+
+    todo = [r for _, r in f.iterrows()]
+    print(f"{len(todo):,} v2 filings in scope ({period})", flush=True)
+    failed = 0
+    with ThreadPoolExecutor(6) as ex:
+        for i, k in enumerate(ex.map(one, todo), 1):
+            failed += k
+            if i % 500 == 0:
+                print(f"  {i:,}/{len(todo):,}", flush=True)
+    print(f"done; {failed} failed", flush=True)
+    return 0
+
+
+def _parse_one_v2(r: dict) -> dict:
+    out = {k: r[k] for k in ("permno", "exdt", "cik", "acc", "form", "filed", "accepted", "items")}
+    try:
+        return {**out, "status": "ok", **parse_filing_v2(text_v2(r), str(r["accepted"]), str(r["form"]))}
+    except Exception as e:                                # recorded, never silently dropped
+        return {**out, "status": f"error {type(e).__name__}: {e}"}
+
+
+def parse_v2(period: str) -> int:
+    """data/rsplit/parsed_v2_<period>.csv: one row per (event, filing)."""
+    from concurrent.futures import ProcessPoolExecutor
+    f = pd.read_csv(CACHE / f"filings_v2_{period}.csv", dtype={"cik": str, "items": str})
+    with ProcessPoolExecutor(8) as ex:
+        rows = list(ex.map(_parse_one_v2, [r.to_dict() for _, r in f.iterrows()], chunksize=16))
+    p = pd.DataFrame(rows)
+    p.to_csv(CACHE / f"parsed_v2_{period}.csv", index=False)
+    print(p["status"].str[:20].value_counts().to_string())
+    return 0
+
+
 def _parse_one(r: dict) -> dict:
     out = {k: r[k] for k in ("permno", "exdt", "cik", "acc", "form", "filed", "accepted", "items")}
     try:
@@ -516,16 +806,21 @@ def settlement_days(trade_date: str) -> int:
     return sd(trade_date)
 
 
-def timeline(p: pd.DataFrame) -> list[dict]:
+def timeline(p: pd.DataFrame, rule: str = "v1") -> list[dict]:
     """An event's filings in acceptance order, each usable from the trading day
-    after its acceptance date."""
+    after its acceptance date.
+
+    v1 takes a ratio from 8-Ks only. v2 also takes a single (non-range) ratio
+    from a definitive proxy or information statement, or a prospectus;
+    preliminary proxies still don't count."""
     p = p[p["status"] == "ok"].sort_values(["accepted", "acc"])
+    ok_form = (lambda f: str(f).startswith("8-K")) if rule == "v1" else (lambda f: bool(V2_RATIO_FORMS.match(str(f))))
     return [{"usable": bday(r.accepted, 1) if bday(r.accepted, 0) == r.accepted else bday(r.accepted, 0),
-             "accepted": r.accepted, "acc": r.acc, "form": r.form,
+             "accepted": r.accepted, "acc": r.acc, "form": r.form, "rule": rule,
              "cls": r.frac_class if isinstance(r.frac_class, str) else "UNKNOWN",
              # a proxy proposes (its ratios match CRSP 56% of the time in the design period, 8-Ks 95%):
-             # only an 8-K states the terms the board chose
-             "ratio": None if pd.isna(r.ratio) or r.ratio_is_range or not str(r.form).startswith("8-K") else int(r.ratio),
+             # v1 lets only an 8-K state the terms the board chose
+             "ratio": None if pd.isna(r.ratio) or r.ratio_is_range or not ok_form(r.form) else int(r.ratio),
              "effective": r.effective if isinstance(r.effective, str) else None,
              "cancel": bool(r.cancel)} for r in p.itertuples()]
 
@@ -538,6 +833,9 @@ def known_at(tl: list[dict], t: str) -> dict:
     for f in tl:
         if f["usable"] > t:
             break
+        if f.get("rule") == "v2":
+            # v2: only a filing later than the announcement can cancel it
+            k["cancelled"] = k["cancelled"] or (f["cancel"] and k["announced"] is not None)
         if f["cls"] != "UNKNOWN":
             k["cls"] = f["cls"]
         if f["ratio"]:
@@ -546,7 +844,8 @@ def known_at(tl: list[dict], t: str) -> dict:
             k["effective"] = f["effective"]
         if k["announced"] is None and f["ratio"] and f["effective"]:
             k["announced"] = f["usable"]
-        k["cancelled"] = k["cancelled"] or f["cancel"]
+        if f.get("rule") != "v2":
+            k["cancelled"] = k["cancelled"] or f["cancel"]
     return k
 
 
@@ -657,17 +956,23 @@ def break_even_p(r: dict) -> float:
 
 # ------------------------------------------------------------------ event table, checks, gate
 
-def event_table() -> pd.DataFrame:
+def parsed_path(rule: str = "v1", period: str | None = None) -> Path:
+    return CACHE / ("parsed.csv" if rule == "v1" else f"parsed_v2_{period}.csv")
+
+
+def event_table(rule: str = "v1", period: str | None = None) -> pd.DataFrame:
     """Per event: the terms known the day before the split (class, ratio,
     effective date), the announcement day, and whether the CRSP factor
-    matches the filing ratio. No prices."""
+    matches the filing ratio. No prices. v2 reads one period's parse."""
     ev = events()
-    P = pd.read_csv(CACHE / "parsed.csv", dtype={"cik": str, "items": str})
+    if period:
+        ev = ev[(ev["exdt"] >= SPLIT[period][0]) & (ev["exdt"] <= SPLIT[period][1])]
+    P = pd.read_csv(parsed_path(rule, period), dtype={"cik": str, "items": str})
     by = {k: g for k, g in P.groupby(["permno", "exdt"])}
     rows = []
     for r in ev.itertuples():
         g = by.get((r.permno, r.exdt))
-        tl = timeline(g) if g is not None else []
+        tl = timeline(g, rule) if g is not None else []
         k = known_at(tl, bday(r.exdt, -1))
         rows.append({"permno": r.permno, "exdt": r.exdt, "cik": r.cik, "issuer": r.issuernm, "n_crsp": r.n_crsp,
                      "filings": len(tl), "cls": k["cls"], "ratio": k["ratio"], "effective": k["effective"],
@@ -708,14 +1013,14 @@ def validate() -> int:
     return 0
 
 
-def simulate(period: str, perfect: bool = False) -> pd.DataFrame:
+def simulate(period: str, perfect: bool = False, rule: str = "v1") -> pd.DataFrame:
     """The payoff of every round-up event in a period (one share each)."""
     lo, hi = SPLIT[period]
     md = da.guard("reverse_split")
-    e = pd.read_csv(CACHE / "event_table.csv")
+    e = pd.read_csv(CACHE / ("event_table.csv" if rule == "v1" else f"event_table_v2_{period}.csv"))
     e = e[(e["exdt"] >= lo) & (e["exdt"] <= min(hi, md))]
     ev = events().set_index(["permno", "exdt"])
-    P = pd.read_csv(CACHE / "parsed.csv", dtype={"cik": str, "items": str})
+    P = pd.read_csv(parsed_path(rule, period), dtype={"cik": str, "items": str})
     by = {k: g for k, g in P.groupby(["permno", "exdt"])}
     px = pd.read_parquet(CACHE / "crsp_daily.parquet")
     pg = {p: g for p, g in px.groupby("permno")}
@@ -724,7 +1029,7 @@ def simulate(period: str, perfect: bool = False) -> pd.DataFrame:
         g = by.get((r.permno, r.exdt))
         if g is None or r.permno not in pg:
             continue
-        tl = timeline(g)
+        tl = timeline(g, rule)
         lo_, hi_ = bday(r.exdt, -100), bday(r.exdt, 15)
         q = quotes(pg[r.permno][(pg[r.permno]["dlycaldt"] >= lo_) & (pg[r.permno]["dlycaldt"] <= hi_)])
         o = payoff({"exdt": r.exdt, "n_crsp": r.n_crsp}, tl, q, perfect=perfect)
@@ -819,11 +1124,40 @@ def candidate(g: pd.DataFrame, a: bool, b: bool) -> None:
     (ROOT / "data" / "candidates.json").write_text(json.dumps(c, indent=2) + "\n")
 
 
+def validate_v2(period: str) -> int:
+    """v2's event table for one period, and counts only (no prices)."""
+    e = event_table("v2", period)
+    e.to_csv(CACHE / f"event_table_v2_{period}.csv", index=False)
+    r = e[e["cls"].isin(ROUNDUP)]
+    print(f"{period}: {len(e)} events; {len(r)} round-up class known the day before the split; "
+          f"{int(r['announced'].notna().sum())} announced under v2; {int(r['cancel_seen'].sum())} flagged cancelled")
+    return 0
+
+
+FROZEN_TAG = "trial60-frozen"
+
+
+def require_frozen(period: str) -> None:
+    """The confirmation period's v2 filings are read only by code at the
+    frozen tag (trial 60's declaration): refuse otherwise."""
+    import subprocess
+    if period != "confirm":
+        return
+    git = lambda *a: subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    tag = git("rev-parse", "-q", "--verify", f"refs/tags/{FROZEN_TAG}^{{commit}}")
+    if not tag or git("rev-parse", "HEAD") != tag or git("status", "--porcelain", "--", "python"):
+        raise SystemExit(f"the confirmation period needs a clean checkout of the {FROZEN_TAG} tag")
+
+
 def main(a) -> int:
+    if a.cmd in ("filings_v2", "parse_v2", "validate_v2"):
+        require_frozen(a.period)
+        return {"filings_v2": filings_v2, "parse_v2": parse_v2, "validate_v2": validate_v2}[a.cmd](a.period)
     return {"crsp": crsp, "filings": filings, "parse": parse, "validate": validate, "gate": gate}[a.cmd]()
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd")
+    ap.add_argument("period", nargs="?", default="design", choices=list(SPLIT))
     sys.exit(main(ap.parse_args()))
