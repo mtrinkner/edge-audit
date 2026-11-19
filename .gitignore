@@ -126,3 +126,6 @@ data/spac/
 
 # Reverse-split study cache: CRSP rows (licensed, never commit) and EDGAR filings
 data/rsplit/
+
+# Ken French factors (public; rebuilt by python/ff_factors.py)
+data/ff/*.parquet

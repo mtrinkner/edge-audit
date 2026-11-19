@@ -49,10 +49,19 @@ OPEN, CLOSE = "09:30", "16:00"
 # ------------------------------------------------------------------ calendar
 
 class Calendar:
-    """Trading days (ISO strings)."""
+    """Trading days (ISO strings).
+
+    Past the last known day, lookups use weekdays (EXTEND_DAYS of them) so a
+    date beyond the calendar maps forward, never back to its last day: a
+    clamp would make known_at earlier than the event. `range` returns known
+    days only."""
+
+    EXTEND_DAYS = 800
 
     def __init__(self, days):
         self.days = np.array(sorted(str(d) for d in days))
+        ext = pd.bdate_range(pd.Timestamp(str(self.days[-1])) + pd.Timedelta(days=1), periods=self.EXTEND_DAYS)
+        self._all = np.concatenate([self.days, np.array(ext.strftime("%Y-%m-%d"))])
 
     @classmethod
     def default(cls) -> "Calendar":
@@ -60,20 +69,20 @@ class Calendar:
         return cls(ff["date"].astype(str))
 
     def next_on_or_after(self, d: str) -> str:
-        i = np.searchsorted(self.days, d)
-        return str(self.days[min(i, len(self.days) - 1)])
+        i = np.searchsorted(self._all, d)
+        return str(self._all[min(i, len(self._all) - 1)])
 
     def shift(self, d: str, n: int) -> str:
-        i = np.searchsorted(self.days, d)
-        return str(self.days[min(max(i + n, 0), len(self.days) - 1)])
+        i = np.searchsorted(self._all, d)
+        return str(self._all[min(max(i + n, 0), len(self._all) - 1)])
 
     def last_on_or_before(self, d: str) -> str:
-        i = np.searchsorted(self.days, d, side="right") - 1
-        return str(self.days[max(i, 0)])
+        i = np.searchsorted(self._all, d, side="right") - 1
+        return str(self._all[max(i, 0)])
 
     def is_day(self, d: str) -> bool:
-        i = np.searchsorted(self.days, d)
-        return i < len(self.days) and self.days[i] == d
+        i = np.searchsorted(self._all, d)
+        return bool(i < len(self._all) and self._all[i] == d)
 
     def usable_after(self, d: str) -> str:
         """The trading day after d if d is one, else the next trading day."""

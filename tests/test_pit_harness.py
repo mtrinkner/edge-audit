@@ -117,6 +117,14 @@ def test_known_at_rules():
     assert P.known_at_tbill(pd.Series(["2020-01-15"]), cal).iloc[0] == pd.Timestamp("2020-01-02 09:30")
 
 
+def test_dates_past_the_calendar_map_forward_not_back():
+    cal = P.Calendar(["2020-01-02", "2020-01-03"])
+    # a filing or factor after the last known day must not be dated to that day
+    assert P.known_at_next_open(pd.Series(["2020-01-08"]), cal).iloc[0] == pd.Timestamp("2020-01-09 09:30")
+    assert P.known_at_ff(pd.Series(["2020-01-15"]), cal).iloc[0] == pd.Timestamp("2020-02-28 16:00")
+    assert cal.shift("2020-01-03", 2) == "2020-01-07"
+    assert cal.range("2020-01-01", "2020-12-31") == ["2020-01-02", "2020-01-03"]
+
 def test_asof_returns_only_known_rows_and_the_latest_revision():
     f = pd.DataFrame({"firm": [1, 1, 1, 2], "fact": ["eps", "eps", "eps", "eps"], "value": [1.0, 1.2, 1.1, 5.0],
                       "known_at": pd.to_datetime(["2020-01-02 09:30", "2020-02-03 09:30", "2020-03-02 09:30",

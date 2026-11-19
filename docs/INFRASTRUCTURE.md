@@ -27,7 +27,9 @@ A `Dataset` is a frame plus:
 
 ### known_at rules
 
-Times are exchange-local. OPEN is 09:30 and CLOSE is 16:00.
+Times are exchange-local. OPEN is 09:30 and CLOSE is 16:00. Past the
+calendar's last day, lookups continue on weekdays, so a later date maps
+forward rather than back to the last known day.
 
 | Dataset | known_at | Function |
 |---|---|---|
@@ -91,7 +93,9 @@ The fill rules:
 - **`nav_report(nav, trades, rf_daily, factors)`:** monthly excess return,
   Newey-West t, Sharpe, maximum drawdown, turnover and capacity used. With
   factors it adds alpha, beta and down-market beta. FF5+UMD daily factors
-  aren't on disk yet: only Mkt-RF and RF are.
+  (1963-07-01 to 2026-09-30) are in `data/ff/ff5_umd_daily.parquet`, built by
+  `python/ff_factors.py` from the Ken French library CSVs; the source files'
+  md5s are in `data/ff/ff5_umd_daily.json`. Load with `pit.ff_factors`.
 
 ## The harness (`python/harness.py`)
 
