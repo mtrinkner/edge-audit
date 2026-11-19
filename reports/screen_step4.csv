@@ -1,0 +1,9 @@
+candidate,row,side,rho,prior_t,scaled_t_events,scaled_t_clusters,scaled_t,p_pass,g_real,projected_usd,ceiling_usd,g_worth_standalone,g_worth_component,binding
+cef_tender,primary,long,0.05,0.04200000000000001,0.4581659088147001,0.33547631731141664,0.448566311473847,0.005364036848951925,False,2962.5,10605.75,True,True,G-REAL
+cef_tender,primary_rho_0.20,long,0.2,0.04200000000000001,0.4581659088147001,0.33547631731141664,0.42302587502873995,0.004983470563547088,False,2962.5,10605.75,True,True,G-REAL
+cef_tender,sensitivity_gray_net,long,0.05,0.07056,0.7697187268086959,0.5636002130831798,0.7535914032760628,0.012338924097759607,False,4977.0,10605.75,True,True,G-REAL
+cef_tender,ceiling_gray_gross,long,0.05,0.15036000000000002,1.6402339535566262,1.2010052159748714,1.605867395076372,0.08163878245312572,False,10605.75,10605.75,True,True,G-REAL
+nt_10k_short,primary,short,,,,,,,False,,,,,"not tradeable retail (short side, no borrow data)"
+nt_10k_short,ceiling_gross,short,,,,,,,False,,,,,"not tradeable retail (short side, no borrow data)"
+small_cash_merger_arb,primary,long,,0.8653323061113574,,,0.8653323061113574,0.016394081831179408,False,540.0,,False,True,G-REAL
+item_3_01_short,primary,short,,,,,,,False,,,,,"not tradeable retail (short side, no borrow data)"

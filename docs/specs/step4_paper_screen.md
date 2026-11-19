@@ -161,3 +161,39 @@ No price or return for any of these events was read.
     and Offenberg & Pirinsky (2013 WP), full text;
   - Kadapakkam, Zhang & Yildirim (2021) and Guragai (2022), abstracts and
     preview only.
+
+## Rerun under the revised rules (2026-11-19): step 4 closed
+
+The rule changes were committed first (17fd3a3). Then the screen was rerun
+(`python3 python/screen_step4.py screen`; inputs `data/screen_step4.csv`,
+output `reports/screen_step4.csv`). No verdict changed.
+
+| Candidate | Row | Side | Prior effect (mean/SD × 0.42) | ρ | Scaled t: events (upper) / design effect / clusters (lower) | P(pass) | Projection $/yr | Ceiling $/yr | Binding reason |
+|---|---|---|---:|---:|---|---:|---:|---:|---|
+| CEF tender offers | **primary** (Kadapakkam et al., 0.50% / 5.0%) | long | 0.042 | 0.05 | 0.46 / **0.45** / 0.34 | **0.005** | 2,963 | 10,606 | G-REAL |
+| CEF tender offers | primary at ρ 0.20 | long | 0.042 | 0.20 | 0.46 / 0.42 / 0.34 | 0.005 | 2,963 | 10,606 | G-REAL |
+| CEF tender offers | Gray after his costs (0.84%) | long | 0.071 | 0.05 | 0.77 / 0.75 / 0.56 | 0.012 | 4,977 | 10,606 | G-REAL |
+| CEF tender offers | Gray gross (1.79%) | long | 0.150 | 0.05 | 1.64 / 1.61 / 1.20 | 0.082 | 10,606 | 10,606 | G-REAL |
+| NT 10-K | Bartov-Konchitchki, net and gross | short | – | – | – | none | – | – | **not tradeable retail**: the drift is short-side and the paper has no borrow-adjusted returns |
+| Small cash merger arb | all-deal Sharpe 0.24 | long | – | – | 0.87 (cited portfolio) | 0.016 | 540 | – | G-REAL |
+| 8-K Item 3.01 | no published estimate | short | – | – | – | none | – | – | **not tradeable retail**: the only effect discussed is negative, so a design study would measure a short too |
+
+What changed from the first run:
+- **CEF tenders:** the Gray rows now take 58% instead of 26%. Gray's
+  gross P(pass) fell from 0.19 to 0.08. The primary row barely moved
+  (0.004 → 0.005): it was already at 58%, and the design effect adds a
+  little n back.
+- **NT 10-K and Item 3.01** are out on the retail short-side rule, before
+  any P(pass) is computed. The first run's NT 10-K P(pass) (0.005, gross
+  0.013) is superseded. It would have failed anyway.
+- **Merger arb:** unchanged.
+
+**Step 4 is closed.** No candidate passes, so step 5 has nothing to run.
+Each failure's binding reason:
+- **CEF tender offers:** G-REAL. The only post-2000 estimate (0.5% gross,
+  not significant after costs) is too small for any confirmation to reach
+  t 3.
+- **Small cash merger arb:** G-REAL. There is no small-deal prior, and the
+  size evidence points the wrong way.
+- **NT 10-K and Item 3.01:** not tradeable retail. Their effects are short
+  side only.
