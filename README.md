@@ -1,10 +1,11 @@
 # Can a Small Trader Find a Real Trading Edge?
 
-I've tested **856 strategy variants across 59 studies** on US stock market data:
+I've tested **857 strategy variants across 60 studies** on US stock market data:
 technical analysis, day-trading setups, published anomalies, two published AI
 models that read stock charts, and small contract-backed trades. Each study is on
 a permanent ledger, charged realistic costs, and checked against what pure luck
-would produce. No strategy has passed so far, and the search is ongoing.
+would produce. **One has passed**, a small reverse-split trade (trial 60), and the
+search for something bigger is ongoing.
 
 **Python · SQL · R · Excel · PyTorch · WRDS (CRSP, IBES)**
 
@@ -12,7 +13,7 @@ would produce. No strategy has passed so far, and the search is ongoing.
 
 - **[Edge Audit Live](https://claude.ai/artifact/3Jq6Ykv74Sf34pXKBSC1Qd)**: the
   whole project as an interactive dashboard: how it was tested, every result,
-  the bugs caught, and the full log of all 856 tests.
+  the bugs caught, and the full log of all 857 tests.
 - **[Signal Charts](https://claude.ai/artifact/NfTTDBQTivhiKaU6f5xJxW)**: price
   charts for the 100 most-traded US stocks with every tested signal marked
   where it fired, next to that signal's tested record.
@@ -21,7 +22,7 @@ would produce. No strategy has passed so far, and the search is ongoing.
 
 ## Where it stands
 
-**No edge yet. The more interesting part is why.**
+**One real edge, and it's small. Why the rest failed is the bigger story.**
 
 | What I tested | Tests | Result |
 |---|---|---|
@@ -33,19 +34,45 @@ would produce. No strategy has passed so far, and the search is ongoing.
 | Two published chart-reading AI models, rebuilt exactly (one on CRSP) | 8 | Matched the papers, then failed their declared tests on later years. On one, a weak signal remains before costs (Sharpe about 0.7) and about zero after |
 | Earnings drift (PEAD) on IBES and CRSP, 1995–2025 | 2 | Real but decaying, from 1.11% to 0.26% a month gross. Net +0.12% a month, t = 0.70 |
 | Odd-lot tender offers, 2010–2025 | 2 | Failed as declared (t = 3.06, then 0.17). Entries below the guaranteed price never lost in 32 deals, but pay about $200 a year, and that cut was found after seeing the data |
+| Reverse-split round-ups, 2019–2025 | 1 | **Passed** (121 events, t = 14.1, $3.17 an event). About $55 a year per account, so real but small |
 
-### Killed before spending a test
+### Screened before spending a test
 
-Since October 28, each idea must first show it could pay enough and that a test
-could realistically confirm it.
+Since October 28, each idea must first show that a pre-registered test could
+realistically confirm it. Since November 18 that gate has two parts: is it
+real (chance of passing at least 0.25), and is it worth having ($1,500 a year
+on its own, or $100 as part of a book of small trades).
 
-| Idea | Size | Chance of passing | Needed |
+| Idea | Size | Chance of passing | Verdict |
 |---|---|---|---|
-| Merger arbitrage | About $540/yr (literature estimate) | 0.17 | 0.25 |
-| SPAC trust arbitrage | $277/yr, Sharpe 0.93 | 0.025 | 0.25 |
-| Reverse-split round-ups | $7/yr, $500 bar | 0.04 | 0.25 |
+| Merger arbitrage | About $540/yr (literature estimate) | 0.016 | killed |
+| SPAC trust arbitrage | $915/yr projected | 0.056 | killed |
+| Reverse-split round-ups | $7/yr at first; $123/yr after the rule was rebuilt | 0.985 | rebuilt, declared as trial 60, **passed** |
 
-## The one thing that's real
+Next in the queue, screened on paper before any prices are looked at:
+closed-end fund tender offers, small cash merger arbitrage, and micro-cap
+distress filings ([the protocol](docs/specs/step4_paper_screen.md)).
+
+## The edge that passed: reverse-split round-ups
+
+When a company does a reverse split, many brokers round a holder's fractional
+share **up** to a whole share instead of paying cash for it. Buy a few shares
+just before the split, end up with one whole post-split share, sell it.
+
+- **Declared before the result:** the rule was frozen and tagged
+  (`trial60-frozen`), registered as trial 60, then run once on 2019–2025.
+- **Result:** 121 events, $3.17 an event, t = 14.06 (clustered by month). It
+  held without the top 5 events, at a much lower round-up rate, and in
+  2024–2025 alone.
+- **Size:** about $55 a year per account, and $125 at the 2024–2025 rate. A
+  $5 commission turns it negative, so it only works at zero-commission brokers.
+- **Now:** a forward ledger records each new reverse split as it is announced
+  ([docs/REVERSE_SPLIT_ROUNDUP.md](docs/REVERSE_SPLIT_ROUNDUP.md)).
+
+It is real but small, so it counts as one piece of a book of small trades.
+It is not the goal on its own.
+
+## Real, but not an edge: the overnight premium
 
 Most of the stock market's return happens **overnight**, between the close and
 the next morning's open. Buying the 50 biggest stocks at the close and selling at
@@ -84,7 +111,7 @@ best Sharpe ratio that luck alone produces when every strategy has **zero** real
                  1    0.00
                 10    0.60
                100    0.96    <- the S&P 500 itself was 0.91
-               856    1.22    <- where this project is
+               857    1.22    <- where this project is
 ```
 
 So:
@@ -100,8 +127,15 @@ So:
    going up.
 4. **Automated tests for peeking at the future.** They remove or replace later
    data, then check that no earlier decision changes: SQL features, intraday
-   rules and event studies. Each must also catch a planted leak.
-5. **Ties go against me.** If an hourly bar hit both the stop and the target,
+   rules and event studies. Each must also catch a planted leak. Since step 3,
+   every new study runs on one shared point-in-time data layer and simulator
+   ([docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)), and passes these checks
+   automatically.
+5. **A gate before every test.** It estimates the chance a test can pass, with
+   a haircut for how much the idea was searched, and the dollars it could make
+   ([docs/METHODOLOGY.md](docs/METHODOLOGY.md)). It's checked against every past
+   trial with a known outcome.
+6. **Ties go against me.** If an hourly bar hit both the stop and the target,
    the trade counts as stopped out.
 
 ## Mistakes I caught in my own work
@@ -135,6 +169,9 @@ python3 python/pead.py run                # earnings drift (needs WRDS data)
 python3 python/odd_lot_study.py           # odd-lot tender offers (needs WRDS data)
 python3 python/spac_trial.py gate         # SPAC trust arbitrage (needs WRDS data)
 python3 python/reverse_split.py gate      # reverse-split round-ups (needs WRDS data)
+python3 python/studies/rsplit_pit.py      # trial 60 rebuilt on the shared layer (needs WRDS data)
+python3 python/gate.py rescreen           # past kills under the current gate
+python3 -m pytest -m "not slow"           # fast test tier (full: python3 -m pytest)
 python3 python/deflated_sharpe.py --power --prior-sharpe 0.6 --years 5
 ```
 
@@ -152,8 +189,19 @@ python/
                       the published effects
   pead.py, odd_lot_study.py, spac_trial.py, reverse_split.py
                       earnings drift and the contract-backed trades
+  rsplit_ledger.py    the reverse-split forward ledger
+  gate.py             the pre-declaration gate: is it real, is it worth it
+  pit.py, sim.py, report.py, harness.py
+                      the shared point-in-time layer, simulator, report and
+                      look-ahead harness every new study uses
+  studies/            studies written on that layer
 docs/
   AUDIT_2026-10-14.md why nothing worked, measured; start here
+  METHODOLOGY.md      the goal, the gate, and how every trial is run
+  REVERSE_SPLIT_ROUNDUP.md  the trade that passed
+  INFRASTRUCTURE.md   the shared research layer
+  SPEC_CHECKLIST.md   the checklist every declaration fills in
+  specs/              protocols for the current step
   LIMITATIONS.md      what this data can't tell you
 tests/                lookahead checks (test_no_lookahead_events.py for event
                       studies), ledger integrity, causal sizing
