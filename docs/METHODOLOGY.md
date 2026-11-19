@@ -37,6 +37,13 @@ must be confirmed out of sample.
   follows every rule here, and the data's terms decide what can be
   committed.
 
+## Shared infrastructure (since 2026-11-18)
+
+From step 4 on, every new study uses `python/pit.py`, `python/sim.py` and
+`python/report.py`, and passes the harness (`python/harness.py`). No
+study-specific simulators. See docs/INFRASTRUCTURE.md. Older studies are
+ported only when a later step needs them.
+
 ## Point-in-time discipline
 
 A feature on date *t* may read data from dates ≤ *t*. A label may read data from

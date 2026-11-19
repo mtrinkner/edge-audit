@@ -750,3 +750,22 @@ happens.
      fewer than 1 qualifying event a month appears for 6 months.
    - Stop if the observed delivery rate's upper bound falls under the
      break-even p.
+
+## Rerunning trial 60, and the port to the shared layer (2026-11-18)
+
+- **Rerunning trial 60 itself requires checking out the tag.** `python/` no
+  longer matches `trial60-frozen`, because new modules were added after the
+  confirmation. The confirmation guard therefore refuses to run on today's
+  tree. `git checkout trial60-frozen` reruns it as frozen.
+- **The port.** `python/studies/rsplit_pit.py` rebuilds the study on the
+  shared layer (docs/INFRASTRUCTURE.md), importing the frozen parse, timeline
+  and entry functions unchanged. It reproduces both trades files exactly:
+  design 40 rows, confirmation 125 rows, 0 differences. Its inputs are the
+  tag's outputs, verified by manifest against the tag's own `python/` md5.
+- **Declared look-ahead in the universe.** The study's event universe is
+  CRSP's list of splits that happened, with their actual ex dates. Cancelled
+  splits never enter. The entry window ends at the actual split, not the
+  announced one. The port registers the universe as a declared look-ahead
+  dataset rather than hiding it. A future version should discover events
+  from filings alone, as the forward ledger does.
+
