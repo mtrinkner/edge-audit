@@ -33,7 +33,10 @@ they don't jump ahead.
      prior t = mean/SD × (1 − shrink) × √n, with n the smaller of the
      projected events and the event-equivalent of the expected month
      clusters. It is added to `python/gate.py` with tests, and committed
-     before any candidate is run.
+     before any candidate is run (`g_real_cited_event`).
+   - Using the cluster count treats every event in a month as one. That
+     is the conservative end: the true clustered t lies between √clusters
+     and √events, depending on how correlated a month's events are.
 4. **Rate:**
    - eligible events a year from EDGAR counts, 2019 to 2026Q3;
    - the confirmation n: the events a year times the confirmation's years.

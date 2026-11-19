@@ -4,6 +4,7 @@ See docs/METHODOLOGY.md, "Pre-declaration gate (since 2026-11-18)".
 
     python3 python/gate.py real --kind event --design-t 5.11 --k 1 --n-design 14 --n-confirm 32.3
     python3 python/gate.py real --kind portfolio --cited-sharpe 0.24 --years 13
+    python3 python/gate.py real --kind event --cited-mean 0.02 --cited-sd 0.08 --n-confirm 200 --confirm-months 84
     python3 python/gate.py worth --usd 7 --ceiling 12
     python3 python/gate.py worth --usd 540 --role component --overlap 1.0
     python3 python/gate.py rescreen          # data/gate_rescreen.csv -> reports/gate_rescreen.csv
@@ -145,6 +146,30 @@ def g_real(kind: str, *, design_t: float | None = None, k: int = 1, n_design: fl
             "p_pass": p, "g_real": p >= P_MIN}
 
 
+def g_real_cited_event(cited_mean: float, cited_sd: float, n_confirm: float, confirm_months: int,
+                       regime: str = "replication") -> dict:
+    """G-REAL for an event trade from a published per-event mean and SD (the
+    step 4 paper screen, docs/specs/step4_paper_screen.md).
+
+    The effect per event, mean/SD, is shrunk by the regime (replication 58%
+    when the trial's design would overlap the paper's sample, else 26%), then
+    scaled by the square root of n, where n is the smaller of the projected
+    events and the expected month clusters (events in one month are treated
+    as one, which is conservative for a t clustered by month)."""
+    stat = statistic("event")
+    if cited_sd <= 0 or n_confirm <= 0 or confirm_months < 1:
+        raise ValueError("cited_sd, n_confirm and confirm_months must be positive")
+    effect = cited_mean / cited_sd * (1 - shrink_for(regime))
+    clusters = expected_clusters(n_confirm, confirm_months)
+    n_eff = min(n_confirm, clusters)
+    scaled = effect * math.sqrt(n_eff)
+    p = p_pass(scaled)
+    return {"statistic": stat, "prior_source": "cited_event", "regime": regime, "e_max_k": 0.0,
+            "prior_t": effect, "scaled_t_events": effect * math.sqrt(n_confirm),
+            "scaled_t_clusters": effect * math.sqrt(clusters), "scaled_t": scaled,
+            "p_pass": p, "g_real": p >= P_MIN}
+
+
 def project(usd_per_unit: float, units_per_yr: float, cap_usd: float | None = None) -> float:
     """Projected $/yr: design dollars per event (or per month) times the
     expected current rate, from information known before pricing; capped by
@@ -263,6 +288,8 @@ def main() -> int:
     r.add_argument("--regime", default="own_design", choices=sorted(SHRINK))
     r.add_argument("--design-clusters", type=float, help="event trades: month clusters in the design")
     r.add_argument("--confirm-months", type=int, help="event trades: months in the confirmation")
+    r.add_argument("--cited-mean", type=float, help="event only: published mean return per event")
+    r.add_argument("--cited-sd", type=float, help="event only: published SD of the per-event return")
     w = sub.add_parser("worth")
     w.add_argument("--usd", type=float, required=True, help="the rule's design $/yr on $25k")
     w.add_argument("--projected", type=float, help="projection: design $/unit x current rate (see project)")
@@ -272,7 +299,11 @@ def main() -> int:
     sub.add_parser("rescreen")
     sub.add_parser("calibrate")
     a = ap.parse_args()
-    if a.cmd == "real":
+    if a.cmd == "real" and a.cited_mean is not None:
+        if a.kind != "event":
+            sys.exit("--cited-mean is an event statistic; a portfolio uses --cited-sharpe")
+        out = g_real_cited_event(a.cited_mean, a.cited_sd, a.n_confirm, a.confirm_months, a.regime)
+    elif a.cmd == "real":
         out = g_real(a.kind, design_t=a.design_t, k=a.k, n_design=a.n_design, n_confirm=a.n_confirm,
                      cited_sharpe=a.cited_sharpe, years=a.years, regime=a.regime,
                      design_clusters=a.design_clusters, confirm_months=a.confirm_months)

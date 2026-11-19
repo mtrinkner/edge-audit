@@ -114,3 +114,21 @@ def test_trial_52_is_a_false_pass_under_the_stated_rule():
     row = cal.set_index("trial").loc[52]
     assert row["outcome"] == "false pass" and row["shrink_regime"] == "replication"
     assert summary["false_kills"] == 0 and summary["cases"] >= 7
+
+
+def test_cited_event_path_shrinks_the_effect_and_uses_the_smaller_n():
+    # 0.25 SD per event, replication shrink 58%: effect 0.105
+    r = g.g_real_cited_event(0.02, 0.08, n_confirm=100, confirm_months=84)
+    assert abs(r["prior_t"] - 0.25 * 0.42) < 1e-12
+    clusters = g.expected_clusters(100, 84)
+    assert clusters < 100
+    assert abs(r["scaled_t"] - 0.105 * math.sqrt(clusters)) < 1e-12
+    assert r["statistic"] == g.STATISTIC["event"]
+    # own_design shrinks less
+    assert g.g_real_cited_event(0.02, 0.08, 100, 84, "own_design")["scaled_t"] > r["scaled_t"]
+    # few events: n_confirm binds, not clusters
+    few = g.g_real_cited_event(0.02, 0.08, n_confirm=5, confirm_months=84)
+    assert abs(few["scaled_t"] - 0.105 * math.sqrt(g.expected_clusters(5, 84))) < 1e-12
+    assert few["scaled_t"] <= 0.105 * math.sqrt(5)
+    with pytest.raises(ValueError):
+        g.g_real_cited_event(0.02, 0.0, 100, 84)
