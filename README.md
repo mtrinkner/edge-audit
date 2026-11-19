@@ -47,7 +47,7 @@ on its own, or $100 as part of a book of small trades).
 |---|---|---|---|
 | Merger arbitrage | About $540/yr (literature estimate) | 0.016 | killed |
 | SPAC trust arbitrage | $915/yr projected | 0.056 | killed |
-| Reverse-split round-ups | $7/yr at first; $123/yr after the rule was rebuilt | 0.985 | rebuilt, declared as trial 60, **passed** |
+| Reverse-split round-ups | $7/yr at first; $123/yr after the rule was rebuilt | 0.996 | rebuilt, declared as trial 60, **passed** |
 
 Next in the queue, screened on paper before any prices are looked at:
 closed-end fund tender offers, small cash merger arbitrage, and micro-cap

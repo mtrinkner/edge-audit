@@ -253,7 +253,9 @@ tests: `tests/test_gate.py`.
    - A portfolio uses the calendar-time t of monthly returns.
 2. **Prior t, from one of two sources.**
    - **A cited published estimate, after decay and costs.** For a
-     portfolio, prior t = Sharpe × √(confirmation years).
+     portfolio, prior t = Sharpe × √(confirmation years). For an event
+     trade (since 2026-11-19), prior effect = (mean ÷ SD per event) × (1 −
+     0.58), then × √(n_eff) as in step 3.
    - **The design estimate, corrected for search:**
      prior t = (design t − E[max of K standard normals]) × (1 − 0.26).
      K is the number of rule variants actually evaluated on the design
@@ -273,6 +275,14 @@ tests: `tests/test_gate.py`.
    - **Regime = replication (58%)** when the design period overlaps the
      sample period of the specific paper whose signal definition the study
      uses. **Otherwise own_design (26%).**
+   - **A cited estimate always takes 58%** (added 2026-11-19). A number
+     taken from a published paper is that paper's in-sample result, so when
+     the confirmation comes after publication the 58% post-publication
+     decline applies, whatever the design overlap. 26% applies only to our
+     own design estimates of unpublished signals. The overlap rule stays for
+     our own design estimates that overlap a paper's sample (trial 59).
+     Rerunning the calibration table under it changed no row: every cited
+     row (47, 52, 56, 57) was already at 58%.
    - Each calibration row cites that paper and its sample years, taken from
      the paper itself, not from memory.
    - The regime follows from what the design period is and is recorded
@@ -282,16 +292,33 @@ tests: `tests/test_gate.py`.
 3. **Scale to the confirmation:**
    scaled t = prior t × √(expected confirmation n ÷ design n).
    - n is events for an event trade and months for a portfolio.
-   - **An event trade is scaled both ways, and the smaller t is used.** Its
-     t is clustered by month, so it grows with clusters as well as events.
-     - Expected confirmation clusters = M(1 − (1 − 1/M)^n), the months
-       expected to hold at least one of n events spread over the
-       confirmation's M months.
-     - The cluster ratio is that over the design's actual clusters. Both
-       scaled values are reported.
+   - **An event trade uses a design effect** (since 2026-11-19; it replaced
+     "the smaller of the event and cluster scalings"). Its t is clustered
+     by month, so n is an effective n in each period:
+     n_eff = n ÷ (1 + (m − 1) × ρ).
+     - m is the events per occupied month: the design's n ÷ its actual
+       clusters; the confirmation's n ÷ M(1 − (1 − 1/M)^n), the months
+       expected to hold at least one of n events over M months.
+     - ρ is the within-month correlation of event payoffs, estimated from
+       the design data when it exists (`python3 python/gate.py rho`, an
+       intraclass correlation clipped to [0, 1]). Without design data, the
+       primary row uses ρ = 0.05 and a second row 0.20.
+     - scaled t = prior t × √(n_eff confirmation ÷ n_eff design). One event
+       a month gives n_eff = n; ρ = 1 gives the cluster count.
+     - The events-only t (ρ = 0) is reported as the upper bound, and the
+       cluster-only t (ρ = 1) as the lower.
    - The expected confirmation n comes only from information known before
      pricing: filing counts and years.
 4. **P(pass) = 1 − Φ(3 − scaled t).** Declare only if P(pass) ≥ 0.25.
+5. **Retail short side** (since 2026-11-19). There is no borrow data
+   (Markit isn't in our WRDS). For the $25k retail account, G-REAL and
+   G-WORTH use only the long-side effect, unless the paper reports
+   borrow-adjusted returns. A candidate with no long-side effect is "not
+   tradeable retail" and gets no P(pass).
+6. **No published estimate.** A candidate with none gets a design study on
+   2010-2018 only (prices allowed in the design), on pit/sim/report, and
+   then goes through G-REAL by the design-t path. It becomes a trial only
+   if declared.
 
 `python3 python/gate.py real --kind event --design-t T --k K --n-design N --n-confirm M`
 or `--kind portfolio --cited-sharpe S --years Y`.
@@ -331,10 +358,10 @@ table. Inputs: `data/gate_rescreen.csv`, each with its source and the
 projection arithmetic. Output: `reports/gate_rescreen.csv`
 (`python3 python/gate.py rescreen`).
 
-| Idea | Old verdict | Prior t | Scaled t (events / clusters) | P(pass) | G-REAL | Design $/yr | Projection $/yr | Ceiling, projected | Standalone | Component | New verdict |
+| Idea | Old verdict | Prior t | Scaled t (events / clusters; design effect) | P(pass) | G-REAL | Design $/yr | Projection $/yr | Ceiling, projected | Standalone | Component | New verdict |
 |---|---|---:|---:|---:|---|---:|---:|---:|---|---|---|
-| Reverse split v1, 2026-11-02 numbers | kill: $7/yr; P 0.042 | 3.78 | 5.74 / 5.66 | 0.996 | **pass** | 7 | 60 | 100 | fail (ceiling) | fail (projection $60) | research-grade only |
-| Reverse split v2, trial 60 as declared | owner override | 3.89 | 5.91 / 5.17 | 0.985 | **pass** | 15 | **123** | not computed | fail (projection) | **pass** (projection; 0% overlap) | declarable as a book component |
+| Reverse split v1, 2026-11-02 numbers | kill: $7/yr; P 0.042 | 3.78 | 5.74 / 5.66; ρ 0.45: 5.70 | 0.997 | **pass** | 7 | 60 | 100 | fail (ceiling) | fail (projection $60) | research-grade only |
+| Reverse split v2, trial 60 as declared | owner override | 3.89 | 5.91 / 5.17; ρ 0.26: 5.66 | 0.996 | **pass** | 15 | **123** | not computed | fail (projection) | **pass** (projection; 0% overlap) | declarable as a book component |
 | SPAC trust arb, run 4 | kill: P 0.025 | 2.02 | 1.41 / – | 0.056 | fail | 278 | 915 | 13,113 | fail (projection) | pass (30% overlap) | kill (G-REAL) |
 | Merger arb, cash tenders | kill: P 0.172 | 0.87 (cited) | – | 0.016 | fail | 540 | 540 | not computed | fail (projection) | pass (100% overlap) | kill (G-REAL) |
 
@@ -391,11 +418,16 @@ sample years. Output: `reports/gate_calibration.csv`
 | 57 | portfolio | replication (Murray-Xia-Xiao: 1963-2022) | 3.02 | 1 | 0.78 | 0.013 | −1.01 | true kill |
 | 58 | event | own design | 3.06 | 2 | 1.29 | 0.043 | 0.17 | true kill |
 | 59 | portfolio | replication (Livnat-Mendenhall: 1987-2002) | 1.92 | 2 | 0.48 | 0.006 | 0.70 | true kill |
-| 60 | event | own design | 5.82 | 2 | 5.17 | 0.985 | 14.06 | true pass |
+| 60 | event | own design | 5.82 | 2 | 5.66 | 0.996 | 14.06 | true pass |
 
 - **Predicted passes:** 2. One failed (trial 52).
 - **Predicted kills that passed:** 0.
 - **Brier score:** 0.017.
+- **Rerun 2026-11-19 under the design effect and the cited-58% rule:** no
+  outcome changed. Only the two event rows could move. Trial 58's design ρ
+  is 0 (odd-lot E1, intraclass correlation −0.04, clipped), so its scaled t
+  stays 1.29. Trial 60's is 0.26, which moves its scaled t from 5.17 to 5.66
+  and P(pass) from 0.985 to 0.996.
 - **Eight cases can't validate a gate.** With one true pass and one false
   pass, the table can't tell a well-calibrated gate from a lucky one.
   Every future confirmation adds a row.

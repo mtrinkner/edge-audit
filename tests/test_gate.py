@@ -90,15 +90,39 @@ def test_projected_dollars_arithmetic():
     assert not g.g_worth(7.12, projected=60.0, ceiling=100.3, role="component")["g_worth"]   # projection decides
 
 
-def test_cluster_scaling_picks_the_smaller_t():
+def test_design_effect_n_eff():
+    # a single event per month: n_eff = n, whatever rho
+    assert g.n_eff(84, 1.0, 0.0) == 84 and g.n_eff(84, 1.0, 0.7) == 84
+    # rho = 1: n_eff = n / m, the cluster count
+    assert g.n_eff(120, 3.0, 1.0) == pytest.approx(40.0)
+    # rho = 0: events only, the upper bound
+    assert g.n_eff(120, 3.0, 0.0) == 120
+    assert g.n_eff(120, 3.0, 0.05) == pytest.approx(120 / 1.1)
+    with pytest.raises(ValueError):
+        g.n_eff(10, 2.0, 1.5)
+    # m in the confirmation: expected events per occupied month
+    assert g.m_confirm(1, 84) == pytest.approx(1.0)
+    assert g.m_confirm(83, 84) == pytest.approx(83 / g.expected_clusters(83, 84))
+
+
+def test_design_path_uses_the_design_effect_with_bounds():
     assert g.expected_clusters(1, 84) == pytest.approx(1.0)
-    assert g.expected_clusters(83, 84) == pytest.approx(84 * (1 - (83 / 84) ** 83))
-    r = g.g_real("event", design_t=5.82, k=2, n_design=36, n_confirm=83, design_clusters=30, confirm_months=84)
-    assert r["scaled_t_clusters"] < r["scaled_t_events"] and r["scaled_t"] == r["scaled_t_clusters"]
-    # few events spread over many months: the cluster count grows with n, so events can be the smaller one
-    q = g.g_real("event", design_t=4.0, k=1, n_design=40, n_confirm=40, design_clusters=10, confirm_months=200)
-    assert q["scaled_t"] == min(q["scaled_t_events"], q["scaled_t_clusters"])
+    r = g.g_real("event", design_t=5.82, k=2, n_design=36, n_confirm=83, design_clusters=30, confirm_months=84,
+                 rho=0.2578)
+    nd = g.n_eff(36, 36 / 30, 0.2578)
+    nc = g.n_eff(83, g.m_confirm(83, 84), 0.2578)
+    assert r["scaled_t"] == pytest.approx(r["prior_t"] * math.sqrt(nc / nd))
+    assert r["scaled_t_clusters"] <= r["scaled_t"] <= r["scaled_t_events"]      # rho = 1 <= rho <= rho = 0
+    # with no design estimate of rho, the primary 0.05 applies
+    assert g.g_real("event", design_t=5.82, k=2, n_design=36, n_confirm=83, design_clusters=30,
+                    confirm_months=84)["rho"] == g.RHO_DEFAULT
     assert g.g_real("portfolio", design_t=4.0, n_design=100, n_confirm=100)["scaled_t_clusters"] is None
+
+
+def test_icc_recovers_within_month_correlation():
+    assert g.icc([1, 1, 5, 5, 9, 9], ["a", "a", "b", "b", "c", "c"]) == pytest.approx(1.0)
+    assert g.icc([1, 9, 1, 9, 1, 9], ["a", "a", "b", "b", "c", "c"]) == 0.0           # clipped at 0
+    assert g.icc([1, 2, 3], ["a", "b", "c"]) != g.icc([1, 2, 3], ["a", "b", "c"])     # NaN: no month has two
 
 
 def test_trial_52_is_a_false_pass_under_the_stated_rule():
@@ -116,19 +140,22 @@ def test_trial_52_is_a_false_pass_under_the_stated_rule():
     assert summary["false_kills"] == 0 and summary["cases"] >= 7
 
 
-def test_cited_event_path_shrinks_the_effect_and_uses_the_smaller_n():
-    # 0.25 SD per event, replication shrink 58%: effect 0.105
+def test_cited_event_path_takes_58_percent_and_the_design_effect():
+    assert g.shrink_for("cited") == 0.58
     r = g.g_real_cited_event(0.02, 0.08, n_confirm=100, confirm_months=84)
-    assert abs(r["prior_t"] - 0.25 * 0.42) < 1e-12
-    clusters = g.expected_clusters(100, 84)
-    assert clusters < 100
-    assert abs(r["scaled_t"] - 0.105 * math.sqrt(clusters)) < 1e-12
+    assert r["prior_t"] == pytest.approx(0.25 * 0.42)
+    ne = g.n_eff(100, g.m_confirm(100, 84), g.RHO_DEFAULT)
+    assert r["scaled_t"] == pytest.approx(0.105 * math.sqrt(ne))
+    assert r["scaled_t"] <= r["scaled_t_events"] == pytest.approx(0.105 * 10)
+    assert g.g_real_cited_event(0.02, 0.08, 100, 84, rho=0.20)["scaled_t"] < r["scaled_t"]
     assert r["statistic"] == g.STATISTIC["event"]
-    # own_design shrinks less
-    assert g.g_real_cited_event(0.02, 0.08, 100, 84, "own_design")["scaled_t"] > r["scaled_t"]
-    # few events: n_confirm binds, not clusters
-    few = g.g_real_cited_event(0.02, 0.08, n_confirm=5, confirm_months=84)
-    assert abs(few["scaled_t"] - 0.105 * math.sqrt(g.expected_clusters(5, 84))) < 1e-12
-    assert few["scaled_t"] <= 0.105 * math.sqrt(5)
     with pytest.raises(ValueError):
         g.g_real_cited_event(0.02, 0.0, 100, 84)
+
+
+def test_retail_short_side_needs_borrow_adjusted_returns():
+    s = g.g_real_cited_event(0.09, 0.8, 800, 84, side="short")
+    assert s["tradeable_retail"] is False and s["p_pass"] is None and s["g_real"] is False
+    b = g.g_real_cited_event(0.09, 0.8, 800, 84, side="short", borrow_adjusted=True)
+    assert b["tradeable_retail"] and b["p_pass"] is not None
+    assert g.tradeable_retail("long") and not g.tradeable_retail("short")
