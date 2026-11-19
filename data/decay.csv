@@ -1,0 +1,9 @@
+study,era,value,unit,kind,source
+PEAD gross (trial 59),1995-2002,1.11,%/month,this repo,registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d
+PEAD gross (trial 59),2003-2012,0.58,%/month,this repo,registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d
+PEAD gross (trial 59),2013-2025,0.26,%/month,this repo,registry 33033be3f1d02b16f53760e54b7a99586672a6010b2384e5c01ee7157563829d
+Customer momentum,original sample,1.55,%/month,literature,"Cohen, L. and Frazzini, A. (2008), Economic links and predictable returns, Journal of Finance 63(4), 1977-2011, introduction"
+Customer momentum,2005-2018,,%/month,"preprint (sign only, no point estimate)","Pinchuk, M. (2023), Customer momentum, arXiv:2301.11394 (preprint, not peer reviewed): the factor's return is negative over 2005-2018"
+Anomaly returns (97 predictors),in sample,100,% of in-sample return,literature,"McLean, R. D. and Pontiff, J. (2016), Does academic research destroy stock return predictability?, Journal of Finance 71(1), 5-32, abstract"
+Anomaly returns (97 predictors),out of sample,74,% of in-sample return,literature,"McLean, R. D. and Pontiff, J. (2016), Journal of Finance 71(1), 5-32, abstract: 26% lower out of sample"
+Anomaly returns (97 predictors),after publication,42,% of in-sample return,literature,"McLean, R. D. and Pontiff, J. (2016), Journal of Finance 71(1), 5-32, abstract: 58% lower after publication"

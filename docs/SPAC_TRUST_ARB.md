@@ -17,6 +17,24 @@ Nothing registered; no trial spent.**
    been bought after the last chance to redeem. Fixed by rule, run 4 gives
     a year, t 2.73, Sharpe 0.93, P(pass) 0.025. Still killed.
 
+## Main conclusion: the floor is real but nearly worthless
+
+Run 4, the final design-period run (2010-2020), earned $4,308 over 11
+years on $25k:
+
+| Source | PnL | Share | Per year |
+|---|---|---|---|
+| Redemptions: the contract-backed floor | $454 | 11% | about $40 |
+| Sales above trust, mostly deal-announcement pops | $3,436 | 80% | about $310 |
+| No parsed meeting, liquidations | $418 | 10% | about $40 |
+
+2020 alone is 52% of profit; without it the rule earns $145 a year.
+
+The redemption floor is real: buying under trust and redeeming does pay.
+But it is worth about $40 a year on this account. What looked like an
+arbitrage was mostly a free option on deal pops, and that option paid out
+in the 2020 SPAC boom.
+
 # Second gate: a research-grade test (2026-10-29)
 
 The goal was a pre-registered statistical test of a contract-backed trade.
@@ -57,7 +75,9 @@ EDGAR:
   - A filed proxy for a meeting past the charter deadline counts, because
     the deadline must have moved.
 - **amount_t.** The proxy-stated amount once a proxy is filed, else E_t
-  (from spac_trust.py) accrued to the payment date.
+  (from spac_trust.py) accrued to the payment date at day t's T-bill rate.
+  Until 2026-11-03 it used the rates that actually followed; see "Correction
+  to run 4: a T-bill look-ahead".
 - **Outcomes, used only to settle positions.** The meeting date actually
   held (the nearest item 5.07 8-K); the amount paid (from the post-meeting
   8-Ks); liquidation amounts and dates.
@@ -518,6 +538,30 @@ period. Any later fix is a documented correction, not a new gate decision.
 The lost part is concentrated where the reviewer pointed: short holds fell
 from $1,482 to $192, and unparsed settlements from $1,220 to $353. What
 remains leans harder on 2020: 52% of profit, and $145 a year without it.
+
+## Correction to run 4: a T-bill look-ahead (found 2026-11-03)
+
+The truncation audit (`tests/test_no_lookahead_events.py`) found that an
+estimated amount_t was accrued with `growth[pay] / growth[t]`, the T-bill path
+that actually happened between day t and payment. A trader on day t could not
+know it. Proxy-stated amounts were not affected. `python/spac_trial.py` now
+accrues at day t's rate.
+
+| Design 2010-2020 | Run 4 as recorded | T-bill rate known at t |
+|---|---|---|
+| $/yr over T-bills | $276.7 | $278.0 |
+| Sharpe | 0.929 | 0.932 |
+| t (Newey-West) | 2.73 | 2.73 |
+| Entries | 161 | 165 |
+
+The totals barely move, but the trades do: 35 recorded trades drop out and 39
+others come in, because small changes in amount_t move days across the 2%
+yield threshold and reorder the ranking.
+
+The leak understated the rule slightly. The kill stands: a pass needed a design
+Sharpe of 2.08. This is a measurement of the bug, not a new gate run: run 4
+remains the last gate run, `reports/spac_trial_gate.csv` still holds its
+as-recorded numbers, no registry entry was made and no confirmation data was read.
 
 ## Correction to the second gate's "not touched" statement
 

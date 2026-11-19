@@ -3,15 +3,15 @@
   "n": 1,
   "found": "Day-trading volume signal",
   "what": "Average volume included hours later the same day",
-  "before": "+12.6bp edge",
-  "after": "-0.7bp",
+  "before": "+6.5bp edge",
+  "after": "+0.2bp",
   "direction": "Made results look better"
  },
  {
   "n": 2,
   "found": "Daily budget weighting",
   "what": "Split each day's money across signals that hadn't fired yet",
-  "before": "Sharpe 1.52",
+  "before": "Sharpe 1.19",
   "after": "Sharpe -1.27",
   "direction": "Made results look better"
  },

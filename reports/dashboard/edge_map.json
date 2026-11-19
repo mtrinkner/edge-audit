@@ -1,0 +1,110 @@
+[
+ {
+  "name": "Odd-lot tenders below the floor",
+  "short": "Odd-lot tenders",
+  "kind": "contract",
+  "status": "recorded FAIL",
+  "label": "descriptive subset of trial 58",
+  "capital_usd": 803.53,
+  "excess_pct_yr": 24.556,
+  "usd_per_yr": 197.3,
+  "basis": "32 deals 2010-2025 bought below the guaranteed price minus the $40 fee a share; T-bills on the capital while locked subtracted",
+  "source": "registry d30a11881fc03553b6900f68db4f448a807050a68dee5cb8df3b14924229a74f; docs/ODD_LOT_TENDERS.md, Looked at after the fact; capital and T-bills aggregated from data/edgar/odd_lot_*_deals.csv"
+ },
+ {
+  "name": "SPAC trust arb (rule, run 4)",
+  "short": "SPAC rule",
+  "kind": "contract",
+  "status": "gate-killed",
+  "label": "",
+  "capital_usd": 7594.04,
+  "excess_pct_yr": 3.644,
+  "usd_per_yr": 276.7,
+  "basis": "design 2010-2020, excess over T-bills; capital = average share invested x $25k",
+  "source": "reports/spac_trial_gate.csv, row design_gate (excess_usd_per_yr, avg_invested)"
+ },
+ {
+  "name": "SPAC redemption floor only",
+  "short": "SPAC floor",
+  "kind": "contract",
+  "status": "gate-killed",
+  "label": "",
+  "capital_usd": 7594.04,
+  "excess_pct_yr": 0.543,
+  "usd_per_yr": 41.3,
+  "basis": "run 4 redemption PnL, $454 over 11 years, before T-bills; capital is the whole run's average (the redemption trades' own share is not exported)",
+  "source": "docs/SPAC_TRUST_ARB.md, Main conclusion (run 4 table, Redemptions row)"
+ },
+ {
+  "name": "PEAD (trial 59)",
+  "short": "PEAD",
+  "kind": "anomaly",
+  "status": "recorded FAIL",
+  "label": "",
+  "capital_usd": 25000.0,
+  "excess_pct_yr": 1.472,
+  "usd_per_yr": 368.0,
+  "basis": "confirmation 2013-2025, V1 long-short net of costs, annualised; a long-short return, so no T-bill subtraction",
+  "source": "reports/pead_confirm.csv, row v1_net, column annualised"
+ },
+ {
+  "name": "Holding the market",
+  "short": "Market",
+  "kind": "reference",
+  "status": "literature",
+  "label": "risk premium, not an edge",
+  "capital_usd": 25000.0,
+  "excess_pct_yr": 12.902,
+  "usd_per_yr": 3225.4,
+  "basis": "Fama-French Mkt-RF compounded 2013-2025 (13 years), annualised",
+  "source": "data/pead/ff_daily.parquet (Ken French data library daily factors), column mktrf"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "short": "Reverse split",
+  "kind": "contract",
+  "status": "gate-killed",
+  "label": "",
+  "capital_usd": 0.03,
+  "excess_pct_yr": 24521.735,
+  "usd_per_yr": 7.1,
+  "basis": "design 2010-2018 at the primary round-up probability; one share an event, 14 events, median 6 days held",
+  "source": "reports/rsplit_gate.csv, row primary (usd_per_yr); capital aggregated from data/rsplit/trades_design_gate.csv"
+ },
+ {
+  "name": "Merger arb (cash tenders)",
+  "short": "Merger arb",
+  "kind": "contract",
+  "status": "gate-killed",
+  "label": "literature preview",
+  "capital_usd": 25000.0,
+  "excess_pct_yr": 2.16,
+  "usd_per_yr": 540.0,
+  "basis": "base case (7% break rate, 25% loss given break), $0 fee, 2.22% median spread; five $5,000 slots assumed fully deployed",
+  "source": "docs/MERGER_ARB_TENDERS.md, a. Economic size (per-year table); Jetley and Ji (2010), Financial Analysts Journal 66(2), 54-68"
+ },
+ {
+  "name": "Anomalies: average",
+  "short": "Anomalies (average)",
+  "kind": "anomaly",
+  "status": "literature",
+  "label": "literature",
+  "capital_usd": 25000.0,
+  "excess_pct_yr": 0.48,
+  "usd_per_yr": 120.0,
+  "basis": "4 bp/month after trading costs and post-publication decay, x 12, on a $25k long-short book",
+  "source": "Chen, A. Y. and Velikov, M. (2023), Zeroing in on the expected returns of anomalies, Journal of Financial and Quantitative Analysis 58(3), 968-1004, abstract"
+ },
+ {
+  "name": "Anomalies: best combinations",
+  "short": "Anomaly combinations",
+  "kind": "anomaly",
+  "status": "literature",
+  "label": "literature",
+  "capital_usd": 25000.0,
+  "excess_pct_yr": 2.4,
+  "usd_per_yr": 600.0,
+  "basis": "about 20 bp/month after costs for several combination methods, x 12, on a $25k long-short book",
+  "source": "Chen, A. Y. and Velikov, M. (2023), Journal of Financial and Quantitative Analysis 58(3), 968-1004, abstract"
+ }
+]

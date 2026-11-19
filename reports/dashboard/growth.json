@@ -1827,13 +1827,13 @@
   "study": "overnight",
   "date": "2026-10-01",
   "series": "Overnight only, after costs",
-  "value": 4.224
+  "value": 4.2706
  },
  {
   "study": "overnight",
   "date": "2026-10-01",
   "series": "Hold the same stocks",
-  "value": 8.6495
+  "value": 8.6868
  },
  {
   "study": "trend",

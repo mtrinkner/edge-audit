@@ -1,0 +1,8 @@
+source,events,sample
+8-K or 8-K exhibit accepted on the last trading day before the split or later (too late under any EDGAR rule),17,"40 of the 95 unannounced v1 design round-up events, seed 63"
+"8-K exhibit stating both, early enough to trade (EX-99.1, 5 trading days ahead)",1,"40 of the 95 unannounced v1 design round-up events, seed 63"
+8-K stating the ratio and an assumed date only (a blackout notice),1,"40 of the 95 unannounced v1 design round-up events, seed 63"
+"Fixed ratio in a proxy, information statement or 8-K, but no date before the split-day filing",6,"40 of the 95 unannounced v1 design round-up events, seed 63"
+"No pre-split EDGAR filing with the final ratio (press release not on EDGAR, or filed on or after the split day; off-EDGAR sources not searched)",15,"40 of the 95 unannounced v1 design round-up events, seed 63"
+Definitive 14C or DEF 14A with a fixed ratio and a date,0,"40 of the 95 unannounced v1 design round-up events, seed 63"
+"424B, S-1 or S-3 prospectus with both",0,"40 of the 95 unannounced v1 design round-up events, seed 63"

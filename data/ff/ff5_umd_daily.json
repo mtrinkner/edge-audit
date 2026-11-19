@@ -1,0 +1,11 @@
+{
+  "source": "Ken French data library",
+  "files": {
+    "F-F_Research_Data_5_Factors_2x3_daily.csv": "4be525f57e45fbe2faf6a6fbdecdd46d",
+    "F-F_Momentum_Factor_daily.csv": "ae489bb9a552910b442983655da58285"
+  },
+  "first_line": "This file was created by using the 202609 CRSP database.",
+  "rows": 15918,
+  "first": "1963-07-01",
+  "last": "2026-09-30"
+}

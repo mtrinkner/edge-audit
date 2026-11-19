@@ -1,0 +1,68 @@
+[
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "confirmed (trial 60 PASS)",
+  "check": "a",
+  "label": "Mean > 0, clustered t >= 3",
+  "status": "pass",
+  "value": "$3.17 an event, t 14.06 (121 events, 46 month clusters)",
+  "bar": "t >= 3",
+  "source": "reports/rsplit_trial60_confirm.csv, row primary"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "confirmed (trial 60 PASS)",
+  "check": "b",
+  "label": "Without the top 5",
+  "status": "pass",
+  "value": "$2.87 an event",
+  "bar": "mean > 0",
+  "source": "reports/rsplit_trial60_confirm.csv, row drop_top_5"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "confirmed (trial 60 PASS)",
+  "check": "c",
+  "label": "p = 0.2, both classes",
+  "status": "pass",
+  "value": "$0.86 an event",
+  "bar": "mean > 0",
+  "source": "reports/rsplit_trial60_confirm.csv, row p_0.2_both"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "confirmed (trial 60 PASS)",
+  "check": "d",
+  "label": "2024-2025",
+  "status": "pass",
+  "value": "$2.83 an event (88 events)",
+  "bar": "mean > 0",
+  "source": "reports/rsplit_trial60_confirm.csv, row ex_2024_2025"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "confirmed (trial 60 PASS)",
+  "check": "e",
+  "label": "Events traded",
+  "status": "pass",
+  "value": "121",
+  "bar": ">= 30, else inconclusive",
+  "source": "reports/rsplit_trial60_confirm_summary.csv"
+ },
+ {
+  "name": "Reverse-split round-up",
+  "doc": "docs/REVERSE_SPLIT_ROUNDUP.md",
+  "candidate_status": "confirmed (trial 60 PASS)",
+  "check": "r",
+  "label": "Reported: scale and cost",
+  "status": "reported",
+  "value": "$54.7/yr per account; $5 commission: -$5.64 an event",
+  "bar": "reported, no pass line",
+  "source": "reports/rsplit_trial60_confirm.csv, rows primary and fee_5"
+ }
+]
